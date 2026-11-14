@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    数据库结构配置：供 DatabaseConfigParser 解析，DatabaseHelper.onCreate 逐条执行建表 SQL。
+
+    修改约定：
+    1. 只为“已有用户”新增列/表时，version 必须 +1，并在 DatabaseHelper.onUpgrade
+       中补一段 ALTER/CREATE 迁移；不要依赖本文件重建老库（老库不会重新执行 onCreate）。
+    2. 表名、列名与 DAO 中的 SQL / 游标下标强耦合，改动前先全局搜索列名。
+    3. 日期列统一为 TEXT：日期 id 用 yyyyMMdd（字典序即时间序），时间戳用 yyyy-MM-dd HH:mm:ss。
+-->
+<database>
+    <!-- 数据库文件名与结构版本号（版本号必须与 DatabaseHelper.onUpgrade 的分支对应） -->
+    <name>menstruation.db</name>
+    <version>7</version>
+
+    <tables>
+        <!-- 周期分段设置：每轮实际周期一行；start_time 为分段起点（yyyyMMdd），
+             后续分段沿用各自保存的 total_cycle_day / menstrual_period_day，互不影响 -->
+        <table>
+            <name>menstrual_cycle_record</name>
+            <sql>
+                <![CDATA[
+                CREATE TABLE menstrual_cycle_record (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    start_time TEXT NOT NULL,
+                    total_cycle_day INTEGER NOT NULL,
+                    menstrual_period_day INTEGER NOT NULL,
+                    created_time TEXT DEFAULT (datetime('now', 'localtime'))
+                )
+                ]]>
+            </sql>
+        </table>
+
+        <!-- 每日记录：id 为日期（yyyyMMdd）主键。
+             注意 is_prediction 的存储语义与实体字段相反：库内 0 = 预测，1 = 用户实际记录，
+             所有“只更新/只删除预测行”的 SQL 都以 is_prediction = 0 作为条件 -->
+        <table>
+            <name>menstrual_record</name>
+            <sql>
+                <![CDATA[
+                CREATE TABLE menstrual_record (
+                    id TEXT PRIMARY KEY,
+                    menstrual_cycle TEXT NOT NULL,
+                    is_prediction INTEGER NOT NULL DEFAULT 0,
+                    suggestion TEXT,
+                    flow_level INTEGER DEFAULT 0,
+                    flow_score INTEGER DEFAULT 0,
+                    pain_level INTEGER DEFAULT 0,
+                    pad_count INTEGER DEFAULT 0,
+                    pad_light_count INTEGER DEFAULT 0,
+                    pad_medium_count INTEGER DEFAULT 0,
+                    pad_heavy_count INTEGER DEFAULT 0,
+                    clot_small_count INTEGER DEFAULT 0,
+                    clot_large_count INTEGER DEFAULT 0,
+                    notes TEXT,
+                    created_time TEXT DEFAULT (datetime('now', 'localtime')),
+                    updated_time TEXT DEFAULT (datetime('now', 'localtime')),
+                    flow_note TEXT,
+                    pain_note TEXT
+                )
+                ]]>
+            </sql>
+        </table>
+
+        <!-- 阶段锚点：用户手动修改非经期阶段后，记录“某天应从哪个阶段开始”的基准；
+             anchor_date 为主键，同一日期重复写入时由 DAO 做 UPDATE 覆盖 -->
+        <table>
+            <name>phase_anchor</name>
+            <sql>
+                <![CDATA[
+                CREATE TABLE phase_anchor (
+                    anchor_date TEXT PRIMARY KEY,
+                    phase_index INTEGER NOT NULL,
+                    created_time TEXT DEFAULT (datetime('now', 'localtime'))
+                )
+                ]]>
+            </sql>
+        </table>
+
+        <!-- 自定义提醒：target_day（yyyyMMdd）用于固定日期模式；
+             cycle_node > 0 表示按周期节点提醒；repeat_type > 0 表示按重复规则提醒，
+             后两者由调度器按最新周期/规则动态计算下一次触发时间。
+             v7 起 repeat_type = 5 表示“指定多个日期”，repeat_config 存逗号分隔的 yyyyMMdd，
+             每个日期各触发一次；无需新增列 -->
+        <table>
+            <name>reminder</name>
+            <sql>
+                <![CDATA[
+                CREATE TABLE reminder (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    message TEXT,
+                    reminder_type TEXT NOT NULL DEFAULT 'custom',
+                    target_day INTEGER DEFAULT 0,
+                    alarm_time TEXT,
+                    is_enabled INTEGER NOT NULL DEFAULT 1,
+                    is_alarm INTEGER NOT NULL DEFAULT 0,
+                    cycle_node INTEGER NOT NULL DEFAULT 0,
+                    repeat_type INTEGER NOT NULL DEFAULT 0,
+                    repeat_config TEXT,
+                    repeat_end_day INTEGER NOT NULL DEFAULT 0,
+                    created_time TEXT DEFAULT (datetime('now', 'localtime'))
+                )
+                ]]>
+            </sql>
+        </table>
+    </tables>
+</database>

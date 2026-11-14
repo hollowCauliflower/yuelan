@@ -1,0 +1,657 @@
+<resources>
+    <string name="app_name">Yuelan</string>
+    <string name="app_backup_failed">Database backup failed</string>
+
+    <!-- bottom navigation -->
+    <string name="nav_home_title">Home</string>
+    <string name="nav_calendar_title">Calendar</string>
+    <string name="nav_statistics_title">Statistics</string>
+    <string name="nav_settings_title">Settings</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Menstrual Period -->
+    <string name="cycle_menstrual_period_name">Menstrual Period</string>
+    <string name="cycle_menstrual_period_description">The period of menstrual bleeding when the uterine lining sheds. Usually lasts 3–7 days.</string>
+    <string name="cycle_menstrual_period_tips">Keep warm, rest more, avoid strenuous exercise and cold foods.</string>
+
+    <!-- Follicular Phase -->
+    <string name="cycle_follicular_phase_name">Follicular Phase</string>
+    <string name="cycle_follicular_phase_description">From end of menstruation to ovulation, follicles mature and estrogen rises.</string>
+    <string name="cycle_follicular_phase_tips">Suitable for exercise, good skin condition, golden period for study and work.</string>
+
+    <!-- Ovulation Period -->
+    <string name="cycle_ovulation_period_name">Ovulation Period</string>
+    <string name="cycle_ovulation_period_description">When eggs are released from ovaries, most fertile period. Usually lasts 3–4 days.</string>
+    <string name="cycle_ovulation_period_tips">Best time for conception, maintain balanced nutrition, mild abdominal pain is normal.</string>
+
+    <!-- Luteal Phase -->
+    <string name="cycle_lute_phase_name">Luteal Phase</string>
+    <string name="cycle_lute_phase_description">From ovulation to next menstruation, corpus luteum forms and secretes progesterone.</string>
+    <string name="cycle_lute_phase_tips">May experience PMS symptoms, manage emotions, consider vitamin B6 supplement.</string>
+
+    <!-- onboarding -->
+    <string name="activity_onboarding_skip_button_text">Next</string>
+    <string name="fragment_welcome_subtitle_text">Your Thoughtful Period Assistant</string>
+    <string name="fragment_welcome_description_text">Manage menstrual information, predict menstrual cycles, and provide thoughtful reminders</string>
+    <string name="fragment_setup_title_text">Personalized Settings</string>
+    <string name="fragment_setup_icon_content_description">icon</string>
+    <string name="fragment_setup_last_menstrual_date_text">Date of last menstrual period</string>
+    <string name="fragment_setup_cycle_length_text">Average cycle length</string>
+    <string name="fragment_setup_cycle_default_length_text">%d</string>
+    <string name="fragment_setup_unit_of_measurement">day</string>
+    <string name="fragment_setup_menstrual_length_text">Average Menstrual Cycle Length</string>
+    <string name="fragment_setup_menstrual_default_length_text">%d</string>
+    <string name="fragment_setup_slider_cycle_content_description">Adjust cycle length</string>
+    <string name="fragment_setup_slider_period_content_description">Adjust menstrual cycle days</string>
+    <string name="fragment_setup_period_reminder_tile">Period Reminder</string>
+    <string name="fragment_setup_period_reminder_description">Turn on period reminder</string>
+    <string name="fragment_setup_select_date_text">Please select a date</string>
+    <string name="fragment_setup_tips_icon_content_description">Tips</string>
+    <string name="fragment_loading_loading_textview_text">We are weaving wonderful moments of health for you…</string>
+    <string name="fragment_loading_progress_percentage_text">0%</string>
+    <string name="fragment_loading_progress_description_text">Initializing health database…</string>
+    <string name="progress_percentage">%d%%</string>
+    <string-array name="loading_messages">
+        <item>Initializing health database……</item>
+        <item>Analyzing your health data…</item>
+        <item>Personalizing your interface…</item>
+        <item>Loading intelligent prediction feature…</item>
+        <item>Almost done! It\'ll be ready soon~…</item>
+    </string-array>
+    <string name="fragment_setup_dialog_tips_title">Setup Tips</string>
+    <string name="fragment_setup_tips_cycle_length">The menstrual cycle is counted from the first day of bleeding until the first day of the next period, which constitutes a complete menstrual cycle</string>
+    <string name="fragment_setup_tips_cycle_days">Cycle length: generally 21–35 days, with most women around 28 days</string>
+    <string name="fragment_setup_tips_period_length">The duration of each menstruation is called the menstrual period. If fertilization and implantation do not occur after ovulation during this time, the corpus luteum degenerates, the endometrium sheds, and menstrual bleeding occurs</string>
+    <string name="fragment_setup_tips_period_day">Menstruation duration: usually 2–8 days, with an average of 4–6 days</string>
+    <string name="fragment_setup_dialog_button_got_it">Okay, got it</string>
+
+    <!-- CircularPeriodProgressBar -->
+    <string name="circular_period_progressbar_current_label">current：</string>
+
+    <!-- fragment home -->
+    <string name="fragment_home_current_cycle_progress_title">Current cycle progress</string>
+    <string name="fragment_home_menstrual_cycle_number_one">1</string>
+    <string name="fragment_home_menstrual_cycle_number_one_text">menstrual period</string>
+    <string name="fragment_home_menstrual_cycle_right_arrow">→</string>
+    <string name="fragment_home_menstrual_cycle_number_two">2</string>
+    <string name="fragment_home_menstrual_cycle_number_two_text">follicular phase</string>
+    <string name="fragment_home_menstrual_cycle_number_three">3</string>
+    <string name="fragment_home_menstrual_cycle_number_three_text">ovulation period</string>
+    <string name="fragment_home_menstrual_cycle_number_four">4</string>
+    <string name="fragment_home_menstrual_cycle_number_four_text">lute phase</string>
+    <string name="fragment_home_current_day_text">current day</string>
+    <string name="fragment_home_total_cycle_length_text">Total cycle length</string>
+    <string name="fragment_home_days_remaining_text">Days remaining</string>
+    <string name="fragment_home_current_day_value">Day %d</string>
+    <string name="fragment_home_total_cycle_length_value">Day %d</string>
+    <string name="fragment_home_days_remaining_value">Day %d</string>
+    <string name="fragment_home_cycle_pop_window_text">%s</string>
+    <string name="fragment_home_next_menstrual_period_title">Next menstrual period</string>
+    <string name="fragment_home_next_menstrual_period_value">%s</string>
+    <string name="fragment_home_next_phase_title">Next phase</string>
+    <string name="fragment_home_next_phase_value">%s</string>
+    <string name="fragment_home_tv_daily_recommendation">Daily Recommendation</string>
+    <string name="fragment_home_tv_show">Look up</string>
+    <string name="fragment_home_tv_health_review">health review</string>
+    <string name="fragment_home_tv_daily_reminder_list_title">Daily reminder</string>
+    <string name="fragment_home_record_flow">Record Flow</string>
+    <string name="fragment_home_record_pain">Record Pain</string>
+
+    <!-- Statistics -->
+    <string name="statistics_title">Health Review</string>
+    <string name="statistics_cycle_stats">Cycle Overview</string>
+    <string name="statistics_total_records">Recorded Days</string>
+    <string name="statistics_menstrual_days">Period Days</string>
+    <string name="statistics_cycle_count">Complete Cycles</string>
+    <string name="statistics_avg_cycle">Avg Cycle Length</string>
+    <string name="statistics_avg_menstrual">Avg Period Length</string>
+    <string name="statistics_avg_pain">Avg Pain</string>
+    <string name="statistics_cycle_logic_hint">A complete cycle spans two consecutive period starts; the ongoing cycle is excluded</string>
+    <string name="statistics_rhythm_title">Cycle Rhythm</string>
+    <string name="statistics_rhythm_subtitle">Bar length = cycle days; pink = period days</string>
+    <string name="statistics_rhythm_summary">Avg %1$d d · Shortest %2$d d · Longest %3$d d</string>
+    <string name="statistics_rhythm_cycle_label">Cycle %1$d</string>
+    <string name="statistics_day_count">%1$d d</string>
+    <string name="statistics_flow_trend">Menstrual Flow Trend</string>
+    <string name="statistics_pain_distribution">Pain Level Distribution</string>
+    <string name="statistics_phase_distribution">Phase Distribution</string>
+    <string name="statistics_history">History Records</string>
+    <string name="statistics_view_all">View all</string>
+    <string name="statistics_days">days</string>
+    <string name="statistics_pain_none">None</string>
+    <string name="statistics_pain_mild">Mild</string>
+    <string name="statistics_pain_moderate">Moderate</string>
+    <string name="statistics_pain_severe">Severe</string>
+    <string name="statistics_pain_extreme">Extreme</string>
+    <string name="statistics_flow_light">Light</string>
+    <string name="statistics_flow_medium">Medium</string>
+    <string name="statistics_flow_heavy">Heavy</string>
+    <string name="statistics_cycle_summary">Period Details</string>
+    <string name="statistics_cycle_start">Period Start</string>
+    <string name="statistics_cycle_end">Period End</string>
+    <string name="statistics_flow_level">Flow</string>
+    <string name="statistics_pain_level">Pain</string>
+    <string name="statistics_period_days">Days</string>
+    <string name="statistics_not_recorded">Not recorded</string>
+    <string name="statistics_flow_score_label">PBAC Score: %d</string>
+    <string name="statistics_no_cycle_data">No cycle data available</string>
+    <string name="statistics_no_records">No records</string>
+
+    <!-- Calendar -->
+    <string name="calendar_predicted_cycle">Predicted Cycle</string>
+    <string name="calendar_previous_cycle">Previous Cycle</string>
+    <string name="calendar_next_period">Next Period</string>
+    <string name="calendar_current_day">Current Day</string>
+    <string name="calendar_adjust_cycle">Adjust Cycle</string>
+    <string name="calendar_makeup_record">Makeup Record</string>
+    <string name="calendar_select_phase">Select Phase</string>
+    <string name="calendar_legend">Legend:</string>
+    <!-- 图例说明弹框内：实心色块=当天有实际记录；浅色块=仅按周期推算的预测 -->
+    <string name="calendar_legend_actual">Recorded</string>
+    <string name="calendar_legend_predicted">Predicted</string>
+    <!-- 首次进入日历页的图例说明弹框（只弹一次） -->
+    <string name="calendar_legend_guide_title">Understanding Calendar Colors</string>
+    <string name="calendar_legend_guide_message">Solid blocks are days you actually recorded; light tints are predictions calculated from your cycle. Colors apply to all four phases in the same way.</string>
+    <string name="calendar_cycle_info">Cycle Info</string>
+    <string name="calendar_predicted_cycle_with_unit">Predicted Cycle (days)</string>
+    <string name="calendar_previous_cycle_with_unit">Previous Cycle (days)</string>
+    <string name="calendar_next_period_label">Next Period Estimate</string>
+    <string name="calendar_current_day_in_cycle">Day in Current Cycle</string>
+    <!-- 日历页统计卡：与首页错开，展示记录相关的补充信息 -->
+    <string name="calendar_next_ovulation">Next Ovulation</string>
+    <string name="calendar_current_phase_label">Current Phase</string>
+    <string name="calendar_recorded_days_label">Recorded This Cycle (days)</string>
+    <!-- 补签弹窗：阶段卡片描述与批量编辑入口 -->
+    <string name="makeup_phase_desc_menstrual">Period bleeding days</string>
+    <string name="makeup_phase_desc_follicular">After period, before ovulation</string>
+    <string name="makeup_phase_desc_ovulation">Around ovulation, fertile window</string>
+    <string name="makeup_phase_desc_luteal">After ovulation until next period</string>
+    <string name="makeup_batch_edit">Batch edit consecutive days</string>
+    <string name="makeup_batch_edit_desc">Paint over a date range to set its phase</string>
+    <string name="makeup_select_phase_hint">Pick the phase for this day</string>
+    <string name="calendar_manual_correction">Manual Correction</string>
+    <string name="calendar_manual_correction_desc">If predicted cycle doesn\'t match reality, you can manually adjust it.</string>
+    <string name="calendar_makeup_record_title">Makeup Record - %s</string>
+    <string name="calendar_no_cycle_record">No cycle record, please complete initial setup first</string>
+    <string name="calendar_adjust_cycle_settings">Adjust Cycle Settings</string>
+    <!-- 长按未来日期时提示不能提前记录 -->
+    <string name="calendar_record_future_not_allowed">Future dates can\'t be recorded</string>
+    <string name="calendar_prediction_marker">P</string>
+    <string name="calendar_recorded_mark">Recorded</string>
+    <string name="calendar_recorded_prefix">✓</string>
+    <string name="reminder_mode_label">Mode</string>
+    <string name="reminder_mode_date">Custom dates</string>
+    <string name="reminder_mode_cycle">Cycle-based</string>
+    <string name="reminder_node_period_start">Period starts</string>
+    <string name="reminder_node_period_end">Period ends</string>
+    <string name="reminder_node_follicle">Follicular phase starts</string>
+    <string name="reminder_node_ovulation">Ovulation window starts</string>
+    <string name="reminder_node_luteal">Luteal phase starts</string>
+    <string name="reminder_node_before_period">3 days before period</string>
+    <string name="reminder_cycle_hint">Reminds at this node in every cycle, based on your cycle settings</string>
+    <string name="reminder_add_date">Add</string>
+    <string name="reminder_empty_dates">Please add at least one date</string>
+    <string name="reminder_cycle_prefix">Every cycle · </string>
+    <string name="reminder_cycle_pending_setup"> (set up your cycle first)</string>
+
+    <!-- Dialog -->
+    <string name="dialog_title_prompt">Notice</string>
+    <string name="dialog_save">Save</string>
+    <string name="dialog_clear">Clear</string>
+    <string name="dialog_i_know">Got it</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_cycle_settings">Current Cycle</string>
+    <string name="settings_last_period_start">Last Period Start</string>
+    <string name="settings_cycle_length">Cycle Length</string>
+    <string name="settings_period_length">Period Length</string>
+    <string name="settings_edit_cycle_action">Edit</string>
+    <string name="settings_cycle_adjust_hint">To adjust, go to the Calendar page</string>
+    <string name="settings_cycle_not_set">Not set yet</string>
+    <string name="settings_reminder_settings">Reminder Settings</string>
+    <string name="settings_period_reminder">Period Reminder</string>
+    <string name="settings_reminder_days">Reminder Days Before</string>
+    <string name="settings_reminder_time">Reminder Time</string>
+    <string name="settings_data_management">Data Management</string>
+    <string name="settings_export">Export Data</string>
+    <string name="settings_import">Import Data</string>
+    <string name="settings_backup">Backup Data</string>
+    <string name="settings_clear_data">Clear All Data</string>
+    <string name="settings_about">About</string>
+    <string name="settings_privacy">Privacy Policy</string>
+    <string name="settings_agreement">User Agreement</string>
+    <string name="settings_app_icon_title">App Icon</string>
+    <string name="settings_theme_mode">Theme</string>
+    <string name="settings_theme_mode_dialog_title">Choose theme</string>
+    <string name="settings_theme_follow_system">Follow system</string>
+    <string name="settings_theme_light">Light mode</string>
+    <string name="settings_theme_dark">Dark mode</string>
+    <string name="icon_style_default">Default</string>
+    <string name="icon_style_moon">Blue Moon</string>
+    <string name="icon_style_star">Mint Star</string>
+    <string name="icon_style_violet">Violet</string>
+    <string name="icon_style_custom">Custom desktop shortcut (from gallery)</string>
+    <string name="icon_style_custom_guide">Make my own app icon</string>
+    <string name="custom_icon_guide_title">Custom App Icon</string>
+    <string name="custom_icon_guide_message">Want the app icon to be your own photo?\n\n1. Pick 1~3 images you like (square works best);\n2. Send them to %1$s (subject: \"custom icon\"), or send directly via WeChat: %2$s;\n3. We will reply within 3 days with a custom install package — the first image becomes the launcher icon, the rest appear under \"My images\" to switch freely.\n\nYour images are only used to build your custom package. If you get no reply within 3 days, please send again. Thank you!</string>
+    <string name="custom_contact_email">contact@example.com</string>
+    <string name="custom_contact_wechat">your_wechat_id</string>
+    <string name="icon_style_custom_remove">Remove custom image</string>
+    <!-- Bundled custom-icon pack: the first image is the default icon, no separate "default" entry -->
+    <string name="icon_style_bundled_item">My image %1$d</string>
+    <string name="settings_app_icon_applied">Icon updated, takes effect shortly</string>
+    <string name="settings_app_icon_custom_applied">Custom icon applied</string>
+    <string name="settings_app_icon_custom_failed">Failed to apply custom icon: %1$s</string>
+    <string name="settings_app_icon_custom_removed">Custom image removed</string>
+    <string name="settings_app_icon_shortcut_create">Create shortcut</string>
+    <string name="settings_app_icon_shortcut_done">Shortcut creation requested</string>
+    <string name="settings_app_icon_shortcut_unsupported">This launcher does not support creating shortcuts</string>
+    <string name="settings_app_icon_shortcut_message">Android does not allow replacing the launcher icon directly, but you can pin a shortcut with this image on the home screen to open the app.</string>
+    <string name="settings_app_icon_shortcut_title">Create desktop shortcut</string>
+    <string name="settings_app_icon_shortcut_created">Desktop shortcut created</string>
+    <string name="settings_app_icon_shortcut_cancelled">Desktop shortcut was not created</string>
+    <string name="settings_app_icon_shortcut_success_message">A desktop shortcut with the selected image has been created.</string>
+    <string name="settings_app_icon_shortcut_old_message">Android does not allow apps to delete pinned shortcuts automatically. If an old custom shortcut is still on your home screen, long-press it and remove it manually to avoid duplicates or an old shortcut that cannot open the app.</string>
+    <string name="icon_rename_longpress_hint">Long press an image to rename</string>
+    <string name="icon_rename_title">Rename icon</string>
+    <string name="icon_rename_hint">Enter image name</string>
+    <string name="icon_rename_empty">Name cannot be empty</string>
+    <string name="icon_rename_saved">Name saved</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_about_app">About App</string>
+    <string name="settings_version_label">Version</string>
+    <string name="settings_custom_reminder">Custom Reminder</string>
+    <string name="reminder_manage_title">Custom Reminders</string>
+    <string name="reminder_add">Add reminder</string>
+    <string name="reminder_new_title">New Reminder</string>
+    <string name="reminder_edit_title">Edit Reminder</string>
+    <string name="reminder_empty">No reminders yet. Tap the button at the bottom right to add one.</string>
+    <string name="reminder_title_hint">Reminder title</string>
+    <string name="reminder_message_hint">Notes (optional)</string>
+    <!-- Common reminder presets -->
+    <string name="reminder_presets_label">Quick presets</string>
+    <!-- 预设说明：无周期设置时 / 有周期设置且命中阶段时（%s=阶段名） -->
+    <string name="reminder_presets_hint_fixed">Reminders fire on the chosen date and don\'t follow cycle changes</string>
+    <string name="reminder_presets_hint_phase">You\'re in %s — common items for this phase are listed first; reminders fire on fixed dates</string>
+    <string name="reminder_preset_progesterone_title">Take progesterone</string>
+    <string name="reminder_preset_progesterone_message">Take progesterone / dydrogesterone as prescribed</string>
+    <string name="reminder_preset_folic_acid_title">Take folic acid</string>
+    <string name="reminder_preset_folic_acid_message">One tablet of folic acid a day</string>
+    <string name="reminder_preset_bbt_title">Measure BBT</string>
+    <string name="reminder_preset_bbt_message">Measure basal body temperature before getting up</string>
+    <string name="reminder_preset_ginger_tea_title">Ginger tea</string>
+    <string name="reminder_preset_ginger_tea_message">Warm drink to ease period discomfort</string>
+    <string name="reminder_preset_weight_title">Log weight</string>
+    <string name="reminder_preset_weight_message">Log today\'s weight to track cycle changes</string>
+    <string name="reminder_date_label">Date</string>
+    <string name="reminder_time_label">Time</string>
+    <string name="reminder_enabled_label">Enabled</string>
+    <string name="reminder_delete">Delete</string>
+    <string name="reminder_delete_title">Delete Reminder</string>
+    <string name="reminder_delete_message">Delete this reminder?</string>
+    <string name="reminder_saved">Saved</string>
+    <string name="reminder_save_failed_title">Save failed</string>
+    <string name="reminder_save_failed_message">The reminder could not be saved. Please try again.</string>
+    <string name="reminder_title_required">Please enter a reminder title</string>
+    <string name="reminder_channel_name">Custom reminders</string>
+    <string name="reminder_channel_description">Reminds you at the scheduled time (visible on lock screen and in the notification shade)</string>
+    <string name="reminder_notification_default_text">You have a reminder</string>
+    <string name="period_reminder_notification_title">Period reminder</string>
+    <string name="period_reminder_notification_text">Your period is expected in about %1$d days. Be prepared.</string>
+    <string name="reminder_time_passed">The reminder time has passed; no notification will be sent</string>
+    <string name="reminder_notification_disabled">Notifications are not allowed, so reminders cannot fire. Please enable notifications.</string>
+    <string name="reminder_exact_alarm_open_failed">Unable to open settings. Please enable "Alarms &amp; reminders" manually.</string>
+    <string name="reminder_guide_title">Keep reminders on time</string>
+    <string name="reminder_guide_message">So reminders don\'t arrive late, allow Yuelan:\n1. "Alarms &amp; reminders"\n2. Auto-start and background running\nOtherwise reminders may be hours late, or even a day or two.</string>
+    <string name="reminder_guide_settings">Go to settings</string>
+    <string name="reminder_guide_dismiss">Got it</string>
+    <string name="reminder_today_title">Today\'s Reminders</string>
+    <string name="settings_not_set">Not set</string>
+    <string name="settings_menstrual_days_too_long">Period too long: a %1$d-day cycle allows at most %2$d period days. Shorten the period or lengthen the cycle.</string>
+    <string name="settings_export_success">Data exported to: %s</string>
+    <string name="settings_export_done">Data exported successfully</string>
+    <string name="settings_export_failed">Export failed: %s</string>
+    <string name="settings_no_file_picker">No file picker available</string>
+    <string name="settings_import_title">Import Data</string>
+    <string name="settings_import_message">Importing data will overwrite current data. Continue?</string>
+    <string name="settings_import_button">Import</string>
+    <string name="settings_no_backup_file">No backup file found</string>
+    <string name="settings_backup_success">Backup successful: %s</string>
+    <string name="settings_clear_data_title">Clear Data</string>
+    <string name="settings_clear_button">Clear</string>
+    <string name="settings_data_cleared">Data cleared</string>
+    <string name="settings_clear_failed">Clear failed: %s</string>
+    <string name="settings_flow_label_with_unit">%d days</string>
+    <string name="settings_default_reminder_days">3 days</string>
+    <string name="settings_default_reminder_time">09:00</string>
+    <string name="settings_reminder_days_title">Reminder Days in Advance</string>
+    <string name="settings_clear_data_message">Are you sure you want to clear all data? This operation is irreversible!</string>
+    <string name="settings_import_success">Data imported successfully</string>
+    <string name="settings_import_failed">Import failed: %s</string>
+    <string name="settings_backup_failed">Backup failed</string>
+    <string name="settings_backup_failed_with_msg">Backup failed: %s</string>
+    <string name="settings_clear_failed_with_msg">Clear failed: %s</string>
+    <string name="settings_privacy_policy_content">Yuelan (the \"App\") is a local, offline-first tool. This policy explains how the App handles your data.\n\n1. Data storage\nYour period records, cycle settings and reminder settings are stored only in the local SQLite database and local preferences on your device, and are never uploaded to any server. The App requires no account and does not collect names, phone numbers, ID numbers or contacts.\n\n2. Permissions\n- Notifications: used to send period reminders and custom reminders.\n- Alarms &amp; reminders (exact alarms): used to fire reminders on time; without it reminders may be delayed.\n- Receive boot completed: used only to rebuild reminder alarms after reboot or app update.\n- Location (optional): used only to request local weather from Open-Meteo. If denied, a default city coordinate is used and recording still works. Location is not stored by the App.\n\n3. Network access\nThe App may send approximate coordinates to Open-Meteo (api.open-meteo.com) solely to fetch weather; no period data is included. If an update-check URL is configured, the App requests it only to read version information. The App contains no ads, analytics or social SDKs and does not share your data with third parties.\n\n4. Export and deletion\nYou can export your data to a local file through the system file picker and delete all data in Settings at any time. Uninstalling the App also removes the local database.\n\n5. Contact\nIf you have questions about this policy, please contact us through the contact information shown in the App.</string>
+    <string name="settings_user_agreement_content">Welcome to Yuelan!\n\n1. Service\nThis App is a local period tracking and prediction tool providing cycle records, four-phase predictions, calendar, statistics, custom reminders and app icon customization.\n\n2. Not medical advice\nPredictions are calculated from the data you enter and common cycle patterns. They are for reference only and do not constitute medical diagnosis or treatment advice. Please consult a doctor for health concerns.\n\n3. Data and backup\nYour data is stored locally on your device. Please use \"Export Data\" to keep your own backup. Uninstalling the App, clearing app data or changing devices may cause data loss, and the App is not liable for such loss.\n\n4. Icon customization\nIf you use the icon customization service, images you provide are used only to generate the corresponding custom installation package and for no other purpose. Please make sure you have the right to use the images you submit.\n\n5. Disclaimer\nThe App is provided \"as is\". To the extent permitted by law, the developer is not liable for any direct or indirect loss arising from the use of, or inability to use, the App.\n\n6. Changes\nWe may update this agreement with new versions, and the updated content will be shown in the App. Continued use means you accept the updated agreement.</string>
+
+    <!-- Home -->
+    <string name="fragment_home_today_record">Today\'s Record</string>
+    <string name="fragment_home_flow_level_label">Menstrual Flow:</string>
+    <string name="fragment_home_pain_level_label">Pain Level:</string>
+    <string name="fragment_home_record_button">Record</string>
+
+    <!-- Record list -->
+    <string name="record_no_suggestion">No suggestions</string>
+    <string name="record_flow_label">Flow: %s</string>
+    <string name="record_pain_label">Pain: %s</string>
+    <string name="record_flow_score_label">PBAC: %d</string>
+
+    <!-- Record detail -->
+    <string name="record_detail_flow_record_title">Menstrual Flow Record (PBAC)</string>
+    <string name="record_detail_pad_staining_level">Pad Staining Level</string>
+    <string name="record_detail_clot_size">Clot Size</string>
+    <string name="record_detail_notes_hint">Record today\'s physical condition…</string>
+    <string name="record_detail_flow_score_label">PBAC Score: %d</string>
+    <string name="record_detail_flow_score_init">PBAC Score: 0</string>
+    <string name="record_detail_date_placeholder">Mon, Jan 1, 2024</string>
+    <string name="record_detail_pain_0">No pain</string>
+    <string name="record_detail_pain_1">Mild pain</string>
+    <string name="record_detail_pain_2">Moderate pain</string>
+    <string name="record_detail_pain_3">Severe pain</string>
+    <string name="record_detail_pain_4">Extreme pain</string>
+    <string name="record_detail_pain_text_0">No pain</string>
+    <string name="record_detail_pain_text_1">Mild</string>
+    <string name="record_detail_pain_text_2">Moderate</string>
+    <string name="record_detail_pain_text_3">Severe</string>
+    <string name="record_detail_pain_text_4">Extreme</string>
+    <string name="record_detail_pain_no_data">No pain</string>
+    <string name="record_detail_not_menstrual_hint">Not in your period, so flow and pain records are unavailable.</string>
+    <string name="record_detail_mark_menstrual">Mark today as period</string>
+    <string name="record_detail_pbac_hint">Score = light pad ×1 + moderate pad ×5 + soaked pad ×20, small clot ×1, large clot ×5. Total per day with no upper limit; over 100 suggests heavy flow.</string>
+    <string name="record_detail_flow_no_data">None</string>
+
+    <!-- Record Detail -->
+    <string name="record_detail_title">Record Detail</string>
+    <string name="record_detail_flow">Menstrual Flow</string>
+    <string name="record_detail_pain">Pain Level</string>
+    <string name="record_detail_notes">Notes</string>
+    <string name="record_detail_notes_flow">Flow Notes</string>
+    <string name="record_detail_notes_pain">Pain Notes</string>
+    <string name="record_detail_save">Save</string>
+    <string name="record_detail_cancel">Cancel</string>
+    <!-- 删除当天记录 -->
+    <string name="record_detail_delete">Delete this record</string>
+    <string name="record_detail_delete_confirm_title">Delete record</string>
+    <string name="record_detail_delete_confirm_message">Delete this day\'s record? The date will revert to a prediction.</string>
+    <string name="record_detail_delete_confirm">Delete</string>
+    <string name="record_detail_delete_failed">Delete failed</string>
+    <string name="record_detail_pad_light">Light staining</string>
+    <string name="record_detail_pad_medium">Medium staining</string>
+    <string name="record_detail_pad_heavy">Heavy staining</string>
+    <string name="record_detail_clot_small">Small clots</string>
+    <string name="record_detail_clot_large">Large clots</string>
+    <string name="record_detail_pain_none">No pain</string>
+    <string name="record_detail_pain_mild">Mild</string>
+    <string name="record_detail_pain_moderate">Moderate</string>
+    <string name="record_detail_pain_severe">Severe</string>
+    <string name="record_detail_pain_extreme">Extreme</string>
+
+    <!-- Record Adapter -->
+    <string name="record_adapter_no_suggestion">No suggestion</string>
+    <string name="record_adapter_flow_label">Flow: %1$s (%2$d)</string>
+    <string name="record_adapter_pain_label">Pain: %1$s</string>
+
+    <!-- Flow Level -->
+    <string name="flow_level_light">Light</string>
+    <string name="flow_level_medium">Medium</string>
+    <string name="flow_level_heavy">Heavy</string>
+    <string name="flow_level_not_recorded">Not recorded</string>
+
+    <!-- Home Fragment Tips -->
+    <string name="home_no_tips_today">No tips for today</string>
+    <string name="home_complete_initial_setup">Please complete initial setup first</string>
+    <string name="home_tip_menstrual_1">• Today is your menstrual period, keep warm</string>
+    <string name="home_tip_menstrual_2">• Avoid cold food and strenuous exercise</string>
+    <string name="home_tip_menstrual_3">• Get enough sleep, drink plenty of warm water</string>
+    <string name="home_tip_menstrual_4">• Apply warm compress if you have cramps</string>
+    <string name="home_tip_follicular_1">• Today is follicular phase, you have lots of energy</string>
+    <string name="home_tip_follicular_2">• Great for important work and study</string>
+    <string name="home_tip_follicular_3">• You can increase exercise appropriately</string>
+    <string name="home_tip_follicular_4">• Maintain balanced nutrition, eat more fruits and vegetables</string>
+    <string name="home_tip_ovulation_1">• Today is ovulation period, you are at your best</string>
+    <string name="home_tip_ovulation_2">• Good for important decisions and social activities</string>
+    <string name="home_tip_ovulation_3">• Pay attention to contraception or pregnancy planning</string>
+    <string name="home_tip_ovulation_4">• Maintain good sleep habits</string>
+    <string name="home_tip_lute_1">• Today is luteal phase, rest more</string>
+    <string name="home_tip_lute_2">• You may have mood swings, stay happy</string>
+    <string name="home_tip_lute_3">• Avoid overwork</string>
+    <string name="home_tip_lute_4">• Try gentle exercise like yoga</string>
+
+    <!-- Daily Suggestion -->
+    <string name="daily_suggestion_date_placeholder">Mar 26, 2026</string>
+    <string name="daily_suggestion_title">Today\'s Suggestion</string>
+    <string name="daily_suggestion_default">Keep warm, rest more, avoid strenuous exercise and cold food.</string>
+    <string name="daily_suggestion_prev_day">Previous Day</string>
+    <string name="daily_suggestion_next_day">Next Day</string>
+    <string name="daily_suggestion_no_record">No Record</string>
+    <string name="daily_suggestion_no_record_suggestion">No record for this date</string>
+    <string name="daily_suggestion_future_hint">Future dates are predictions only. Records can be made once the day arrives.</string>
+    <string name="daily_suggestion_predicted_phase">Predicted: %1$s</string>
+    <string name="phase_edit_island_message">The days before and after are both %1$s. Changing only this day breaks continuity. Please adjust phases from this date to today in bulk.</string>
+    <string name="phase_edit_backward_message">The previous day is %1$s. The phase you picked is earlier in the cycle order. Please adjust phases from this date to today in bulk.</string>
+    <string name="phase_edit_option_resequence">Adjust phases in bulk</string>
+    <string name="phase_edit_option_single_day">Only change this day</string>
+    <string name="phase_edit_luteal_to_period_message">The previous day is still in the luteal phase, so this day breaks the current phase order. If you continue, only this day will be recorded and the predicted cycle will not be rearranged.</string>
+    <string name="phase_edit_save_single_day">Save this day only</string>
+    <!-- Phase range editor -->
+    <string name="phase_range_title">Adjust phases</string>
+    <string name="phase_range_range_label">Range: %1$s – today</string>
+    <string name="phase_range_range_label_range">Range: %1$s – %2$s</string>
+    <string name="phase_range_hint">Pick a phase brush, then tap or drag across dates to paint them in bulk. Adjacent days may stay the same or advance in order: Period → Follicular → Ovulation → Luteal.</string>
+    <string name="phase_range_month_title">%1$d-%2$d</string>
+    <string name="phase_range_day_count">%1$s %2$d d</string>
+    <string name="phase_range_invalid_title">Phase order is not continuous</string>
+    <string name="phase_range_invalid_message">%1$s is %2$s, so %3$s cannot be changed directly to %4$s. Please follow Period → Follicular → Ovulation → Luteal.</string>
+    <string name="phase_range_saved">Phases saved</string>
+    <string name="cancel">Cancel</string>
+    <string name="settings_update_cycle_title">Update Current Cycle</string>
+    <string name="daily_suggestion_no_remind_today">Don\'t remind me today</string>
+    <string name="daily_suggestion_reminder_section">Day Reminders</string>
+    <string name="daily_suggestion_close">Got it</string>
+
+    <!-- Calendar -->
+    <string name="calendar_weekday_sun">Sun</string>
+    <string name="calendar_weekday_mon">Mon</string>
+    <string name="calendar_weekday_tue">Tue</string>
+    <string name="calendar_weekday_wed">Wed</string>
+    <string name="calendar_weekday_thu">Thu</string>
+    <string name="calendar_weekday_fri">Fri</string>
+    <string name="calendar_weekday_sat">Sat</string>
+    <string name="calendar_today">Today</string>
+    <string name="calendar_today_schedule">Today\'s Schedule</string>
+    <string name="calendar_schedule_suffix"> Schedule</string>
+    <string name="calendar_no_schedule_today">No schedule for today</string>
+    <string name="calendar_no_schedule_that_day">No schedule for this day</string>
+    <string name="calendar_event_count_1">1 item</string>
+    <string name="calendar_event_count_n">%d items</string>
+    <string name="calendar_event_count_many">Multiple items</string>
+    <string name="calendar_tag_meeting">Meeting</string>
+    <string name="calendar_tag_review">Review</string>
+    <string name="calendar_tag_birthday">Birthday</string>
+    <string name="calendar_tag_travel">Travel</string>
+    <string name="calendar_tag_visit">Visit</string>
+    <string name="calendar_tag_important">Important</string>
+    <string name="calendar_tag_deadline">Deadline</string>
+    <string name="calendar_tag_team">Team</string>
+    <string name="calendar_tag_demo">Demo</string>
+    <string name="calendar_tag_family">Family</string>
+    <string name="calendar_tag_release">Release</string>
+    <string name="calendar_tag_design">Design</string>
+    <string name="calendar_tag_training">Training</string>
+    <string name="calendar_tag_planning">Planning</string>
+    <string name="calendar_tag_requirement">Requirement</string>
+    <string name="calendar_tag_test">Test</string>
+    <string name="calendar_tag_deploy">Deploy</string>
+    <string name="calendar_tag_summary">Summary</string>
+    <string name="calendar_tag_default">Event</string>
+
+    <!-- Weather -->
+    <string name="weather_rainy">Rainy day, remember to take an umbrella.</string>
+    <string name="weather_snowy">Snowy day, keep warm and walk carefully on slippery roads.</string>
+    <string name="weather_foggy">Foggy day, drive and walk carefully.</string>
+    <string name="weather_sunny">Nice sunny weather.</string>
+    <string name="weather_cold">Cold weather, keep warm.</string>
+    <string name="weather_hot">Hot weather, protect from sun and stay hydrated.</string>
+
+    <!-- Dialog -->
+    <string name="dialog_confirm">Confirm</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_clear_data_title">Clear All Data</string>
+    <string name="dialog_clear_data_message">Are you sure you want to clear all data? This action cannot be undone.</string>
+    <string name="dialog_export_success">Data exported successfully</string>
+    <string name="dialog_export_failed">Export failed</string>
+    <string name="dialog_import_success">Data imported successfully</string>
+    <string name="dialog_import_failed">Import failed</string>
+    <string name="dialog_backup_success">Backup completed</string>
+    <string name="dialog_backup_failed">Backup failed</string>
+    <string name="dialog_no_data">No data available</string>
+
+    <!-- Today Tips -->
+    <string name="today_tips_menstrual">• You are in menstrual period, keep warm\n• Avoid cold foods and strenuous exercise\n• Get enough sleep, drink warm water\n• Use hot compress for cramps if needed</string>
+    <string name="today_tips_follicular">• You are in follicular phase, full of energy\n• Good time for important work and study\n• Can increase exercise intensity\n• Maintain balanced nutrition</string>
+    <string name="today_tips_ovulation">• You are in ovulation period, at your best\n• Great for important decisions and social activities\n• Pay attention to contraception or pregnancy planning\n• Maintain good sleep habits</string>
+    <string name="today_tips_luteal">• You are in luteal phase, rest more\n• Mood swings may occur, stay positive\n• Avoid overexertion\n• Try gentle exercises like yoga</string>
+    <string name="today_tips_no_setup">Please complete initial setup first</string>
+    <string name="today_tips_no_suggestion">No suggestions available</string>
+    <string name="today_tips_loading">Loading…</string>
+
+    <!-- Suggestions Arrays -->
+    <string-array name="menstrual_period_suggestions">
+        <item>Stay warm during menstruation and avoid cold or raw foods.</item>
+        <item>Drink moderate amounts of ginger and brown sugar tea to relieve discomfort.</item>
+        <item>Avoid strenuous exercise and get plenty of rest.</item>
+        <item>Maintain a positive mood and avoid staying up late.</item>
+    </string-array>
+
+    <string-array name="follicular_phase_suggestions">
+        <item>The follicular phase is an ideal time to nourish your eggs; consider increasing soy product intake.</item>
+        <item>Moderate exercise during this phase helps strengthen your body.</item>
+        <item>Ensure adequate intake of high-quality protein and folic acid.</item>
+    </string-array>
+
+    <string-array name="ovulation_period_suggestions">
+        <item>Conception likelihood is highest during ovulation. Plan intercourse if trying to conceive.</item>
+        <item>Increased vaginal discharge during ovulation requires attention to personal hygiene.</item>
+        <item>Maintain a relaxed mindset during ovulation and avoid excessive stress.</item>
+    </string-array>
+
+    <string-array name="lute_phase_suggestions">
+        <item>Emotional fluctuations may occur during the luteal phase; listen to music to relax.</item>
+        <item>Edema is common during the luteal phase; maintain a light diet.</item>
+        <item>Consider supplementing with vitamin B6 during the luteal phase to alleviate anxiety.</item>
+    </string-array>
+
+    <!-- Daily guidance prompts (shown when entering home on a predicted key day) -->
+    <string name="daily_prompt_menstrual_title">Today is predicted to be a menstrual day</string>
+    <string name="daily_prompt_menstrual_message">Record flow and pain to make predictions more accurate.</string>
+    <string name="daily_prompt_menstrual_record">Record now</string>
+    <string name="daily_prompt_cycle_wrong">Cycle off?</string>
+    <string name="daily_prompt_dont_show_today">Don\'t remind me again today</string>
+    <string name="daily_prompt_ovulation_title">Today is predicted ovulation day</string>
+    <string name="daily_prompt_ovulation_message">You can note how you\'re feeling (useful when trying to conceive).</string>
+    <string name="daily_prompt_approaching_title">Your period is coming soon</string>
+    <string name="daily_prompt_approaching_message">Your period is expected within 3 days. Have sanitary products ready.</string>
+    <string name="daily_prompt_got_it">Got it</string>
+
+    <!-- Cycle correction dialog -->
+    <string name="cycle_correction_title">Adjust cycle</string>
+    <string name="cycle_correction_start_date">Period start date</string>
+    <string name="cycle_correction_select_date">Select date</string>
+    <string name="cycle_correction_hint">Adjusting will regenerate all predictions.</string>
+
+    <!-- App update check -->
+    <string name="settings_check_update">Check for updates</string>
+    <string name="update_check_title">New version v%1$s</string>
+    <string name="update_check_current_version">Current version: v%1$s</string>
+    <string name="update_check_no_notes">No release notes for this version.</string>
+    <string name="update_check_update_now">Update now</string>
+    <string name="update_check_later">Later</string>
+    <string name="update_check_latest">You are on the latest version</string>
+    <string name="update_check_failed">Update check failed, please try again later</string>
+    <string name="update_check_unconfigured">Update check is not configured</string>
+
+    <!-- Reminder repeat rules -->
+    <string name="reminder_repeat_label">Repeat</string>
+    <string name="reminder_repeat_once">Once</string>
+    <string name="reminder_repeat_daily">Daily</string>
+    <string name="reminder_repeat_weekly">Weekly</string>
+    <string name="reminder_repeat_monthly">Monthly</string>
+    <string name="reminder_repeat_interval">Interval</string>
+    <string name="reminder_repeat_multi_date">Specific dates</string>
+    <string name="reminder_repeat_weekly_format">Every week on %1$s</string>
+    <string name="reminder_repeat_monthly_format">Day %1$s of every month</string>
+    <string name="reminder_repeat_interval_format">Every %1$d days</string>
+    <string name="reminder_repeat_multi_date_format">%1$d selected dates</string>
+    <string name="reminder_repeat_until">Repeat until</string>
+    <string name="reminder_repeat_forever">Forever</string>
+    <string name="reminder_repeat_months_1">1 month</string>
+    <string name="reminder_repeat_months_3">3 months</string>
+    <string name="reminder_repeat_months_6">6 months</string>
+    <string name="reminder_repeat_months_12">1 year</string>
+    <string name="reminder_start_date_label">Start date</string>
+    <string name="reminder_weekdays_label">Days of week</string>
+    <string name="reminder_month_day_label">Day of month</string>
+    <string name="reminder_interval_label">Interval</string>
+    <string name="reminder_interval_value">Every %1$d days</string>
+    <string name="reminder_repeat_empty_weekdays">Select at least one weekday</string>
+    <string name="reminder_repeat_empty_days">Select at least one date</string>
+    <string name="reminder_node_label">Cycle node</string>
+    <string name="reminder_remind_on">Remind at</string>
+    <string name="reminder_preview_once">Remind once on %1$s at %2$s</string>
+    <string name="reminder_preview_repeat">From %1$s, %2$s at %3$s</string>
+    <string name="reminder_preview_until"> · until %1$s</string>
+    <string name="reminder_preview_cycle">Every cycle when %1$s · at %2$s</string>
+    <string name="reminder_preview_multi_date">Remind on %1$d selected dates at %2$s</string>
+    <string name="reminder_multi_date_label">Selected dates (tap a tag to remove)</string>
+    <string name="reminder_multi_date_add">+ Add date</string>
+    <string name="reminder_multi_date_pick_title">Select a date</string>
+    <string name="reminder_next_prefix">Next</string>
+    <string name="reminder_weekday_mon">Mon</string>
+    <string name="reminder_weekday_tue">Tue</string>
+    <string name="reminder_weekday_wed">Wed</string>
+    <string name="reminder_weekday_thu">Thu</string>
+    <string name="reminder_weekday_fri">Fri</string>
+    <string name="reminder_weekday_sat">Sat</string>
+    <string name="reminder_weekday_sun">Sun</string>
+    <string name="reminder_preset_recommended_suffix">Recommended</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_badge">Simple · Caring</string>
+    <string name="onboarding_feature_record">Records</string>
+    <string name="onboarding_feature_predict">Forecast</string>
+    <string name="onboarding_feature_reminder">Reminders</string>
+    <string name="onboarding_setup_step_badge">STEP 2 · BASICS</string>
+    <string name="onboarding_setup_subtitle">Two quick steps help us personalize your cycle predictions.</string>
+    <string name="onboarding_cycle_min_hint">21 d</string>
+    <string name="onboarding_cycle_max_hint">45 d</string>
+    <string name="onboarding_period_min_hint">2 d</string>
+    <string name="onboarding_period_max_hint">16 d</string>
+    <string name="onboarding_privacy_hint">All data stays on this device and is never uploaded. You can change these settings anytime.</string>
+
+    <!-- Last period start date is later than today -->
+    <string name="cycle_start_after_today_title">Invalid start date</string>
+    <string name="cycle_start_after_today_message">The last period start date cannot be later than today. Please choose again.</string>
+    <string name="cycle_start_after_today_reselect">Choose again</string>
+
+    <!-- Strong reminder (full-screen alarm) -->
+    <string name="reminder_full_screen_label">Strong reminder (full-screen alarm)</string>
+    <string name="reminder_full_screen_hint">Wakes the screen and rings at the scheduled time. Full-screen notifications must be allowed.</string>
+    <string name="alarm_full_screen_dismiss">Dismiss</string>
+    <string name="reminder_alarm_channel_name">Strong reminder alarm</string>
+    <string name="reminder_alarm_channel_description">Shows a full-screen alert and rings at the scheduled time</string>
+    <string name="reminder_full_screen_permission_title">Allow full-screen notifications</string>
+    <string name="reminder_full_screen_permission_message">Full-screen notifications are not allowed for this app, so strong reminders may only show a banner. Allow them in system settings to wake the screen with a full-screen alert.</string>
+
+</resources>

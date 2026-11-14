@@ -1,0 +1,81 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Yuelan" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- 系统栏与页面背景保持一致 -->
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:statusBarColor">@color/app_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/app_background</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <!-- 启动页背景与图标：与桌面默认图标（鲸尾月牙）保持一致 -->
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_launcher_art_whale_moon</item>
+        <!-- 品牌粉色：开关、底部导航选中指示等 Material3 组件统一用粉色 -->
+        <item name="colorPrimary">@color/pink_primary_variant</item>
+        <item name="colorSecondary">@color/pink_primary_variant</item>
+        <item name="colorSecondaryContainer">#FFE3EE</item>
+        <item name="colorOnSecondaryContainer">@color/text_primary</item>
+        <!-- 统一系统弹窗样式：framework AlertDialog 只认 alertDialogTheme，必须显式挂载 -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.Yuelan.Dialog.Alert</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Yuelan.MaterialAlertDialog</item>
+    </style>
+
+    <style name="Theme.Yuelan" parent="Base.Theme.Yuelan" />
+
+    <!-- 引导页：状态栏/导航栏透明，让铺满全屏的渐变背景一直延伸到状态栏和刘海区域 -->
+    <style name="Theme.Yuelan.Onboarding" parent="Base.Theme.Yuelan">
+        <item name="android:windowBackground">@drawable/gradient_pink_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="28">shortEdges</item>
+    </style>
+
+    <!-- 桌面快捷方式固定入口：透明、无标题、不进入最近任务 -->
+    <style name="Theme.Yuelan.ShortcutEntry" parent="Theme.Yuelan">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <!-- 自定义图标主题：每个桌面图标风格对应一套启动页图标（通过独立入口 Activity 切换） -->
+    <style name="Theme.Yuelan.Moon" parent="Base.Theme.Yuelan">
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_icon_style_moon</item>
+    </style>
+
+    <style name="Theme.Yuelan.Star" parent="Base.Theme.Yuelan">
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_icon_style_star</item>
+    </style>
+
+    <style name="Theme.Yuelan.Violet" parent="Base.Theme.Yuelan">
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_icon_style_violet</item>
+    </style>
+
+    <style name="PopupAnimation">
+        <item name="android:windowEnterAnimation">@anim/popup_enter</item>
+        <item name="android:windowExitAnimation">@anim/popup_exit</item>
+    </style>
+
+    <!-- 底部导航选中项的粉色胶囊指示器 -->
+    <style name="Widget_Yuelan_BottomNavIndicator" parent="">
+        <item name="android:width">64dp</item>
+        <item name="android:height">32dp</item>
+        <item name="android:color">@color/nav_indicator</item>
+        <item name="shapeAppearance">@style/ShapeAppearance_Yuelan_BottomNavIndicator</item>
+    </style>
+
+    <style name="ShapeAppearance_Yuelan_BottomNavIndicator" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <!-- 底部导航文字：选中加粗 -->
+    <style name="TextAppearance_Yuelan_BottomNavActive" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance_Yuelan_BottomNavInactive" parent="TextAppearance.Material3.LabelMedium" />
+</resources>

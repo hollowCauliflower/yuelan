@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 单选选中态使用品牌粉，未选中态使用随主题变化的提示色 -->
+    <item android:color="@color/pink_primary_variant" android:state_checked="true" />
+    <item android:color="@color/text_hint" />
+</selector>

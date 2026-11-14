@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 选中态标签：品牌粉底 + 白色文字（深浅色通用） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/brand_primary" />
+    <corners android:radius="22dp" />
+</shape>

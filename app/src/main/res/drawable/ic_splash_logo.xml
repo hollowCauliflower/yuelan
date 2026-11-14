@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 启动页专用品牌图标：浅粉圆底 + 鲸尾月牙（深蓝弯月＋一点粉）。
+     圆底通过 clip-path 裁出，保证图形不会溢出圆外。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group>
+        <!-- 圆形裁剪：内容只保留在半径 36 的圆内 -->
+        <clip-path android:pathData="M54,54m-36,0a36,36 0,1 1,72 0a36,36 0,1 1,-72 0" />
+
+        <!-- 圆底：浅粉 -->
+        <path
+            android:fillColor="#FFFFF2F5"
+            android:pathData="M54,54m-36,0a36,36 0,1 1,72 0a36,36 0,1 1,-72 0" />
+
+        <!-- 鲸尾月牙 -->
+        <path
+            android:fillColor="#FF12305B"
+            android:pathData="M63,24 C33,36 33,76 46,84 C46,66 46,42 63,24 Z" />
+
+        <!-- 经期：一点粉 -->
+        <path
+            android:fillColor="#FFFF6B8E"
+            android:pathData="M74,54m-6.5,0a6.5,6.5 0,1 1,13 0a6.5,6.5 0,1 1,-13 0" />
+    </group>
+</vector>

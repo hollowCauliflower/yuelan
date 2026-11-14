@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="8dp">
+
+    <!-- 常用提醒快捷项：长按图片式的一键填充入口 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/reminder_presets_label"
+        android:textColor="@color/text_sub"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <!-- 常用提醒同样自动换行，避免第三个及以后的预设被裁切 -->
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/layout_presets"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:chipSpacingHorizontal="8dp"
+        app:chipSpacingVertical="8dp"
+        app:singleLine="false" />
+
+    <TextView
+        android:id="@+id/tv_presets_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/text_hint"
+        android:textSize="11sp" />
+
+    <EditText
+        android:id="@+id/et_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/edittext_background"
+        android:gravity="top|start"
+        android:hint="@string/reminder_title_hint"
+        android:inputType="text"
+        android:maxLength="40"
+        android:padding="12dp"
+        android:textColor="@color/text_title"
+        android:textColorHint="@color/text_hint"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/et_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/edittext_background"
+        android:gravity="top|start"
+        android:hint="@string/reminder_message_hint"
+        android:inputType="textMultiLine"
+        android:maxLength="120"
+        android:minHeight="64dp"
+        android:padding="12dp"
+        android:textColor="@color/text_title"
+        android:textColorHint="@color/text_hint"
+        android:textSize="14sp" />
+
+    <!-- 提醒方式：自选时间（支持重复规则）/ 按周期节点 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/reminder_mode_label"
+        android:textColor="@color/text_sub"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/layout_mode_chips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_mode_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/chip_selected_background"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:text="@string/reminder_mode_date"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_mode_cycle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/chip_unselected_background"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:text="@string/reminder_mode_cycle"
+            android:textColor="@color/text_body"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- 周期节点选项区 -->
+    <LinearLayout
+        android:id="@+id/layout_cycle_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reminder_node_label"
+            android:textColor="@color/text_sub"
+            android:textSize="12sp" />
+
+        <GridLayout
+            android:id="@+id/layout_cycle_nodes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:columnCount="2">
+
+            <TextView
+                android:id="@+id/tv_node_period_start"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_marginEnd="6dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/chip_selected_background"
+                android:gravity="center"
+                android:paddingVertical="9dp"
+                android:text="@string/reminder_node_period_start"
+                android:textColor="@color/white"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_node_period_end"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_marginStart="6dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/chip_unselected_background"
+                android:gravity="center"
+                android:paddingVertical="9dp"
+                android:text="@string/reminder_node_period_end"
+                android:textColor="@color/text_body"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_node_follicle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_marginEnd="6dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/chip_unselected_background"
+                android:gravity="center"
+                android:paddingVertical="9dp"
+                android:text="@string/reminder_node_follicle"
+                android:textColor="@color/text_body"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_node_ovulation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_marginStart="6dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/chip_unselected_background"
+                android:gravity="center"
+                android:paddingVertical="9dp"
+                android:text="@string/reminder_node_ovulation"
+                android:textColor="@color/text_body"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_node_luteal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/chip_unselected_background"
+                android:gravity="center"
+                android:paddingVertical="9dp"
+                android:text="@string/reminder_node_luteal"
+                android:textColor="@color/text_body"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_node_before_period"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/chip_unselected_background"
+                android:gravity="center"
+                android:paddingVertical="9dp"
+                android:text="@string/reminder_node_before_period"
+                android:textColor="@color/text_body"
+                android:textSize="13sp" />
+        </GridLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/reminder_cycle_hint"
+            android:textColor="@color/text_hint"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- 自选时间区：开始日期 + 重复规则 -->
+    <LinearLayout
+        android:id="@+id/layout_date_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reminder_repeat_label"
+            android:textColor="@color/text_sub"
+            android:textSize="12sp" />
+
+        <!-- 用 ChipGroup 自动换行：6 种重复规则在窄屏/大字体下也能全部可见，无需横向滑动 -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/layout_repeat_rules"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:chipSpacingHorizontal="8dp"
+            app:chipSpacingVertical="8dp"
+            app:singleLine="false" />
+
+        <LinearLayout
+            android:id="@+id/layout_start_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_date_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/reminder_date_label"
+                android:textColor="@color/text_sub"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tv_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/chip_unselected_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:textColor="@color/text_title"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 指定多个日期：已选日期用 ChipGroup 自动换行展示，点击标签即可删除 -->
+        <LinearLayout
+            android:id="@+id/layout_multi_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reminder_multi_date_label"
+                android:textColor="@color/text_sub"
+                android:textSize="12sp" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/layout_multi_date_chips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
+                app:singleLine="false" />
+        </LinearLayout>
+
+        <!-- 重复结束条件 -->
+        <LinearLayout
+            android:id="@+id/layout_repeat_end"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reminder_repeat_until"
+                android:textColor="@color/text_sub"
+                android:textSize="12sp" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/layout_end_rules"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
+                app:singleLine="false" />
+        </LinearLayout>
+
+        <!-- 每周：星期多选 -->
+        <LinearLayout
+            android:id="@+id/layout_weekdays"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reminder_weekdays_label"
+                android:textColor="@color/text_sub"
+                android:textSize="12sp" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/layout_weekday_chips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
+                app:singleLine="false" />
+        </LinearLayout>
+
+        <!-- 每月：几号多选 -->
+        <LinearLayout
+            android:id="@+id/layout_month_day"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reminder_month_day_label"
+                android:textColor="@color/text_sub"
+                android:textSize="12sp" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/layout_month_day_chips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
+                app:singleLine="false" />
+        </LinearLayout>
+
+        <!-- 间隔：每 N 天 -->
+        <LinearLayout
+            android:id="@+id/layout_interval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/reminder_interval_label"
+                    android:textColor="@color/text_sub"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tv_interval_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/slider_interval"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:stepSize="1"
+                android:value="2"
+                android:valueFrom="2"
+                android:valueTo="30"
+                app:haloColor="@color/tile_pink"
+                app:thumbColor="@color/brand_primary"
+                app:trackColorActive="@color/brand_primary"
+                app:trackColorInactive="@color/outline_stroke" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_repeat_preview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/edittext_background"
+            android:padding="10dp"
+            android:textColor="@color/text_sub"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/reminder_time_label"
+            android:textColor="@color/text_sub"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/chip_unselected_background"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:textColor="@color/text_title"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- 强提醒：开启后到点拉起全屏闹钟页并循环响铃/震动；
+         Android 14+ 还需用户允许「全屏通知」 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reminder_full_screen_label"
+                android:textColor="@color/text_sub"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/reminder_full_screen_hint"
+                android:textColor="@color/text_hint"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_full_screen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:thumbTint="@color/switch_thumb_tint"
+            app:trackTint="@color/switch_track_tint" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/reminder_enabled_label"
+            android:textColor="@color/text_sub"
+            android:textSize="14sp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_enabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:thumbTint="@color/switch_thumb_tint"
+            app:trackTint="@color/switch_track_tint" />
+    </LinearLayout>
+
+</LinearLayout>

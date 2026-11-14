@@ -1,0 +1,108 @@
+plugins {
+    id 'com.android.application'
+}
+
+// ---------------------------------------------------------------------------
+// 版本号：唯一真源是根目录 version.properties，发版只改那个文件
+// ---------------------------------------------------------------------------
+def versionPropsFile = rootProject.file('version.properties')
+def versionProps = new Properties()
+if (versionPropsFile.exists()) {
+    versionPropsFile.withInputStream { versionProps.load(it) }
+}
+def appVersionCode = (versionProps.getProperty('VERSION_CODE') ?: '1').toInteger()
+def appVersionName = versionProps.getProperty('VERSION_NAME') ?: '1.0'
+
+// ---------------------------------------------------------------------------
+// release 签名：优先读 signing.properties（已 gitignore），其次读环境变量。
+// 缺配置时不中断构建，assembleRelease 会产出未签名 APK 并打印提示。
+// ---------------------------------------------------------------------------
+def signingPropsFile = rootProject.file('signing.properties')
+def signingProps = new Properties()
+if (signingPropsFile.exists()) {
+    signingPropsFile.withInputStream { signingProps.load(it) }
+}
+def signingValue = { String key, String envName ->
+    def fromEnv = System.getenv(envName)
+    return (fromEnv != null && !fromEnv.trim().isEmpty()) ? fromEnv.trim() : signingProps.getProperty(key)
+}
+def releaseStorePath = signingValue('storeFile', 'YUELAN_STORE_FILE')
+def releaseStorePassword = signingValue('storePassword', 'YUELAN_STORE_PASSWORD')
+def releaseKeyAlias = signingValue('keyAlias', 'YUELAN_KEY_ALIAS')
+def releaseKeyPassword = signingValue('keyPassword', 'YUELAN_KEY_PASSWORD')
+def releaseStoreFile = releaseStorePath ? rootProject.file(releaseStorePath) : null
+def hasReleaseSigning = releaseStoreFile != null && releaseStoreFile.exists()
+        && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
+android {
+    namespace 'work.huacai.yuelan'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "work.huacai.yuelan"
+        minSdk 24
+        targetSdk 34
+        versionCode appVersionCode
+        versionName appVersionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile releaseStoreFile
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // release APK 文件名带版本号，便于分发时区分（debug 保持默认名，定制打包脚本依赖它）
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == 'release') {
+            variant.outputs.all { output ->
+                output.outputFileName = "Yuelan-v${appVersionName}-release.apk"
+            }
+        }
+    }
+}
+
+// assembleRelease 缺少签名配置时给出清晰提示（不中断构建，输出未签名 APK）
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleRelease' && !hasReleaseSigning) {
+        task.doFirst {
+            println 'WARNING: 未找到 release 签名配置（signing.properties 或 YUELAN_* 环境变量）。'
+            println '         本次将输出未签名 APK，无法直接安装。'
+            println '         请复制 signing.properties.example 为 signing.properties 并填写 keystore 信息。'
+        }
+    }
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+}

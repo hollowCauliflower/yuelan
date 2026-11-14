@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/rounded_top_corners">
+
+    <!-- 顶部拖拽指示器 -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:background="@color/divider"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- 内容区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- 标题 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fragment_setup_dialog_tips_title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- 图标列表 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="32dp">
+
+            <!-- 周期提示 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:drawableStartCompat="@drawable/ic_notification"
+                app:drawableTint="@color/pink_primary_variant"
+                android:drawablePadding="16dp"
+                android:text="@string/fragment_setup_tips_cycle_length"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp"
+                android:layout_marginBottom="20dp"
+                android:contentDescription="@string/fragment_setup_tips_cycle_length"/>
+
+            <!-- 经期提示 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:drawableStartCompat="@drawable/ic_notification"
+                app:drawableTint="@color/pink_primary_variant"
+                android:drawablePadding="16dp"
+                android:text="@string/fragment_setup_tips_cycle_days"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp"
+                android:layout_marginBottom="20dp"
+                android:contentDescription="@string/fragment_setup_tips_cycle_days"/>
+
+            <!-- 通知提示 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:drawableStartCompat="@drawable/ic_notification"
+                app:drawableTint="@color/pink_primary_variant"
+                android:drawablePadding="16dp"
+                android:text="@string/fragment_setup_tips_period_length"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp"
+                android:layout_marginBottom="20dp"
+                android:contentDescription="@string/fragment_setup_tips_period_length"/>
+
+            <!-- 修改提示 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:drawableStartCompat="@drawable/ic_notification"
+                app:drawableTint="@color/pink_primary_variant"
+                android:drawablePadding="16dp"
+                android:text="@string/fragment_setup_tips_period_day"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp"
+                android:contentDescription="@string/fragment_setup_tips_period_day"/>
+
+        </LinearLayout>
+
+        <!-- 关闭按钮：与全局品牌主按钮保持一致（粉色实心 + 22dp 圆角） -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCloseTips"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:textColor="@color/white"
+            android:text="@string/fragment_setup_dialog_button_got_it"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/brand_primary"
+            app:cornerRadius="22dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

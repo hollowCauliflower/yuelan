@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" >
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 自定义提醒事项：到点通知（Android 13+ 运行时授权） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 精准闹钟（Android 12+ 需用户授予「闹钟与提醒」权限；未授予时降级为非精确闹钟） -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- 强提醒（全屏闹钟）：锁屏全屏展示需要震动、保持唤醒与全屏通知权限 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- 开机后重建提醒闹钟 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:name=".YuelanApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Yuelan"
+        tools:targetApi="31" >
+        <!-- 强提醒（全屏闹钟）：到点点亮屏幕、越过锁屏全屏展示并响铃 -->
+        <activity
+            android:name=".activities.AlarmFullScreenActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.Yuelan"
+            android:turnScreenOn="true"
+            tools:targetApi="27" />
+        <activity
+            android:name=".activities.ReminderListActivity"
+            android:exported="false"
+            android:label="@string/reminder_manage_title" />
+        <activity
+            android:name=".activities.OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Yuelan.Onboarding" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <!-- 桌面图标入口：默认风格（鲸尾月牙，启动页为 ic_splash_logo） -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 桌面快捷方式固定入口：切换图标风格后快捷方式仍可打开应用 -->
+        <activity
+            android:name=".ShortcutEntryActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:theme="@style/Theme.Yuelan.ShortcutEntry" />
+
+        <!-- 桌面图标入口：蔚蓝月（启动页图标同步切换） -->
+        <activity
+            android:name=".LauncherStyleMoon"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_icon_style_moon"
+            android:label="@string/app_name"
+            android:roundIcon="@drawable/ic_icon_style_moon"
+            android:theme="@style/Theme.Yuelan.Moon">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 桌面图标入口：薄荷星（启动页图标同步切换） -->
+        <activity
+            android:name=".LauncherStyleStar"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_icon_style_star"
+            android:label="@string/app_name"
+            android:roundIcon="@drawable/ic_icon_style_star"
+            android:theme="@style/Theme.Yuelan.Star">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 桌面图标入口：紫罗兰 -->
+        <activity
+            android:name=".LauncherStyleViolet"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_icon_style_violet"
+            android:label="@string/app_name"
+            android:roundIcon="@drawable/ic_icon_style_violet"
+            android:theme="@style/Theme.Yuelan.Violet">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 提醒闹钟触发：到点发出高优先级、锁屏可见的通知 -->
+        <receiver
+            android:name=".receiver.ReminderAlarmReceiver"
+            android:exported="false" />
+
+        <!-- 经期提醒闹钟触发：到点发出“经期即将来潮”通知，并重排下个周期 -->
+        <receiver
+            android:name=".receiver.PeriodReminderReceiver"
+            android:exported="false" />
+
+        <!-- 开机 / 应用更新后重建全部提醒闹钟（含经期提醒） -->
+        <receiver
+            android:name=".receiver.ReminderBootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

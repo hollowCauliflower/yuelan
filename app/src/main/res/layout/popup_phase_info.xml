@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    android:orientation="vertical"
+    android:background="@drawable/floating_tip_bg"
+    android:elevation="8dp">
+
+    <!-- 日期范围 -->
+    <TextView
+        android:id="@+id/tv_date_range"
+        android:layout_width="wrap_content"
+        android:layout_height="28dp"
+        android:gravity="center"
+        android:text="@string/fragment_home_cycle_pop_window_text"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold"
+        android:textSize="11sp" />
+
+</LinearLayout>

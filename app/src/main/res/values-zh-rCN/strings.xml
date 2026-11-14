@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">月澜</string>
+    <string name="app_backup_failed">数据库备份失败</string>
+    <string name="nav_home_title">首页</string>
+    <string name="nav_calendar_title">日历</string>
+    <string name="nav_statistics_title">统计</string>
+    <string name="nav_settings_title">设置</string>
+
+    <!-- 月经期 -->
+    <string name="cycle_menstrual_period_name">月经期</string>
+    <string name="cycle_menstrual_period_description">月经来潮期间，子宫内膜脱落排出体外。持续时间通常为3–7天。</string>
+    <string name="cycle_menstrual_period_tips">注意保暖，多休息，避免剧烈运动和生冷食物。</string>
+
+    <!-- 卵泡期 -->
+    <string name="cycle_follicular_phase_name">卵泡期</string>
+    <string name="cycle_follicular_phase_description">月经结束后到排卵前，卵泡发育成熟。雌激素水平逐渐升高。</string>
+    <string name="cycle_follicular_phase_tips">适合运动，皮肤状态较好，是学习和工作的黄金时期。</string>
+
+    <!-- 排卵期 -->
+    <string name="cycle_ovulation_period_name">排卵期</string>
+    <string name="cycle_ovulation_period_description">卵子从卵巢排出的时期，最容易受孕。通常持续3–4天。</string>
+    <string name="cycle_ovulation_period_tips">备孕最佳时期，注意营养均衡，如有腹痛属正常现象。</string>
+
+    <!-- 黄体期 -->
+    <string name="cycle_lute_phase_name">黄体期</string>
+    <string name="cycle_lute_phase_description">排卵后到下次月经前，黄体形成并分泌孕激素，为怀孕做准备。</string>
+    <string name="cycle_lute_phase_tips">可能出现经前症状，注意情绪管理，可适当补充维生素B6。</string>
+
+    <!-- 引导页 -->
+    <string name="activity_onboarding_skip_button_text">下一步</string>
+    <string name="fragment_welcome_subtitle_text">您的贴心月经小助手</string>
+    <string name="fragment_welcome_description_text">管理月经信息，预测月经周期，贴心提醒功能</string>
+    <string name="fragment_setup_title_text">个性化设置</string>
+    <string name="fragment_setup_icon_content_description">图标</string>
+    <string name="fragment_setup_last_menstrual_date_text">上次月经开始日期</string>
+    <string name="fragment_setup_cycle_length_text">平均周期长度</string>
+    <string name="fragment_setup_cycle_default_length_text">%d</string>
+    <string name="fragment_setup_unit_of_measurement">天</string>
+    <string name="fragment_setup_menstrual_length_text">平均经期天数</string>
+    <string name="fragment_setup_menstrual_default_length_text">%d</string>
+    <string name="fragment_setup_slider_cycle_content_description">调整月经周期长度</string>
+    <string name="fragment_setup_slider_period_content_description">调整月经期天数</string>
+    <string name="fragment_setup_period_reminder_tile">月经提醒</string>
+    <string name="fragment_setup_period_reminder_description">开启月经提醒</string>
+    <string name="fragment_setup_select_date_text">请选择日期</string>
+    <string name="fragment_setup_tips_icon_content_description">小提示</string>
+    <string name="fragment_loading_loading_textview_text">正在为您编织美好的健康时光…</string>
+    <string name="fragment_loading_progress_percentage_text">0%</string>
+    <string name="fragment_loading_progress_description_text">正在初始化健康数据库…</string>
+    <string name="progress_percentage">%d%%</string>
+    <string-array name="loading_messages">
+        <item>正在初始化健康数据库…</item>
+        <item>正在分析您的健康数据…</item>
+        <item>正在个性化您的界面…</item>
+        <item>正在加载智能预测功能…</item>
+        <item>即将完成！马上就好~…</item>
+    </string-array>
+    <string name="fragment_setup_dialog_tips_title">设置小贴士</string>
+    <string name="fragment_setup_tips_cycle_length">月经周期从出血的第一天开始算，一直到下一次月经来潮的第一天，算一个完整的月经周期</string>
+    <string name="fragment_setup_tips_cycle_days">周期天数：一般为21–35天，多数女性为28天左右</string>
+    <string name="fragment_setup_tips_period_length">每次月经持续时间称为月经期，如果这个时期排卵后没有发生受精、着床，则黄体萎缩退化，子宫内膜脱落，出现经血</string>
+    <string name="fragment_setup_tips_period_day">月经天数：一般是2–8天，平均4–6天</string>
+    <string name="fragment_setup_dialog_button_got_it">好的，明白了</string>
+
+    <!-- CircularPeriodProgressBar -->
+    <string name="circular_period_progressbar_current_label">当前：</string>
+
+    <!-- fragment home -->
+    <string name="fragment_home_current_cycle_progress_title">当前周期进度</string>
+    <string name="fragment_home_menstrual_cycle_number_one">1</string>
+    <string name="fragment_home_menstrual_cycle_number_one_text">月经期</string>
+    <string name="fragment_home_menstrual_cycle_right_arrow">→</string>
+    <string name="fragment_home_menstrual_cycle_number_two">2</string>
+    <string name="fragment_home_menstrual_cycle_number_two_text">卵泡期</string>
+    <string name="fragment_home_menstrual_cycle_number_three">3</string>
+    <string name="fragment_home_menstrual_cycle_number_three_text">排卵期</string>
+    <string name="fragment_home_menstrual_cycle_number_four">4</string>
+    <string name="fragment_home_menstrual_cycle_number_four_text">黄体期</string>
+    <string name="fragment_home_current_day_text">当前天数</string>
+    <string name="fragment_home_total_cycle_length_text">周期总长</string>
+    <string name="fragment_home_days_remaining_text">剩余天数</string>
+    <string name="fragment_home_current_day_value">第%d天</string>
+    <string name="fragment_home_total_cycle_length_value">%d天</string>
+    <string name="fragment_home_days_remaining_value">%d天</string>
+    <string name="fragment_home_cycle_pop_window_text">%s</string>
+    <string name="fragment_home_next_menstrual_period_title">下次月经</string>
+    <string name="fragment_home_next_menstrual_period_value">%s</string>
+    <string name="fragment_home_next_phase_title">下个阶段</string>
+    <string name="fragment_home_next_phase_value">%s</string>
+    <string name="fragment_home_tv_daily_recommendation">每日建议</string>
+    <string name="fragment_home_tv_show">查看</string>
+    <string name="fragment_home_tv_health_review">健康复盘</string>
+    <string name="fragment_home_tv_daily_reminder_list_title">每日提醒</string>
+    <string name="fragment_home_record_flow">记录流量</string>
+    <string name="fragment_home_record_pain">记录疼痛</string>
+
+    <!-- Statistics -->
+    <string name="statistics_title">健康复盘</string>
+    <string name="statistics_cycle_stats">周期概览</string>
+    <string name="statistics_total_records">记录天数</string>
+    <string name="statistics_menstrual_days">经期天数</string>
+    <string name="statistics_cycle_count">完整周期</string>
+    <string name="statistics_avg_cycle">平均周期长度</string>
+    <string name="statistics_avg_menstrual">平均经期长度</string>
+    <string name="statistics_avg_pain">平均痛经</string>
+    <string name="statistics_cycle_logic_hint">完整周期 = 两次经期开始之间的间隔，进行中不计入</string>
+    <string name="statistics_rhythm_title">周期节律</string>
+    <string name="statistics_rhythm_subtitle">条形长度 = 本轮周期天数，粉色部分为经期</string>
+    <string name="statistics_rhythm_summary">平均 %1$d 天 · 最短 %2$d 天 · 最长 %3$d 天</string>
+    <string name="statistics_rhythm_cycle_label">第%1$d轮</string>
+    <string name="statistics_day_count">%1$d 天</string>
+    <string name="statistics_flow_trend">月经流量趋势</string>
+    <string name="statistics_pain_distribution">痛经程度分布</string>
+    <string name="statistics_phase_distribution">阶段分布</string>
+    <string name="statistics_history">历史记录</string>
+    <string name="statistics_view_all">查看全部</string>
+    <string name="statistics_days">天</string>
+    <string name="statistics_pain_none">无痛</string>
+    <string name="statistics_pain_mild">轻度</string>
+    <string name="statistics_pain_moderate">中度</string>
+    <string name="statistics_pain_severe">重度</string>
+    <string name="statistics_pain_extreme">剧烈</string>
+    <string name="statistics_flow_light">少量</string>
+    <string name="statistics_flow_medium">适中</string>
+    <string name="statistics_flow_heavy">过量</string>
+    <string name="statistics_cycle_summary">经期周期明细</string>
+    <string name="statistics_cycle_start">经期开始</string>
+    <string name="statistics_cycle_end">经期结束</string>
+    <string name="statistics_flow_level">流量</string>
+    <string name="statistics_pain_level">痛经</string>
+    <string name="statistics_period_days">天数</string>
+    <string name="statistics_not_recorded">未记录</string>
+    <string name="statistics_flow_score_label">PBAC评分: %d</string>
+    <string name="statistics_no_cycle_data">暂无周期数据</string>
+    <string name="statistics_no_records">暂无记录</string>
+
+    <!-- Calendar -->
+    <string name="calendar_predicted_cycle">预测周期</string>
+    <string name="calendar_previous_cycle">上一周期</string>
+    <string name="calendar_next_period">下次月经</string>
+    <string name="calendar_current_day">当前天数</string>
+    <string name="calendar_adjust_cycle">调整周期</string>
+    <string name="calendar_makeup_record">补签记录</string>
+    <string name="calendar_select_phase">选择阶段</string>
+    <string name="calendar_legend">图例：</string>
+    <!-- 图例说明弹框内：实心色块=当天有实际记录；浅色块=仅按周期推算的预测 -->
+    <string name="calendar_legend_actual">已记录</string>
+    <string name="calendar_legend_predicted">预测</string>
+    <!-- 首次进入日历页的图例说明弹框（只弹一次） -->
+    <string name="calendar_legend_guide_title">认识日历颜色</string>
+    <string name="calendar_legend_guide_message">实心色块表示当天有实际记录，浅色色块表示按周期推算的预测。四个阶段的颜色都遵循同样的明暗规则。</string>
+    <string name="calendar_cycle_info">周期信息</string>
+    <string name="calendar_predicted_cycle_with_unit">预测周期(天)</string>
+    <string name="calendar_previous_cycle_with_unit">上一周期(天)</string>
+    <string name="calendar_next_period_label">预计下次月经</string>
+    <string name="calendar_current_day_in_cycle">当前周期第几天</string>
+    <!-- 日历页统计卡：与首页错开，展示记录相关的补充信息 -->
+    <string name="calendar_next_ovulation">下次排卵</string>
+    <string name="calendar_current_phase_label">当前阶段</string>
+    <string name="calendar_recorded_days_label">本周期已记录(天)</string>
+    <!-- 补签弹窗：阶段卡片描述与批量编辑入口 -->
+    <string name="makeup_phase_desc_menstrual">来潮出血期间</string>
+    <string name="makeup_phase_desc_follicular">经期结束至排卵前</string>
+    <string name="makeup_phase_desc_ovulation">排卵日前后，易受孕</string>
+    <string name="makeup_phase_desc_luteal">排卵后至下次经期</string>
+    <string name="makeup_batch_edit">批量调整连续日期</string>
+    <string name="makeup_batch_edit_desc">像涂抹一样框选一段日期统一设置阶段</string>
+    <string name="makeup_select_phase_hint">选择这一天所属的阶段</string>
+    <string name="calendar_manual_correction">手动纠正</string>
+    <string name="calendar_manual_correction_desc">如果预测的周期与实际情况不符，可以手动调整</string>
+    <string name="calendar_makeup_record_title">补签记录 - %s</string>
+    <string name="calendar_no_cycle_record">暂无周期记录，请先完成初始设置</string>
+    <string name="calendar_adjust_cycle_settings">调整周期设置</string>
+    <!-- 长按未来日期时提示不能提前记录 -->
+    <string name="calendar_record_future_not_allowed">未来日期不能记录</string>
+    <!-- 日期格右下角小标记：表示当天颜色来自预测，用户尚未记录 -->
+    <string name="calendar_prediction_marker">预</string>
+    <string name="calendar_recorded_mark">已记录</string>
+    <string name="calendar_recorded_prefix">记·</string>
+    <string name="reminder_mode_label">提醒方式</string>
+    <string name="reminder_mode_date">自选日期</string>
+    <string name="reminder_mode_cycle">按周期节点</string>
+    <string name="reminder_node_period_start">经期开始</string>
+    <string name="reminder_node_period_end">经期结束</string>
+    <string name="reminder_node_follicle">卵泡期开始</string>
+    <string name="reminder_node_ovulation">排卵期开始（易孕期）</string>
+    <string name="reminder_node_luteal">黄体期开始</string>
+    <string name="reminder_node_before_period">月经前 3 天</string>
+    <string name="reminder_cycle_hint">按当前周期设置，每周期的该节点都会提醒一次</string>
+    <string name="reminder_add_date">添加</string>
+    <string name="reminder_empty_dates">请至少添加一个日期</string>
+    <string name="reminder_cycle_prefix">每周期·</string>
+    <string name="reminder_cycle_pending_setup">（完成周期设置后生效）</string>
+
+    <!-- Dialog -->
+    <string name="dialog_title_prompt">提示</string>
+    <string name="dialog_save">保存</string>
+    <string name="dialog_clear">清除</string>
+    <string name="dialog_i_know">我知道了</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_cycle_settings">当前周期设置</string>
+    <string name="settings_last_period_start">上次月经开始</string>
+    <string name="settings_cycle_length">周期长度</string>
+    <string name="settings_period_length">经期长度</string>
+    <string name="settings_edit_cycle_action">编辑</string>
+    <string name="settings_cycle_adjust_hint">如需修改，请到日历页调整</string>
+    <string name="settings_cycle_not_set">尚未设置</string>
+    <string name="settings_reminder_settings">提醒设置</string>
+    <string name="settings_period_reminder">月经提醒</string>
+    <string name="settings_reminder_days">提前提醒天数</string>
+    <string name="settings_reminder_time">提醒时间</string>
+    <string name="settings_data_management">数据管理</string>
+    <string name="settings_export">导出数据</string>
+    <string name="settings_import">导入数据</string>
+    <string name="settings_backup">备份数据</string>
+    <string name="settings_clear_data">清除所有数据</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_privacy">隐私政策</string>
+    <string name="settings_agreement">用户协议</string>
+    <string name="settings_app_icon_title">自定义图标</string>
+    <string name="settings_theme_mode">主题模式</string>
+    <string name="settings_theme_mode_dialog_title">选择主题</string>
+    <string name="settings_theme_follow_system">跟随系统</string>
+    <string name="settings_theme_light">浅色模式</string>
+    <string name="settings_theme_dark">深色模式</string>
+    <string name="icon_style_default">默认</string>
+    <string name="icon_style_moon">蔚蓝月</string>
+    <string name="icon_style_star">薄荷星</string>
+    <string name="icon_style_violet">紫罗兰</string>
+    <string name="icon_style_custom">自定义桌面快捷方式（从相册选择）</string>
+    <string name="icon_style_custom_guide">定制我的专属图标</string>
+    <string name="custom_icon_guide_title">定制专属图标</string>
+    <string name="custom_icon_guide_message">想把应用图标换成自己的图片吗？\n\n1. 挑选 1~3 张你喜欢的图片（正方形最佳）；\n2. 发送到邮箱：%1$s（邮件标题写「定制图标」），或添加微信：%2$s 直接发图；\n3. 我们会在 3 天内回复一个专属安装包——第一张图会成为桌面图标，其余图片会放进「我的图片」里随时切换。\n\n你上传的图片仅用于生成你的定制安装包，不会用于其他用途。若 3 天内没有收到回复，麻烦再次发送申请，谢谢！</string>
+    <string name="custom_contact_email">contact@example.com</string>
+    <string name="custom_contact_wechat">your_wechat_id</string>
+    <string name="icon_style_custom_remove">移除自定义图片</string>
+    <!-- 定制包图标选项：第一张即默认图标，无需单独列出"默认" -->
+    <string name="icon_style_bundled_item">我的图片 %1$d</string>
+    <string name="settings_app_icon_applied">图标已更新，稍后生效</string>
+    <string name="settings_app_icon_custom_applied">自定义图标已应用</string>
+    <string name="settings_app_icon_custom_failed">设置自定义图标失败：%1$s</string>
+    <string name="settings_app_icon_custom_removed">已移除自定义图片</string>
+    <string name="settings_app_icon_shortcut_create">创建桌面快捷方式</string>
+    <string name="settings_app_icon_shortcut_done">已请求创建桌面快捷方式</string>
+    <string name="settings_app_icon_shortcut_unsupported">当前桌面不支持创建快捷方式</string>
+    <string name="settings_app_icon_shortcut_message">系统不允许直接替换桌面图标，但可以在桌面创建一个使用这张图片的快捷方式，点击即可打开应用。</string>
+    <string name="settings_app_icon_shortcut_title">创建桌面快捷方式</string>
+    <string name="settings_app_icon_shortcut_created">桌面快捷方式已创建</string>
+    <string name="settings_app_icon_shortcut_cancelled">未创建桌面快捷方式，操作未成功</string>
+    <string name="settings_app_icon_shortcut_success_message">已使用所选图片在桌面创建快捷方式。</string>
+    <string name="settings_app_icon_shortcut_old_message">Android 不允许应用自动删除桌面快捷方式。如果桌面上还有旧的自定义快捷方式，请长按旧图标手动删除，避免多个快捷方式并存，或旧快捷方式无法打开应用。</string>
+    <string name="icon_rename_longpress_hint">长按图片可重命名</string>
+    <string name="icon_rename_title">重命名图标</string>
+    <string name="icon_rename_hint">输入图片名称</string>
+    <string name="icon_rename_empty">名称不能为空</string>
+    <string name="icon_rename_saved">名称已保存</string>
+    <string name="settings_version">版本</string>
+    <string name="settings_about_app">关于应用</string>
+    <string name="settings_version_label">版本号</string>
+    <string name="settings_custom_reminder">自定义提醒</string>
+    <string name="reminder_manage_title">自定义提醒</string>
+    <string name="reminder_add">新建提醒</string>
+    <string name="reminder_new_title">新建提醒</string>
+    <string name="reminder_edit_title">编辑提醒</string>
+    <string name="reminder_empty">还没有提醒事项，点击右下角按钮添加一条</string>
+    <string name="reminder_title_hint">提醒标题</string>
+    <string name="reminder_message_hint">备注（可选）</string>
+    <!-- 常用提醒快捷项 -->
+    <string name="reminder_presets_label">常用提醒</string>
+    <!-- 预设说明：无周期设置时 / 有周期设置且命中阶段时（%s=阶段名） -->
+    <string name="reminder_presets_hint_fixed">提醒按所选日期触发，不随周期自动变化</string>
+    <string name="reminder_presets_hint_phase">当前处于%s，该阶段常用项已排在前面；提醒按固定日期触发</string>
+    <string name="reminder_preset_progesterone_title">吃黄体酮</string>
+    <string name="reminder_preset_progesterone_message">按医嘱服用黄体酮 / 地屈孕酮</string>
+    <string name="reminder_preset_folic_acid_title">补叶酸</string>
+    <string name="reminder_preset_folic_acid_message">每天一片叶酸，记得按时服用</string>
+    <string name="reminder_preset_bbt_title">测基础体温</string>
+    <string name="reminder_preset_bbt_message">起床后未活动前测量基础体温并记录</string>
+    <string name="reminder_preset_ginger_tea_title">喝红糖姜茶</string>
+    <string name="reminder_preset_ginger_tea_message">经期暖暖肚子，缓解不适</string>
+    <string name="reminder_preset_weight_title">记录体重</string>
+    <string name="reminder_preset_weight_message">记录今天的体重，观察周期变化</string>
+    <string name="reminder_date_label">日期</string>
+    <string name="reminder_time_label">时间</string>
+    <string name="reminder_enabled_label">启用</string>
+    <string name="reminder_delete">删除</string>
+    <string name="reminder_delete_title">删除提醒</string>
+    <string name="reminder_delete_message">确定删除这条提醒吗？</string>
+    <string name="reminder_saved">已保存</string>
+    <string name="reminder_save_failed_title">保存失败</string>
+    <string name="reminder_save_failed_message">提醒保存失败，请重试。</string>
+    <string name="reminder_title_required">请填写提醒标题</string>
+    <string name="reminder_channel_name">自定义提醒</string>
+    <string name="reminder_channel_description">到达设定时间时提醒你（锁屏与通知栏均可见）</string>
+    <string name="reminder_notification_default_text">你有一条提醒</string>
+    <string name="period_reminder_notification_title">月经提醒</string>
+    <string name="period_reminder_notification_text">预计约 %1$d 天后月经来潮，记得提前做好准备哦</string>
+    <string name="reminder_time_passed">提醒时间已过，不会触发通知</string>
+    <string name="reminder_notification_disabled">通知权限未开启，到点将无法提醒，请允许通知</string>
+    <string name="reminder_exact_alarm_open_failed">无法打开系统设置，请在系统设置中手动开启「闹钟与提醒」</string>
+    <string name="reminder_guide_title">让提醒准点到达</string>
+    <string name="reminder_guide_message">为了避免提醒迟到，请给月澜两项系统权限：\n1. 允许「闹钟和提醒」\n2. 允许自启动和后台运行\n否则提醒可能晚几个小时，甚至拖一两天。</string>
+    <string name="reminder_guide_settings">去设置</string>
+    <string name="reminder_guide_dismiss">知道了</string>
+    <string name="reminder_today_title">今日提醒</string>
+    <string name="settings_not_set">未设置</string>
+    <string name="settings_menstrual_days_too_long">经期天数过长：%1$d 天周期最多只能设置 %2$d 天经期，请缩短经期或延长周期</string>
+    <string name="settings_export_success">数据已导出到: %s</string>
+    <string name="settings_export_done">数据导出成功</string>
+    <string name="settings_export_failed">导出失败: %s</string>
+    <string name="settings_no_file_picker">未找到可用的文件选择器</string>
+    <string name="settings_import_title">导入数据</string>
+    <string name="settings_import_message">导入数据将覆盖当前数据，是否继续？</string>
+    <string name="settings_import_button">导入</string>
+    <string name="settings_no_backup_file">未找到备份文件</string>
+    <string name="settings_backup_success">备份成功: %s</string>
+    <string name="settings_clear_data_title">清除数据</string>
+    <string name="settings_clear_button">清除</string>
+    <string name="settings_data_cleared">数据已清除</string>
+    <string name="settings_clear_failed">清除失败: %s</string>
+    <string name="settings_flow_label_with_unit">%d天</string>
+    <string name="settings_default_reminder_days">3天</string>
+    <string name="settings_default_reminder_time">09:00</string>
+    <string name="settings_reminder_days_title">提前提醒天数</string>
+    <string name="settings_clear_data_message">确定要清除所有数据吗？此操作不可恢复！</string>
+    <string name="settings_import_success">数据导入成功</string>
+    <string name="settings_import_failed">导入失败: %s</string>
+    <string name="settings_backup_failed">备份失败</string>
+    <string name="settings_backup_failed_with_msg">备份失败: %s</string>
+    <string name="settings_clear_failed_with_msg">清除失败: %s</string>
+    <string name="settings_privacy_policy_content">月澜（以下简称「本应用」）重视你的隐私。本应用是一款以本地存储为核心的离线工具，数据处理方式如下：\n\n一、数据存储\n1. 你的经期记录、周期设置、提醒设置仅保存在本机的 SQLite 数据库与本地配置中，不会上传到任何服务器。\n2. 本应用无需注册账号，不收集姓名、手机号、身份证号、通讯录等个人信息。\n\n二、权限用途\n1. 通知权限：用于发送经期提醒和自定义提醒。\n2. 闹钟与提醒（精确闹钟）权限：用于按时触发提醒；若未授权，提醒可能延迟。\n3. 开机自启权限：仅用于开机或应用更新后重建提醒闹钟，不会在后台执行其他操作。\n4. 定位权限（可选）：仅用于向 Open-Meteo 天气服务查询所在地天气；拒绝授权时会使用默认城市坐标，不影响记录功能。位置信息不会被本应用保存。\n\n三、网络访问\n1. 天气查询会向 Open-Meteo（api.open-meteo.com）发送粗略经纬度，仅用于获取天气，不包含任何经期数据。\n2. 若配置了更新检查地址，应用会请求该地址获取版本信息，不会上传你的记录。\n3. 本应用不集成广告、统计或社交 SDK，不会与第三方共享你的数据。\n\n四、数据导出与删除\n1. 你可以通过系统文件选择器主动把数据导出为本地文件，导出文件由你自行保管。\n2. 你可以在设置页随时清空全部数据；卸载应用也会删除本地数据库。\n\n五、联系我们\n如对本政策有疑问，可通过应用内展示的联系方式与我们联系。</string>
+    <string name="settings_user_agreement_content">欢迎使用月澜！\n\n一、服务说明\n本应用是一款本地经期记录与预测工具，提供周期记录、四阶段预测、日历视图、统计图表、自定义提醒和图标定制等功能。\n\n二、非医疗建议\n本应用的预测结果基于你录入的数据和常见周期规律推算，仅供参考，不构成医疗诊断或治疗建议。如有健康问题，请咨询专业医生。\n\n三、数据与备份\n1. 数据保存在你的设备本地，请自行通过「导出数据」做好备份。\n2. 卸载应用、清除应用数据或更换设备可能导致数据丢失，本应用不承担由此产生的责任。\n\n四、图标定制\n若你使用图标定制服务，你上传的图片仅用于生成对应的定制安装包，不会用于其他用途。请确保你拥有所上传图片的使用权。\n\n五、免责声明\n本应用按「现状」提供。在法律允许的范围内，开发者不对因使用或无法使用本应用造成的任何直接或间接损失承担责任。\n\n六、协议变更\n我们可能随版本更新调整本协议，更新后的内容会在应用内展示。继续使用即视为接受更新后的协议。</string>
+
+    <!-- Home -->
+    <string name="fragment_home_today_record">今日记录</string>
+    <string name="fragment_home_flow_level_label">月经流量：</string>
+    <string name="fragment_home_pain_level_label">痛经程度：</string>
+    <string name="fragment_home_record_button">记录</string>
+
+    <!-- Record list -->
+    <string name="record_no_suggestion">暂无建议</string>
+    <string name="record_flow_label">流量：%s</string>
+    <string name="record_pain_label">痛经：%s</string>
+    <string name="record_flow_score_label">PBAC：%d</string>
+
+    <!-- Record detail -->
+    <string name="record_detail_flow_record_title">月经流量记录 (PBAC评估法)</string>
+    <string name="record_detail_pad_staining_level">卫生巾血染程度</string>
+    <string name="record_detail_clot_size">血块大小</string>
+    <string name="record_detail_notes_hint">记录今日身体状况...</string>
+    <string name="record_detail_flow_score_label">PBAC评分: %d分</string>
+    <string name="record_detail_flow_score_init">PBAC评分: 0分</string>
+    <string name="record_detail_date_placeholder">2024年01月01日 周一</string>
+    <string name="record_detail_pain_0">无痛经</string>
+    <string name="record_detail_pain_1">轻度痛经</string>
+    <string name="record_detail_pain_2">中度痛经</string>
+    <string name="record_detail_pain_3">严重痛经</string>
+    <string name="record_detail_pain_4">剧痛</string>
+    <string name="record_detail_pain_text_0">无痛经</string>
+    <string name="record_detail_pain_text_1">轻度</string>
+    <string name="record_detail_pain_text_2">中度</string>
+    <string name="record_detail_pain_text_3">严重</string>
+    <string name="record_detail_pain_text_4">剧痛</string>
+    <string name="record_detail_pain_no_data">无痛经</string>
+    <string name="record_detail_not_menstrual_hint">当前不在经期，暂无可记录的流量 / 痛经数据</string>
+    <string name="record_detail_mark_menstrual">标记今天为经期</string>
+    <string name="record_detail_pbac_hint">评分 = 少量×1 + 适中×5 + 浸透×20，小血块×1、大血块×5；按天累计、无上限，超过 100 分提示经量偏多</string>
+    <string name="record_detail_flow_no_data">无</string>
+
+    <!-- Record Detail -->
+    <string name="record_detail_title">记录详情</string>
+    <string name="record_detail_flow">月经流量</string>
+    <string name="record_detail_pain">痛经程度</string>
+    <string name="record_detail_notes">备注</string>
+    <string name="record_detail_notes_flow">流量备注</string>
+    <string name="record_detail_notes_pain">痛经备注</string>
+    <string name="record_detail_save">保存</string>
+    <string name="record_detail_cancel">取消</string>
+    <!-- 删除当天记录 -->
+    <string name="record_detail_delete">删除这条记录</string>
+    <string name="record_detail_delete_confirm_title">删除记录</string>
+    <string name="record_detail_delete_confirm_message">确定删除这一天的记录吗？删除后该日期会恢复为预测状态。</string>
+    <string name="record_detail_delete_confirm">删除</string>
+    <string name="record_detail_delete_failed">删除失败</string>
+    <string name="record_detail_pad_light">轻度血染</string>
+    <string name="record_detail_pad_medium">中度血染</string>
+    <string name="record_detail_pad_heavy">重度血染</string>
+    <string name="record_detail_clot_small">小血块</string>
+    <string name="record_detail_clot_large">大血块</string>
+    <string name="record_detail_pain_none">无痛经</string>
+    <string name="record_detail_pain_mild">轻度</string>
+    <string name="record_detail_pain_moderate">中度</string>
+    <string name="record_detail_pain_severe">重度</string>
+    <string name="record_detail_pain_extreme">剧烈</string>
+
+    <!-- Record Adapter -->
+    <string name="record_adapter_no_suggestion">暂无建议</string>
+    <string name="record_adapter_flow_label">流量: %1$s (%2$d分)</string>
+    <string name="record_adapter_pain_label">痛经: %1$s</string>
+
+    <!-- Flow Level -->
+    <string name="flow_level_light">轻度</string>
+    <string name="flow_level_medium">中度</string>
+    <string name="flow_level_heavy">重度</string>
+    <string name="flow_level_not_recorded">未记录</string>
+
+    <!-- Home Fragment Tips -->
+    <string name="home_no_tips_today">暂无今日建议</string>
+    <string name="home_complete_initial_setup">请先完成初始设置</string>
+    <string name="home_tip_menstrual_1">• 今日处于月经期，注意保暖</string>
+    <string name="home_tip_menstrual_2">• 避免生冷食物和剧烈运动</string>
+    <string name="home_tip_menstrual_3">• 保持充足睡眠，多喝温水</string>
+    <string name="home_tip_menstrual_4">• 如有痛经可适当热敷腹部</string>
+    <string name="home_tip_follicular_1">• 今日处于卵泡期，精力充沛</string>
+    <string name="home_tip_follicular_2">• 适合进行重要工作和学习</string>
+    <string name="home_tip_follicular_3">• 可以适当增加运动量</string>
+    <string name="home_tip_follicular_4">• 注意营养均衡，多吃蔬菜水果</string>
+    <string name="home_tip_ovulation_1">• 今日处于排卵期，状态最佳</string>
+    <string name="home_tip_ovulation_2">• 适合进行重要决策和社交活动</string>
+    <string name="home_tip_ovulation_3">• 注意避孕或备孕规划</string>
+    <string name="home_tip_ovulation_4">• 保持良好的作息习惯</string>
+    <string name="home_tip_lute_1">• 今日处于黄体期，注意休息</string>
+    <string name="home_tip_lute_2">• 可能出现情绪波动，保持心情愉悦</string>
+    <string name="home_tip_lute_3">• 避免过度劳累</string>
+    <string name="home_tip_lute_4">• 适当进行舒缓运动如瑜伽</string>
+
+    <!-- Daily Suggestion -->
+    <string name="daily_suggestion_date_placeholder">2026年3月26日</string>
+    <string name="daily_suggestion_title">今日建议</string>
+    <string name="daily_suggestion_default">注意保暖，多休息，避免剧烈运动和生冷食物。</string>
+    <string name="daily_suggestion_prev_day">前一天</string>
+    <string name="daily_suggestion_next_day">后一天</string>
+    <string name="daily_suggestion_no_record">无记录</string>
+    <string name="daily_suggestion_no_record_suggestion">该日期暂无记录</string>
+    <string name="daily_suggestion_future_hint">未来日期仅展示预测，当天到来后才能记录</string>
+    <string name="daily_suggestion_predicted_phase">预测：%1$s</string>
+    <string name="phase_edit_island_message">这一天前后都是%1$s，只修改这一天会形成不连贯的记录。请批量调整该日期至今的阶段。</string>
+    <string name="phase_edit_backward_message">前一天是%1$s，所选阶段在周期顺序上更早。请批量调整该日期至今的阶段。</string>
+    <string name="phase_edit_option_resequence">批量调整阶段</string>
+    <string name="phase_edit_option_single_day">仅修改当天</string>
+    <string name="phase_edit_luteal_to_period_message">前一天还是黄体期，这一天不符合当前阶段顺序。保存后只记录这一天，不会重排预测周期。</string>
+    <string name="phase_edit_save_single_day">仍然保存这一天</string>
+    <!-- 阶段范围编辑器 -->
+    <string name="phase_range_title">调整阶段</string>
+    <string name="phase_range_range_label">范围：%1$s 至今天</string>
+    <string name="phase_range_range_label_range">范围：%1$s 至 %2$s</string>
+    <string name="phase_range_hint">先点选下方阶段画笔，再点按或滑过日期批量涂抹；相邻天只能保持同一阶段，或按 月经期 → 卵泡期 → 排卵期 → 黄体期 顺序推进。</string>
+    <string name="phase_range_month_title">%1$d年%2$d月</string>
+    <string name="phase_range_day_count">%1$s %2$d 天</string>
+    <string name="phase_range_invalid_title">阶段顺序不连贯</string>
+    <string name="phase_range_invalid_message">%1$s 是%2$s，%3$s 不能直接改成%4$s。请按 月经期 → 卵泡期 → 排卵期 → 黄体期 的顺序调整。</string>
+    <string name="phase_range_saved">阶段已保存</string>
+    <string name="cancel">取消</string>
+    <string name="settings_update_cycle_title">更新本轮周期</string>
+    <string name="daily_suggestion_no_remind_today">今日不再提醒</string>
+    <string name="daily_suggestion_reminder_section">当日提醒</string>
+    <string name="daily_suggestion_close">知道了</string>
+
+    <!-- Calendar -->
+    <string name="calendar_weekday_sun">日</string>
+    <string name="calendar_weekday_mon">一</string>
+    <string name="calendar_weekday_tue">二</string>
+    <string name="calendar_weekday_wed">三</string>
+    <string name="calendar_weekday_thu">四</string>
+    <string name="calendar_weekday_fri">五</string>
+    <string name="calendar_weekday_sat">六</string>
+    <string name="calendar_today">今日</string>
+    <string name="calendar_today_schedule">今日安排</string>
+    <string name="calendar_schedule_suffix"> 安排</string>
+    <string name="calendar_no_schedule_today">今天没有安排</string>
+    <string name="calendar_no_schedule_that_day">这天没有事项</string>
+    <string name="calendar_event_count_1">1项</string>
+    <string name="calendar_event_count_n">%d项</string>
+    <string name="calendar_event_count_many">多项</string>
+    <string name="calendar_tag_meeting">会议</string>
+    <string name="calendar_tag_review">复盘</string>
+    <string name="calendar_tag_birthday">生日</string>
+    <string name="calendar_tag_travel">旅行</string>
+    <string name="calendar_tag_visit">拜访</string>
+    <string name="calendar_tag_important">重要</string>
+    <string name="calendar_tag_deadline">截止</string>
+    <string name="calendar_tag_team">团队</string>
+    <string name="calendar_tag_demo">演示</string>
+    <string name="calendar_tag_family">家庭</string>
+    <string name="calendar_tag_release">发布</string>
+    <string name="calendar_tag_design">设计</string>
+    <string name="calendar_tag_training">培训</string>
+    <string name="calendar_tag_planning">计划</string>
+    <string name="calendar_tag_requirement">需求</string>
+    <string name="calendar_tag_test">测试</string>
+    <string name="calendar_tag_deploy">部署</string>
+    <string name="calendar_tag_summary">总结</string>
+    <string name="calendar_tag_default">事项</string>
+
+    <!-- Weather -->
+    <string name="weather_rainy">雨天，出门记得带伞。</string>
+    <string name="weather_snowy">下雪天，注意保暖，路面湿滑小心行走。</string>
+    <string name="weather_foggy">雾天出行注意安全。</string>
+    <string name="weather_sunny">晴朗的好天气。</string>
+    <string name="weather_cold">天气寒冷，注意保暖。</string>
+    <string name="weather_hot">天气炎热，注意防晒补水。</string>
+
+    <!-- Dialog -->
+    <string name="dialog_confirm">确认</string>
+    <string name="dialog_cancel">取消</string>
+    <string name="dialog_ok">确定</string>
+    <string name="dialog_clear_data_title">清除所有数据</string>
+    <string name="dialog_clear_data_message">确定要清除所有数据吗？此操作不可恢复。</string>
+    <string name="dialog_export_success">数据导出成功</string>
+    <string name="dialog_export_failed">导出失败</string>
+    <string name="dialog_import_success">数据导入成功</string>
+    <string name="dialog_import_failed">导入失败</string>
+    <string name="dialog_backup_success">备份完成</string>
+    <string name="dialog_backup_failed">备份失败</string>
+    <string name="dialog_no_data">暂无数据</string>
+
+    <!-- Today Tips -->
+    <string name="today_tips_menstrual">• 今日处于月经期，注意保暖\n• 避免生冷食物和剧烈运动\n• 保持充足睡眠，多喝温水\n• 如有痛经可适当热敷腹部</string>
+    <string name="today_tips_follicular">• 今日处于卵泡期，精力充沛\n• 适合进行重要工作和学习\n• 可以适当增加运动量\n• 注意营养均衡，多吃蔬菜水果</string>
+    <string name="today_tips_ovulation">• 今日处于排卵期，状态最佳\n• 适合进行重要决策和社交活动\n• 注意避孕或备孕规划\n• 保持良好的作息习惯</string>
+    <string name="today_tips_luteal">• 今日处于黄体期，注意休息\n• 可能出现情绪波动，保持心情愉悦\n• 避免过度劳累\n• 适当进行舒缓运动如瑜伽</string>
+    <string name="today_tips_no_setup">请先完成初始设置</string>
+    <string name="today_tips_no_suggestion">暂无今日建议</string>
+    <string name="today_tips_loading">加载中...</string>
+
+    <!-- 月经期多条建议 -->
+    <string-array name="menstrual_period_suggestions">
+        <item>月经期注意保暖，避免生冷食物。</item>
+        <item>月经期可适量喝红糖姜茶，缓解不适。</item>
+        <item>月经期避免剧烈运动，多休息。</item>
+        <item>月经期保持心情舒畅，避免熬夜。</item>
+    </string-array>
+
+    <!-- 卵泡期多条建议 -->
+    <string-array name="follicular_phase_suggestions">
+        <item>卵泡期是养卵的好时机，可多吃豆制品。</item>
+        <item>卵泡期适合适量运动，增强体质。</item>
+        <item>卵泡期注意补充优质蛋白和叶酸。</item>
+    </string-array>
+
+    <!-- 排卵期多条建议 -->
+    <string-array name="ovulation_period_suggestions">
+        <item>排卵期受孕几率高，如有备孕计划可安排同房。</item>
+        <item>排卵期分泌物增多，注意个人卫生。</item>
+        <item>排卵期保持轻松心态，避免压力过大。</item>
+    </string-array>
+
+    <!-- 黄体期多条建议 -->
+    <string-array name="lute_phase_suggestions">
+        <item>黄体期可能出现情绪波动，多听音乐放松。</item>
+        <item>黄体期易水肿，饮食宜清淡。</item>
+        <item>黄体期注意补充维生素B6，缓解焦虑。</item>
+    </string-array>
+
+    <!-- 每日引导弹窗（在预测的关键日期进入首页时弹出） -->
+    <string name="daily_prompt_menstrual_title">今天预计是经期</string>
+    <string name="daily_prompt_menstrual_message">记录一下流量和痛经，让预测更准确。</string>
+    <string name="daily_prompt_menstrual_record">记录一下</string>
+    <string name="daily_prompt_cycle_wrong">周期不准？</string>
+    <string name="daily_prompt_dont_show_today">今天不再提醒</string>
+    <string name="daily_prompt_ovulation_title">今天是预测排卵期</string>
+    <string name="daily_prompt_ovulation_message">可以记录一下身体状况（备孕时更有帮助）。</string>
+    <string name="daily_prompt_approaching_title">月经快到了</string>
+    <string name="daily_prompt_approaching_message">预计 3 天内来月经，准备好卫生用品。</string>
+    <string name="daily_prompt_got_it">知道了</string>
+
+    <!-- 纠错周期弹窗 -->
+    <string name="cycle_correction_title">调整周期</string>
+    <string name="cycle_correction_start_date">本次经期起始日</string>
+    <string name="cycle_correction_select_date">选择日期</string>
+    <string name="cycle_correction_hint">调整后会重新生成所有预测记录。</string>
+
+    <!-- 应用更新检测 -->
+    <string name="settings_check_update">检查更新</string>
+    <string name="update_check_title">发现新版本 v%1$s</string>
+    <string name="update_check_current_version">当前版本：v%1$s</string>
+    <string name="update_check_no_notes">该版本暂无更新说明。</string>
+    <string name="update_check_update_now">立即更新</string>
+    <string name="update_check_later">稍后</string>
+    <string name="update_check_latest">已是最新版本</string>
+    <string name="update_check_failed">检查更新失败，请稍后再试</string>
+    <string name="update_check_unconfigured">未配置更新检查地址</string>
+
+    <!-- 提醒重复规则 -->
+    <string name="reminder_repeat_label">重复规则</string>
+    <string name="reminder_repeat_once">仅一次</string>
+    <string name="reminder_repeat_daily">每天</string>
+    <string name="reminder_repeat_weekly">每周</string>
+    <string name="reminder_repeat_monthly">每月</string>
+    <string name="reminder_repeat_interval">间隔</string>
+    <string name="reminder_repeat_multi_date">指定日期</string>
+    <string name="reminder_repeat_weekly_format">每周%1$s</string>
+    <string name="reminder_repeat_monthly_format">每月%1$s日</string>
+    <string name="reminder_repeat_interval_format">每%1$d天</string>
+    <string name="reminder_repeat_multi_date_format">指定 %1$d 个日期</string>
+    <string name="reminder_repeat_until">重复至</string>
+    <string name="reminder_repeat_forever">长期有效</string>
+    <string name="reminder_repeat_months_1">1个月</string>
+    <string name="reminder_repeat_months_3">3个月</string>
+    <string name="reminder_repeat_months_6">6个月</string>
+    <string name="reminder_repeat_months_12">1年</string>
+    <string name="reminder_start_date_label">开始日期</string>
+    <string name="reminder_weekdays_label">重复星期</string>
+    <string name="reminder_month_day_label">每月几号</string>
+    <string name="reminder_interval_label">间隔天数</string>
+    <string name="reminder_interval_value">每 %1$d 天</string>
+    <string name="reminder_repeat_empty_weekdays">请至少选择一个星期</string>
+    <string name="reminder_repeat_empty_days">请至少选择一个日期</string>
+    <string name="reminder_node_label">周期节点</string>
+    <string name="reminder_remind_on">提醒时间</string>
+    <string name="reminder_preview_once">%1$s %2$s 提醒一次</string>
+    <string name="reminder_preview_repeat">从 %1$s 起，%2$s %3$s</string>
+    <string name="reminder_preview_until">，至 %1$s</string>
+    <string name="reminder_preview_cycle">每周期 %1$s · %2$s</string>
+    <string name="reminder_preview_multi_date">将在选中的 %1$d 个日期 %2$s 提醒</string>
+    <string name="reminder_multi_date_label">已选日期（点击标签可删除）</string>
+    <string name="reminder_multi_date_add">＋ 添加日期</string>
+    <string name="reminder_multi_date_pick_title">选择日期</string>
+    <string name="reminder_next_prefix">下次</string>
+    <string name="reminder_weekday_mon">一</string>
+    <string name="reminder_weekday_tue">二</string>
+    <string name="reminder_weekday_wed">三</string>
+    <string name="reminder_weekday_thu">四</string>
+    <string name="reminder_weekday_fri">五</string>
+    <string name="reminder_weekday_sat">六</string>
+    <string name="reminder_weekday_sun">日</string>
+    <string name="reminder_preset_recommended_suffix">推荐</string>
+
+    <!-- 引导页 -->
+    <string name="onboarding_welcome_badge">轻记录 · 懂周期</string>
+    <string name="onboarding_feature_record">周期记录</string>
+    <string name="onboarding_feature_predict">智能预测</string>
+    <string name="onboarding_feature_reminder">温柔提醒</string>
+    <string name="onboarding_setup_step_badge">第 2 步 · 基础设置</string>
+    <string name="onboarding_setup_subtitle">只需两步，帮我们了解你的周期，预测会更准确</string>
+    <string name="onboarding_cycle_min_hint">21 天</string>
+    <string name="onboarding_cycle_max_hint">45 天</string>
+    <string name="onboarding_period_min_hint">2 天</string>
+    <string name="onboarding_period_max_hint">16 天</string>
+    <string name="onboarding_privacy_hint">所有数据仅保存在本机，不会上传；设置可随时在「我的」中修改</string>
+
+    <!-- 上次月经开始时间晚于今天 -->
+    <string name="cycle_start_after_today_title">开始日期无效</string>
+    <string name="cycle_start_after_today_message">上次月经开始时间不能晚于今天，请重新选择。</string>
+    <string name="cycle_start_after_today_reselect">重新选择</string>
+
+    <!-- 强提醒（全屏闹钟） -->
+    <string name="reminder_full_screen_label">强提醒（全屏闹钟）</string>
+    <string name="reminder_full_screen_hint">到点会点亮屏幕全屏提醒并响铃，需要允许“全屏通知”</string>
+    <string name="alarm_full_screen_dismiss">关闭提醒</string>
+    <string name="reminder_alarm_channel_name">强提醒闹钟</string>
+    <string name="reminder_alarm_channel_description">到点全屏提醒并响铃</string>
+    <string name="reminder_full_screen_permission_title">开启全屏通知</string>
+    <string name="reminder_full_screen_permission_message">系统当前不允许本应用使用全屏通知，强提醒到点可能只显示横幅。请在系统设置中允许「全屏通知」，才能点亮屏幕全屏提醒。</string>
+
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 默认圆形桌面图标（API 26+）：与 ic_launcher 共用同一份矢量图形 -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_art_whale_moon"/>
+    <foreground android:drawable="@android:color/transparent"/>
+</adaptive-icon>

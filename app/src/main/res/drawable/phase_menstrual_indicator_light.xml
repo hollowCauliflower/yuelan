@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 预测色块图例：与日历中预测日期的 20% 透明度底色一致 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#33FF6B93"/>
+    <corners android:radius="4dp"/>
+</shape>

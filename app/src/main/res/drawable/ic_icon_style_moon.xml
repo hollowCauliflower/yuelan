@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 预设图标 2：蔚蓝月（蓝色圆底 + 白色月牙与星点） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 圆底：蔚蓝渐变 -->
+    <path android:pathData="M54,54m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="24"
+                android:startY="20"
+                android:endX="86"
+                android:endY="92">
+                <item android:color="#FF7EA8FF" android:offset="0.0" />
+                <item android:color="#FF4A6CF7" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 月牙 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M56,28 A26,26 0,1 0,56,80 A32,32 0,0 1,56,28 Z" />
+
+    <!-- 点缀星点 -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M74,36 m-3.5,0 a3.5,3.5 0,1 1,7,0 a3.5,3.5 0,1 1,-7,0" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M70,64 m-2.5,0 a2.5,2.5 0,1 1,5,0 a2.5,2.5 0,1 1,-5,0" />
+</vector>

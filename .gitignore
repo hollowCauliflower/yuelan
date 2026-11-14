@@ -1,0 +1,46 @@
+*.iml
+.gradle
+/local.properties
+# IDE 本地配置：不同机器的路径、运行配置、本地历史都不同，不入库
+/.idea/
+/.vscode/
+.DS_Store
+/build
+/app/build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# 定制图标打包脚本的本地配置（含邮箱授权码）与收发/输出目录,icon_packager.config.json文件格式如下，自行创建该文件
+# {
+#   "_说明": "email_auth_code 填 QQ 邮箱授权码（QQ邮箱网页版 → 设置 → 账户 → 开启 IMAP/SMTP 服务 → 生成授权码），不是登录密码。本文件含敏感信息，请勿提交到代码仓库。",
+#   "email_account": "3107791179@qq.com",
+#   "email_auth_code": "xxxxxxxxxx",
+#   "imap_host": "imap.qq.com",
+#   "smtp_host": "smtp.qq.com"
+# }
+/tools/icon_packager.config.json
+/tools/inbox/
+/tools/dist/
+# 打包脚本每次用 javac 重新生成的 class 文件
+/tools/*.class
+
+# release 签名密钥与密码配置（严禁提交到公开仓库，请自行备份）格式如下：自行创建signing.properties文件
+# storeFile=xxxxxxxxx.jks
+# storePassword=xxxxxxxxx
+# keyAlias=xxxxxxxxx
+# keyPassword=xxxxxxxxx
+/signing.properties
+/keystore/
+# 兜底：密钥文件放在 keystore/ 之外的目录时也不允许提交
+*.jks
+*.keystore
+
+# 构建日志、临时目录与历史验证/截图产物
+/build_*.txt
+/.tmp/
+/.screenshots/
+/verification/
+/verification_*/
+/screenshots/

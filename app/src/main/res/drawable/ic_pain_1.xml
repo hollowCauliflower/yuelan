@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 小月亮表情记·1级 轻微：圆点眼 + 浅微笑 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF87A6"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M12,4.5 A7.5,7.5 0 1,1 12,19.5 A7.5,7.5 0 1,1 12,4.5 Z"/>
+    <path
+        android:fillColor="#FF87A6"
+        android:pathData="M9.5,11.2 m-1.1,0 a1.1,1.1 0 1,0 2.2,0 a1.1,1.1 0 1,0 -2.2,0"/>
+    <path
+        android:fillColor="#FF87A6"
+        android:pathData="M14.5,11.2 m-1.1,0 a1.1,1.1 0 1,0 2.2,0 a1.1,1.1 0 1,0 -2.2,0"/>
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF87A6"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M9.5,14.5 Q12,15.5 14.5,14.5"/>
+</vector>

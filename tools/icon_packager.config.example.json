@@ -1,0 +1,8 @@
+{
+  "_说明": "QQ 邮箱授权码：QQ邮箱网页版 → 设置 → 账户 → POP3/IMAP/SMTP/Exchange/CardDAV/CalDAV服务 → 生成授权码。本文件含敏感信息，已加入 .gitignore，请勿提交。",
+  "email_account": "你的QQ号@qq.com",
+  "email_auth_code": "授权码（不是QQ密码）",
+  "imap_host": "imap.qq.com",
+  "smtp_host": "smtp.qq.com",
+  "build_type": "debug"
+}

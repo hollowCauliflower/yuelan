@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 功能卡片·下次经期：描边日历 + 实心水滴 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 日历框（描边） -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF6B6B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M4.6,6.2 H19.4 V19.6 H4.6 Z" />
+
+    <!-- 挂环 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF6B6B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M8.2,3.2 V7" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF6B6B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M15.8,3.2 V7" />
+
+    <!-- 水滴（实心） -->
+    <path
+        android:fillColor="#FF6B6B"
+        android:pathData="M12,10.4 C11,11.8 10,13.4 10,14.6 C10,15.9 10.9,16.9 12,16.9 C13.1,16.9 14,15.9 14,14.6 C14,13.4 13,11.8 12,10.4 Z" />
+</vector>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主色调 - 温柔粉色系 -->
+    <color name="pink_primary">#FFB6C1</color>      <!-- 浅粉红/淡肉色 -->
+    <color name="pink_primary_variant">#FF69B4</color>  <!-- 热粉色 -->
+    <color name="pink_secondary">#FFD1DC</color>    <!-- 柔粉色 -->
+    <color name="pink_secondary_variant">#FFC0CB</color> <!-- 粉红色 -->
+
+    <!-- 辅助色 -->
+    <color name="pink_accent">#FF4081</color>       <!-- 粉红色强调色 -->
+    <color name="pink_light">#FFF0F5</color>        <!-- 薰衣草粉 -->
+    <color name="pink_lighter">#FFF9FB</color>      <!-- 最浅粉 -->
+
+    <!-- 文字颜色 -->
+    <color name="text_primary">#8B475D</color>      <!-- 深粉红 -->
+    <color name="text_secondary">#B76E79</color>    <!-- 玫瑰红 -->
+    <color name="text_disabled">#D4B2B8</color>     <!-- 浅灰粉 -->
+
+    <!-- 背景色 -->
+    <color name="background">#FFF9FB</color>        <!-- 淡粉色背景 -->
+    <color name="surface">#FFFFFF</color>           <!-- 白色表面 -->
+
+    <!-- 底部导航栏颜色 -->
+    <color name="nav_item_color">@color/selector_nav_color</color>
+
+
+    <color name="primary_color">#FF6B8E</color>
+    <color name="secondary_color">#FFD1DC</color>
+    <color name="light_pink_background">#FFF5F7</color>
+
+    <color name="white">#FFFFFF</color>
+
+    <!-- 粉色主题 -->
+    <color name="pink_dark">#C60055</color>
+    <color name="pink_background">#FFF5F8</color>
+    <color name="pink_surface">#FFEBF3</color>
+
+    <!-- 文字颜色 -->
+    <color name="text_on_pink">#FFFFFF</color>
+
+    <!-- 其他 -->
+    <color name="black">#000000</color>
+    <color name="gray_light">#F5F5F5</color>
+
+    <!-- 指示器 -->
+    <color name="indicator_normal">#E0E0E0</color>
+    <color name="indicator_selected">#FF4081</color>
+
+    <!-- 月经周期各阶段颜色标识 -->
+    <!-- 月经期 -->
+    <color name="menstrual_period_color">#FF7BA0</color>
+    <color name="menstrual_period_color_dark">#E91E63</color>
+    <!-- 卵泡期 -->
+    <color name="follicular_phase_color">#66BB6A</color>
+    <color name="follicular_phase_color_dark">#388E3C</color>
+    <!-- 排卵期 -->
+    <color name="ovulation_period_color">#FFB74D</color>
+    <color name="ovulation_period_color_dark">#F57C00</color>
+    <!-- 黄体期 -->
+    <color name="lute_phase_color">#64B5F6</color>
+    <color name="lute_phase_color_dark">#1976D2</color>
+
+    <!-- 阶段标签颜色 -->
+    <color name="phase_menstrual">#FF6B93</color>
+    <color name="phase_follicular">#4CAF50</color>
+    <color name="phase_ovulation">#FF9800</color>
+    <color name="phase_luteal">#2196F3</color>
+    <!-- 日历选中日专用色：紫色，与四个阶段色均不冲突 -->
+    <color name="calendar_selection">#9C27B0</color>
+    <color name="gray">#9E9E9E</color>
+
+    <!-- 语义色：随深浅色主题切换（深色值见 values-night/colors.xml） -->
+    <!-- 页面背景 -->
+    <color name="app_background">#F8F9FA</color>
+    <!-- 卡片/弹窗/底部导航表面 -->
+    <color name="card_surface">#FFFFFF</color>
+    <!-- 卡片内部的浅色区块 -->
+    <color name="inset_surface">#F8F9FA</color>
+    <!-- 输入框背景 -->
+    <color name="input_background">#FFFFFF</color>
+    <!-- 分割线 -->
+    <color name="divider">#ECECEC</color>
+
+    <!-- 内容块底色 -->
+    <color name="tile_pink">#FFF5F7</color>
+    <color name="tile_yellow">#FFF8E1</color>
+    <color name="tile_violet">#FFF2F6</color>
+    <color name="tile_green">#E8F5E9</color>
+    <!-- 提示浮层底色 -->
+    <color name="tooltip_background">#CCFFFFFF</color>
+    <!-- 小圆标底色 -->
+    <color name="badge_background">#FFF0F5</color>
+
+    <!-- 品牌主按钮底色（深色值见 values-night/colors.xml） -->
+    <color name="brand_primary">#FF6B93</color>
+    <!-- 次级按钮描边色（深色值见 values-night/colors.xml） -->
+    <color name="outline_stroke">#E0E0E0</color>
+
+    <!-- 文字层级 -->
+    <color name="text_title">#1A1A1A</color>
+    <color name="text_body">#333333</color>
+    <color name="text_sub">#666666</color>
+    <color name="text_hint">#999999</color>
+
+    <!-- 启动页背景 -->
+    <color name="splash_background">#FFF9FB</color>
+
+    <!-- 引导页渐变背景与“下一步”按钮（深色值见 values-night/colors.xml） -->
+    <color name="onboarding_gradient_start">#FFFFFF</color>
+    <color name="onboarding_gradient_center">#FFF5F8</color>
+    <color name="onboarding_gradient_end">#FFEBF3</color>
+    <color name="onboarding_button_background">#FFFFFF</color>
+    <color name="onboarding_button_text">#B76E79</color>
+    <color name="onboarding_button_stroke">#FFB6C1</color>
+
+    <!-- 底部导航选中指示器（粉色胶囊） -->
+    <color name="nav_indicator">#FFE9F1</color>
+    <!-- 开关控件：选中粉、未选中灰 -->
+    <color name="switch_thumb_checked">#FFFFFFFF</color>
+    <color name="switch_thumb_unchecked">#FFFFFFFF</color>
+    <color name="switch_track_checked">#FF6B8E</color>
+    <color name="switch_track_unchecked">#FFE0E0E0</color>
+
+</resources>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 小月亮表情记·4级 剧烈：X眼 + 下弯痛苦嘴 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#B32749"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M12,4.5 A7.5,7.5 0 1,1 12,19.5 A7.5,7.5 0 1,1 12,4.5 Z"/>
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#B32749"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M8,9.5 L11,12 M11,9.5 L8,12"/>
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#B32749"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M16,9.5 L13,12 M13,9.5 L16,12"/>
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#B32749"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M9,15.5 Q12,13.5 15,15.5"/>
+</vector>

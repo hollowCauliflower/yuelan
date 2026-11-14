@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 强提醒（全屏闹钟）页面：到点后点亮屏幕、全屏展示提醒内容，
+     用户点击“关闭提醒”才停止响铃与震动。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_pink_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="32dp">
+
+        <!-- 当前时间：闹钟页面的大号主视觉 -->
+        <TextView
+            android:id="@+id/tv_alarm_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_title"
+            android:textSize="56sp"
+            android:textStyle="bold" />
+
+        <!-- 提醒标题 -->
+        <TextView
+            android:id="@+id/tv_alarm_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:textColor="@color/text_title"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <!-- 提醒备注 -->
+        <TextView
+            android:id="@+id/tv_alarm_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.3"
+            android:textColor="@color/text_body"
+            android:textSize="16sp" />
+
+        <!-- 关闭按钮：点击后停止铃声/震动并退出全屏页 -->
+        <TextView
+            android:id="@+id/btn_alarm_dismiss"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="48dp"
+            android:background="@drawable/btn_primary_background"
+            android:gravity="center"
+            android:text="@string/alarm_full_screen_dismiss"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</FrameLayout>

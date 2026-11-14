@@ -1,0 +1,14 @@
+# release 签名配置模板
+#
+# 使用方法：
+# 1. 把本文件复制为项目根目录的 signing.properties（已加入 .gitignore，不会被提交）；
+# 2. 按实际情况填写下面的字段（storeFile 支持相对项目根目录的路径或绝对路径）；
+# 3. 也可以不建文件，改用同名环境变量覆盖：
+#    YUELAN_STORE_FILE / YUELAN_STORE_PASSWORD / YUELAN_KEY_ALIAS / YUELAN_KEY_PASSWORD
+#
+# 没有配置签名时，assembleRelease 仍可执行，但只会产出未签名 APK（无法直接安装）。
+
+storeFile=keystore/yuelan-release.jks
+storePassword=请填写你的密钥库密码
+keyAlias=yuelan
+keyPassword=请填写你的密钥密码

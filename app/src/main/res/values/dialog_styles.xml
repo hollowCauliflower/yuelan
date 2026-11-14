@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        品牌化 Dialog 主题：供 AppDialogFactory 自定义布局使用。
+        背景交给布局自绘（dialog_background 24dp），这里只负责窗口与文字色。
+    -->
+    <style name="Theme.Yuelan.Dialog" parent="Theme.Material3.DayNight.Dialog.Alert">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+        <item name="colorSurface">@color/card_surface</item>
+        <item name="colorOnSurface">@color/text_title</item>
+        <item name="colorPrimary">@color/pink_primary_variant</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSurfaceContainerHigh">@color/card_surface</item>
+        <item name="colorOnSurfaceVariant">@color/text_body</item>
+        <item name="dialogCornerRadius">24dp</item>
+        <item name="android:textColorPrimary">@color/text_title</item>
+        <item name="android:textColorSecondary">@color/text_body</item>
+    </style>
+
+    <!-- 覆盖系统 android.app.AlertDialog 的 alertDialogTheme -->
+    <style name="ThemeOverlay.Yuelan.Dialog.Alert" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="colorSurface">@color/card_surface</item>
+        <item name="colorOnSurface">@color/text_title</item>
+        <item name="colorPrimary">@color/pink_primary_variant</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSurfaceContainerHigh">@color/card_surface</item>
+        <item name="colorOnSurfaceVariant">@color/text_body</item>
+        <item name="colorBackgroundFloating">@color/card_surface</item>
+        <item name="android:colorBackgroundFloating">@color/card_surface</item>
+        <item name="android:textColorPrimary">@color/text_title</item>
+        <item name="android:textColorSecondary">@color/text_body</item>
+        <item name="android:textColorAlertDialogListItem">@color/text_title</item>
+        <item name="dialogCornerRadius">24dp</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+    </style>
+
+    <!-- 覆盖 MaterialAlertDialogBuilder 使用的 materialAlertDialogTheme -->
+    <style name="ThemeOverlay.Yuelan.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/card_surface</item>
+        <item name="colorOnSurface">@color/text_title</item>
+        <item name="colorPrimary">@color/pink_primary_variant</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSurfaceContainerHigh">@color/card_surface</item>
+        <item name="colorOnSurfaceVariant">@color/text_body</item>
+        <item name="colorBackgroundFloating">@color/card_surface</item>
+        <item name="dialogCornerRadius">24dp</item>
+        <item name="android:textColorPrimary">@color/text_title</item>
+        <item name="android:textColorSecondary">@color/text_body</item>
+    </style>
+
+    <!-- 品牌弹窗按钮：主按钮沿用 22dp 粉色胶囊，次级按钮沿用 12dp 描边 -->
+    <style name="Widget.Yuelan.DialogButton" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="Widget.Yuelan.DialogButton.Primary" parent="Widget.Yuelan.DialogButton">
+        <item name="android:background">@drawable/btn_primary_background</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget.Yuelan.DialogButton.Secondary" parent="Widget.Yuelan.DialogButton">
+        <item name="android:background">@drawable/btn_outline_background</item>
+        <item name="android:textColor">@color/text_sub</item>
+    </style>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 外圈光环 -->
+    <item>
+        <shape android:shape="oval">
+            <size
+                android:width="200dp"
+                android:height="200dp"/>
+            <stroke
+                android:width="4dp"
+                android:color="#FF4081"
+                android:dashWidth="8dp"
+                android:dashGap="4dp"/>
+            <solid android:color="@android:color/transparent"/>
+        </shape>
+    </item>
+
+    <!-- 内圈光晕 -->
+    <item android:top="20dp" android:bottom="20dp" android:left="20dp" android:right="20dp">
+        <shape android:shape="oval">
+            <stroke
+                android:width="2dp"
+                android:color="#FF79B0"
+                android:dashWidth="4dp"
+                android:dashGap="2dp"/>
+            <solid android:color="@android:color/transparent"/>
+        </shape>
+    </item>
+</layer-list>

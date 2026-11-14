@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="CircularPeriodProgressBar">
+        <!-- 是否启用动画 -->
+        <attr name="enableAnimation" format="boolean" />
+        <!-- 是否显示阴影 -->
+        <attr name="showShadow" format="boolean" />
+        <!-- 圆环宽度 -->
+        <attr name="strokeWidth" format="dimension" />
+        <!-- 中心文本大小 -->
+        <attr name="centerTextSize" format="dimension" />
+        <!-- 是否深色模式 -->
+        <attr name="darkMode" format="boolean" />
+        <!-- 背景圆环颜色 -->
+        <attr name="backgroundColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="CalendarView">
+        <!-- 日期圆角半径 -->
+        <attr name="cv_dayCornerRadius" format="dimension" />
+        <!-- 日期间距 -->
+        <attr name="cv_daySpacing" format="dimension" />
+        <!-- 日期单元格大小 -->
+        <attr name="cv_daySize" format="dimension" />
+        <!-- 是否显示其他月份日期 -->
+        <attr name="cv_showOtherMonthDays" format="boolean" />
+        <!-- 是否显示事件列表 -->
+        <attr name="cv_showEventList" format="boolean" />
+        <!-- 事件列表高度 -->
+        <attr name="cv_eventListHeight" format="dimension" />
+        <!-- 普通日期文字颜色 -->
+        <attr name="cv_normalTextColor" format="color" />
+        <!-- 今天文字颜色 -->
+        <attr name="cv_todayTextColor" format="color" />
+        <!-- 周末文字颜色 -->
+        <attr name="cv_weekendTextColor" format="color" />
+        <!-- 其他月份文字颜色 -->
+        <attr name="cv_otherMonthTextColor" format="color" />
+        <!-- 选中日期背景颜色 -->
+        <attr name="cv_selectedDayColor" format="color" />
+        <!-- 按下日期背景颜色 -->
+        <attr name="cv_pressedDayColor" format="color" />
+        <!-- 今天背景颜色 -->
+        <attr name="cv_todayBgColor" format="color" />
+        <!-- 周末背景颜色 -->
+        <attr name="cv_weekendBgColor" format="color" />
+        <!-- 日期文字大小 -->
+        <attr name="cv_dayTextSize" format="dimension" />
+        <!-- 周标题文字大小 -->
+        <attr name="cv_weekTextSize" format="dimension" />
+        <!-- 事件文字大小 -->
+        <attr name="cv_eventTextSize" format="dimension" />
+        <!-- 是否显示导航栏 -->
+        <attr name="cv_showNavigationBar" format="boolean" />
+        <!-- 导航栏高度 -->
+        <attr name="cv_navigationBarHeight" format="dimension" />
+        <!-- 年月文字大小 -->
+        <attr name="cv_monthYearTextSize" format="dimension" />
+        <!-- 年月文字颜色 -->
+        <attr name="cv_monthYearTextColor" format="color" />
+        <!-- 导航图标颜色 -->
+        <attr name="cv_navigationIconColor" format="color" />
+    </declare-styleable>
+
+</resources>

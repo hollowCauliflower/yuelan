@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 功能卡片·下一阶段：实心鲸尾月牙 + 描边箭头（延续品牌月牙形状） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 月牙（实心） -->
+    <path
+        android:fillColor="#4ECDC4"
+        android:pathData="M13.4,4.6 C8.6,6.8 8.6,17.2 11.4,19.4 C11.4,15.4 11.4,8.6 13.4,4.6 Z" />
+
+    <!-- 前进箭头（描边） -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4ECDC4"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M16.2,9.4 L18.8,12 L16.2,14.6" />
+</vector>

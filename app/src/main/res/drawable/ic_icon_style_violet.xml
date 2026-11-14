@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 预设图标 5：紫罗兰（紫色圆底 + 白色花苞） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 圆底：紫色渐变 -->
+    <path android:pathData="M54,54m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="24"
+                android:startY="20"
+                android:endX="86"
+                android:endY="92">
+                <item android:color="#FFE6D9FF" android:offset="0.0" />
+                <item android:color="#FFB79CF0" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 花苞 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,26 C64,36 66,50 62,64 L46,64 C42,50 44,36 54,26 Z" />
+    <!-- 花茎 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M52,64 L56,64 L56,78 L52,78 Z" />
+    <!-- 左叶 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M52,76 C45,76 39,72 37,66 C43,66 48,70 52,76 Z" />
+    <!-- 右叶 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M56,76 C63,76 69,72 71,66 C65,66 60,70 56,76 Z" />
+</vector>

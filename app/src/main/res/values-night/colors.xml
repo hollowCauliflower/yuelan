@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 深色模式：带粉调的中性深色，保持品牌调性 -->
+
+    <!-- 页面背景 -->
+    <color name="app_background">#17151A</color>
+    <!-- 卡片/弹窗/底部导航表面 -->
+    <color name="card_surface">#211E24</color>
+    <!-- 卡片内部的浅色区块 -->
+    <color name="inset_surface">#2A262D</color>
+    <!-- 输入框背景 -->
+    <color name="input_background">#262329</color>
+    <!-- 分割线 -->
+    <color name="divider">#3A343C</color>
+
+    <!-- 内容块底色 -->
+    <color name="tile_pink">#2E2028</color>
+    <color name="tile_yellow">#2E281C</color>
+    <color name="tile_violet">#2C2027</color>
+    <color name="tile_green">#1E2A21</color>
+    <!-- 提示浮层底色 -->
+    <color name="tooltip_background">#F2211E24</color>
+    <!-- 小圆标底色 -->
+    <color name="badge_background">#2E2430</color>
+
+    <!-- 品牌主按钮底色（深色下保持品牌粉） -->
+    <color name="brand_primary">#FF6B93</color>
+    <!-- 次级按钮描边色：深色下改用与分割线一致的深灰紫，避免亮边 -->
+    <color name="outline_stroke">#4A424C</color>
+
+    <!-- 文字层级 -->
+    <color name="text_title">#F4EDF1</color>
+    <color name="text_body">#D8CBD2</color>
+    <color name="text_sub">#B2A4AC</color>
+    <color name="text_hint">#8B7F88</color>
+
+    <!-- 启动页背景 -->
+    <color name="splash_background">#17151A</color>
+
+    <!-- 引导页渐变背景与“下一步”按钮：深色下改用深底 + 亮粉文字，避免白色按钮突兀 -->
+    <color name="onboarding_gradient_start">#17151A</color>
+    <color name="onboarding_gradient_center">#1E1B21</color>
+    <color name="onboarding_gradient_end">#2A222A</color>
+    <color name="onboarding_button_background">#2A262D</color>
+    <color name="onboarding_button_text">#FF9CCB</color>
+    <color name="onboarding_button_stroke">#FF69B4</color>
+
+    <!-- 底部导航选中指示器（粉色胶囊） -->
+    <color name="nav_indicator">#3D2632</color>
+    <!-- 开关控件：选中粉、未选中灰 -->
+    <color name="switch_thumb_checked">#FFFFFFFF</color>
+    <color name="switch_thumb_unchecked">#FFB2A4AC</color>
+    <color name="switch_track_checked">#FF6B8E</color>
+    <color name="switch_track_unchecked">#FF3A343C</color>
+
+
+    <!-- 已有品牌文字色在深色下的提亮 -->
+    <color name="text_primary">#F5E3EA</color>
+    <color name="text_secondary">#C9A6B2</color>
+    <color name="pink_light">#2E2430</color>
+    <!-- 日历选中日专用色：亮紫，深色背景下更醒目 -->
+    <color name="calendar_selection">#CE93D8</color>
+</resources>

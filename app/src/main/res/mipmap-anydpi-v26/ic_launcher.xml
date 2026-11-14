@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 默认桌面图标（API 26+ 自适应图标）：可伸缩矢量图形画在背景层，
+     由桌面按系统形状裁剪；前景层透明。 -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_art_whale_moon"/>
+    <foreground android:drawable="@android:color/transparent"/>
+</adaptive-icon>

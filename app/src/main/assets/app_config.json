@@ -1,0 +1,6 @@
+{
+  "_comment": "应用配置文件：展示联系方式，涉及隐私建议在本地修改本文件；更新检查地址留空表示不启用自动检查。",
+  "contact_email": "3107791179@qq.com",
+  "contact_wechat": "wcq_0_0",
+  "update_check_url": ""
+}

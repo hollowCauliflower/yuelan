@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 月经期引导弹窗：标题 + 说明 + 两个入口按钮，"今天不再提醒"作为按钮下方的脚注选项。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_background"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/daily_prompt_menstrual_title"
+        android:textColor="@color/text_title"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:lineSpacingExtra="4dp"
+        android:text="@string/daily_prompt_menstrual_message"
+        android:textColor="@color/text_body"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/btn_record"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/btn_primary_background"
+        android:gravity="center"
+        android:text="@string/daily_prompt_menstrual_record"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/btn_cycle_wrong"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/btn_outline_background"
+        android:gravity="center"
+        android:text="@string/daily_prompt_cycle_wrong"
+        android:textColor="@color/text_sub"
+        android:textSize="14sp" />
+
+    <!-- 今天不再提醒：主操作下方的脚注选项，与按钮保持舒展间距 -->
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/cb_no_remind_today"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:text="@string/daily_prompt_dont_show_today"
+        android:textColor="@color/text_sub"
+        android:textSize="13sp" />
+</LinearLayout>

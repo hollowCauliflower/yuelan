@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Yuelan" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- 系统栏与页面背景保持一致（深色下使用浅色图标） -->
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:statusBarColor">@color/app_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/app_background</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+        <!-- 启动页背景与图标，随深浅色切换（图标为品牌粉色 logo，不使用桌面头像） -->
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/ic_splash_logo</item>
+        <!-- 品牌粉色：开关、底部导航选中指示等 Material3 组件统一用粉色 -->
+        <item name="colorPrimary">@color/pink_primary_variant</item>
+        <item name="colorSecondary">@color/pink_primary_variant</item>
+        <item name="colorSecondaryContainer">#4A2A38</item>
+        <item name="colorOnSecondaryContainer">#FFD9E4</item>
+        <!-- 统一系统弹窗样式：framework AlertDialog 只认 alertDialogTheme，必须显式挂载 -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.Yuelan.Dialog.Alert</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Yuelan.MaterialAlertDialog</item>
+    </style>
+</resources>
