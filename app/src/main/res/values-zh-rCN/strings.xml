@@ -149,7 +149,7 @@
     <string name="calendar_legend_predicted">预测</string>
     <!-- 首次进入日历页的图例说明弹框（只弹一次） -->
     <string name="calendar_legend_guide_title">认识日历颜色</string>
-    <string name="calendar_legend_guide_message">实心色块表示当天有实际记录，浅色色块表示按周期推算的预测。四个阶段的颜色都遵循同样的明暗规则。日期下方的「已记录」表示当天已有你的记录，「记N项」表示当天有记录且有 N 项提醒；点按日期可查看具体内容。</string>
+    <string name="calendar_legend_guide_message">实心色块表示当天有实际记录，浅色色块表示按周期推算的预测。四个阶段的颜色都遵循同样的明暗规则。日期下方的「已记录」表示当天已有你的记录，「记·N项」表示当天有记录且有 N 项提醒；点按日期可查看具体内容。</string>
     <string name="calendar_cycle_info">周期信息</string>
     <string name="calendar_predicted_cycle_with_unit">预测周期(天)</string>
     <string name="calendar_previous_cycle_with_unit">上一周期(天)</string>
@@ -177,7 +177,7 @@
     <!-- 日期格右下角小标记：表示当天颜色来自预测，用户尚未记录 -->
     <string name="calendar_prediction_marker">预</string>
     <string name="calendar_recorded_mark">已记录</string>
-    <string name="calendar_recorded_prefix">记</string>
+    <string name="calendar_recorded_prefix">记·</string>
     <string name="reminder_ring_duration_label">响铃时长</string>
     <string name="reminder_ring_1">1 分钟</string>
     <string name="reminder_ring_3">3 分钟</string>
