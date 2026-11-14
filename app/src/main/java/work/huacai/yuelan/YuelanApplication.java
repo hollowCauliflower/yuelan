@@ -32,6 +32,8 @@ public class YuelanApplication extends Application {
 
         // 提醒通知渠道必须在发通知前创建；渠道创建是幂等的
         ReminderNotificationHelper.ensureChannel(this);
+        // 强提醒渠道提前建好：顺手删除旧的静音渠道，保证升级后第一次提醒就是响亮闹钟
+        ReminderNotificationHelper.ensureAlarmChannel(this);
 
         // 进程启动时重建一次提醒闹钟，作为开机/更新广播之外的兜底（数据库读取较重，放子线程）
         new Thread(() -> {

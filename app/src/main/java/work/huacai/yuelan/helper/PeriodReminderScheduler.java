@@ -31,6 +31,9 @@ import work.huacai.yuelan.receiver.PeriodReminderReceiver;
  * <p>
  * 设置页修改周期参数、提醒开关或提醒时间后都应调用 {@link #apply(Context)} 重排；
  * 开机与进程启动时也需重建（系统会清除 AlarmManager 中的闹钟）。
+ * <p>
+ * 排程同样使用 {@link AlarmManager#setAlarmClock}：普通精确闹钟在 Android 14+ 未授予
+ * 「闹钟与提醒」权限、或被 ColorOS 等 ROM 做批量对齐时，会被延后到最长一小时。
  */
 public final class PeriodReminderScheduler {
 
@@ -154,19 +157,25 @@ public final class PeriodReminderScheduler {
         boolean exact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
                 || alarmManager.canScheduleExactAlarms();
         try {
+            // 与自定义提醒一致：用 setAlarmClock 排程，避免 ROM 把精确闹钟放进
+            // 最长一小时的批量窗口里延后送达
+            Intent showIntent = new Intent(context, work.huacai.yuelan.ShortcutEntryActivity.class);
+            showIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent showPendingIntent = PendingIntent.getActivity(context,
+                    REQUEST_CODE, showIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            alarmManager.setAlarmClock(
+                    new AlarmManager.AlarmClockInfo(triggerAt, showPendingIntent), pendingIntent);
+            Log.i(TAG, "经期提醒已安排: " + new Date(triggerAt) + ", exact=" + exact);
+        } catch (SecurityException e) {
+            Log.w(TAG, "setAlarmClock 不可用，降级为普通闹钟", e);
             if (exact) {
                 alarmManager.setExactAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
             } else {
-                // 未授予「闹钟与提醒」权限时降级：系统可能合并/延后送达
                 alarmManager.setAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
             }
-            Log.i(TAG, "经期提醒已安排: " + new Date(triggerAt) + ", exact=" + exact);
-        } catch (SecurityException e) {
-            Log.w(TAG, "精确闹钟无权限，降级为非精确闹钟", e);
-            alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
         }
     }
 

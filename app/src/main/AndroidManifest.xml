@@ -11,10 +11,18 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 精准闹钟（Android 12+ 需用户授予「闹钟与提醒」权限；未授予时降级为非精确闹钟） -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!--
+        Android 13+ 的普通权限，安装即授予，用于闹钟/提醒类应用准点触发。
+        仅声明 SCHEDULE_EXACT_ALARM 时，Android 14+ 默认不授予，准确性会退化成
+        “最长延迟一小时”的窗口闹钟，导致提醒到点不响。
+    -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- 强提醒（全屏闹钟）：锁屏全屏展示需要震动、保持唤醒与全屏通知权限 -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- 亮屏使用中系统不会拉起全屏通知，可用“显示在其他应用上层”增强为直接弹出闹钟页 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- 开机后重建提醒闹钟 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
