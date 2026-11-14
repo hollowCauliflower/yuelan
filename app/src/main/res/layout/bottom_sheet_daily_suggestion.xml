@@ -64,6 +64,36 @@
 
     </LinearLayout>
 
+    <!-- 当天已有实际记录时显示：对应日历格子底部的“记”标记，点击可查看/编辑记录 -->
+    <LinearLayout
+        android:id="@+id/layout_record_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/chip_unselected_background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="8dp"
+        android:paddingVertical="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_record_summary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/text_body"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_arrow_right" />
+
+    </LinearLayout>
+
     <!-- 未来日期只展示预测，不能改阶段；该提示仅在未来日期出现 -->
     <TextView
         android:id="@+id/tv_future_hint"
@@ -82,6 +112,7 @@
         android:layout_marginBottom="16dp"/>
 
     <TextView
+        android:id="@+id/tv_suggestion_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/daily_suggestion_title"

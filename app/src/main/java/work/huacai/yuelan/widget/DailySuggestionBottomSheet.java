@@ -44,7 +44,10 @@ import work.huacai.yuelan.dao.impl.MenstrualRecordDaoImpl;
 import work.huacai.yuelan.dao.impl.PhaseAnchorDaoImpl;
 import work.huacai.yuelan.dao.impl.ReminderDaoImpl;
 import work.huacai.yuelan.helper.CycleCalculator;
+import work.huacai.yuelan.helper.PeriodReminderScheduler;
 import work.huacai.yuelan.helper.PhaseContinuityHelper;
+import work.huacai.yuelan.helper.ReminderCycleHelper;
+import work.huacai.yuelan.helper.ReminderRepeatHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
@@ -78,7 +81,12 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
 
     private TextView tvDate;
     private TextView tvPhase;
+    /** 建议区块标题：今天显示"今日建议"，其他日期显示"当日建议" */
+    private TextView tvSuggestionTitle;
     private TextView tvSuggestion;
+    /** 当日记录摘要：对应日历格子底部的"记"标记，点击打开记录详情 */
+    private View layoutRecordSummary;
+    private TextView tvRecordSummary;
     private TextView tvPrevDay;
     private TextView tvNextDay;
     private MaterialCheckBox cbNoRemindToday;
@@ -195,6 +203,9 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
 
         tvDate = view.findViewById(R.id.tv_date);
         tvPhase = view.findViewById(R.id.tv_phase);
+        tvSuggestionTitle = view.findViewById(R.id.tv_suggestion_title);
+        layoutRecordSummary = view.findViewById(R.id.layout_record_summary);
+        tvRecordSummary = view.findViewById(R.id.tv_record_summary);
         layoutPhase = view.findViewById(R.id.layout_phase);
         ivPhaseEdit = view.findViewById(R.id.iv_phase_edit);
         tvFutureHint = view.findViewById(R.id.tv_future_hint);
@@ -211,6 +222,8 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         // 点击阶段标签可修改当天所属阶段（补签/修改预测阶段）；
         // 未来日期只允许查看预测，不能写成实际记录，因此不注册点击（视觉上也弱化）
         layoutPhase.setOnClickListener(v -> showPhaseEditDialog());
+        // 记录摘要对应日历格子里的"记"标记，点击查看/编辑当天的流量、痛经与备注
+        layoutRecordSummary.setOnClickListener(v -> openRecordDetail());
 
         updateDisplay();
         updateDayReminders();
@@ -227,18 +240,13 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         if (dayRemindersSection == null || layoutDayReminders == null || currentDate == null) return;
 
         String dateId = CycleCalculator.formatDateId(currentDate);
-        int targetDay;
-        try {
-            targetDay = Integer.parseInt(dateId);
-        } catch (NumberFormatException e) {
-            dayRemindersSection.setVisibility(View.GONE);
-            return;
-        }
-
-        List<Reminder> reminders = new ArrayList<>(reminderDao.selectByDay(targetDay));
+        List<Reminder> reminders = remindersForDay(dateId);
+        // 月经提醒不是数据库里的提醒行，而是按周期推算的"下次预计经期首日"，
+        // 日历上同样会画一个提醒圆点，这里需要补一条只读事项，否则点击该日同样看不到它
+        boolean periodReminderDay = isPeriodReminderDay(dateId);
         layoutDayReminders.removeAllViews();
 
-        if (reminders.isEmpty()) {
+        if (reminders.isEmpty() && !periodReminderDay) {
             dayRemindersSection.setVisibility(View.GONE);
             return;
         }
@@ -284,6 +292,102 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
 
             layoutDayReminders.addView(item);
         }
+
+        if (periodReminderDay) {
+            addPeriodReminderItem();
+        }
+    }
+
+    /** 追加一条只读的"经期提醒"事项（没有数据库提醒行，因此不提供开关） */
+    private void addPeriodReminderItem() {
+        View item = LayoutInflater.from(requireContext())
+                .inflate(R.layout.item_today_reminder, layoutDayReminders, false);
+        TextView tvTime = item.findViewById(R.id.tv_time);
+        TextView tvTitle = item.findViewById(R.id.tv_title);
+        TextView tvMessage = item.findViewById(R.id.tv_message);
+        SwitchCompat switchEnabled = item.findViewById(R.id.switch_enabled);
+
+        tvTime.setVisibility(View.GONE);
+        tvTitle.setText(R.string.period_reminder_notification_title);
+        tvMessage.setVisibility(View.GONE);
+        switchEnabled.setVisibility(View.GONE);
+
+        layoutDayReminders.addView(item);
+    }
+
+    /**
+     * 指定日期是否为"月经提醒"的提醒日（预计经期首日）。
+     * <p>与 {@code CalendarFragment#loadCalendarEvents()} 的口径保持一致：
+     * 打开月经提醒且该日等于当前周期起点 + 周期长度时，日历会画提醒圆点。
+     *
+     * @param dateId 日期 id（yyyyMMdd）
+     * @return 是月经提醒日返回 true
+     */
+    private boolean isPeriodReminderDay(String dateId) {
+        if (!PeriodReminderScheduler.isEnabled(requireContext())) {
+            return false;
+        }
+        MenstrualCycleRecord cycleRecord = cycleRecordDao.selectLast();
+        if (cycleRecord == null || cycleRecord.getStartTime() == null) {
+            return false;
+        }
+        Date cycleStart = CycleCalculator.getCurrentCycleStart(
+                cycleRecord.getStartTime(), cycleRecord.getTotalCycleDay());
+        if (cycleStart == null) {
+            return false;
+        }
+        Calendar nextPeriod = Calendar.getInstance();
+        nextPeriod.setTime(cycleStart);
+        nextPeriod.add(Calendar.DAY_OF_MONTH, cycleRecord.getTotalCycleDay());
+        return dateId.equals(CycleCalculator.formatDateId(nextPeriod.getTime()));
+    }
+
+    /**
+     * 收集指定日期真正命中的提醒。
+     * <p>
+     * 不能只按 target_day 精确匹配：阶段区间、周期节点、重复规则三种提醒
+     * 在日历上会把区间内的每一天都画成提醒圆点，若这里只查固定日期，
+     * 点击带圆点的当天就会出现"日历有提醒、弹窗里却什么都没有"的情况。
+     * 因此这里与 {@code CalendarFragment#loadCalendarEvents()} 使用同一套展开规则。
+     *
+     * @param dateId 日期 id（yyyyMMdd）
+     * @return 当天命中的提醒列表；日期非法时返回空列表
+     */
+    private List<Reminder> remindersForDay(String dateId) {
+        List<Reminder> reminders = new ArrayList<>();
+        Date day = CycleCalculator.parseDateId(dateId);
+        if (day == null) {
+            return reminders;
+        }
+        for (Reminder reminder : reminderDao.selectAll()) {
+            if (occursOn(reminder, dateId, day)) {
+                reminders.add(reminder);
+            }
+        }
+        return reminders;
+    }
+
+    /**
+     * 判断某条提醒是否在指定日期触发（只比较日期，忽略提醒时间）。
+     *
+     * @param reminder 提醒
+     * @param dateId   日期 id（yyyyMMdd）
+     * @param day      该日期的 00:00
+     * @return 当天触发返回 true
+     */
+    private boolean occursOn(Reminder reminder, String dateId, Date day) {
+        // 阶段区间优先于周期节点：区间模式同样带 cycleNode，必须先判断
+        if (reminder.isSpanMode()) {
+            return !ReminderCycleHelper.spanDatesBetween(reminder, day, day).isEmpty();
+        }
+        if (reminder.isCycleMode()) {
+            return !ReminderCycleHelper.nodeDatesBetween(
+                    reminder.getCycleNode(), day, day).isEmpty();
+        }
+        if (reminder.isRepeatMode()) {
+            return ReminderRepeatHelper.matches(reminder, day);
+        }
+        return dateId.equals(reminder.getDateId());
     }
 
     /** 比较 "HH:mm" 时间字符串；空值排最后 */
@@ -319,7 +423,13 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
 
         // 记录 id 就是 yyyyMMdd，直接按日期查当天的记录
         String dateId = CycleCalculator.formatDateId(currentDate);
+        // 查看非今天的日期时不能写"今日建议"，否则容易让人以为日历上的那一项就是今日建议
+        boolean isToday = dateId.equals(CycleCalculator.formatDateId(new Date()));
+        tvSuggestionTitle.setText(isToday
+                ? R.string.daily_suggestion_title : R.string.daily_suggestion_title_day);
+
         MenstrualRecord record = recordDao.selectById(dateId);
+        updateRecordSummary(record);
         MenstrualCycle cycle = record != null ? record.getMenstrualCycle() : null;
 
         if (cycle != null) {
@@ -361,6 +471,59 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         layoutPhase.setAlpha(future ? 0.75f : 1.0f);
         ivPhaseEdit.setVisibility(future ? View.GONE : View.VISIBLE);
         tvFutureHint.setVisibility(future ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * 刷新"已记录"摘要：只有用户实际记录（非预测）才展示。
+     * <p>这条摘要就是日历格子底部"记"标记的说明，避免用户点开后不知道这一项是什么；
+     * 显示流量等级 / 痛经等级，只有阶段没有任何流量痛经数据时提示"仅标记阶段"。
+     *
+     * @param record 当天记录，可为 null
+     */
+    private void updateRecordSummary(@Nullable MenstrualRecord record) {
+        if (layoutRecordSummary == null || tvRecordSummary == null) return;
+        if (record == null || record.isPrediction() || record.getMenstrualCycle() == null) {
+            layoutRecordSummary.setVisibility(View.GONE);
+            return;
+        }
+
+        boolean hasFlow = record.hasFlowData();
+        boolean hasPain = record.hasPainData();
+        StringBuilder summary = new StringBuilder(getString(R.string.daily_suggestion_recorded));
+        if (hasFlow) {
+            summary.append(" · ").append(getString(R.string.daily_suggestion_record_flow,
+                    record.getFlowLevelText(requireContext())));
+        }
+        if (hasPain) {
+            summary.append(" · ").append(getString(R.string.daily_suggestion_record_pain,
+                    record.getPainLevelText(requireContext())));
+        }
+        if (!hasFlow && !hasPain) {
+            summary.append(" · ").append(getString(R.string.daily_suggestion_record_phase_only));
+        }
+
+        tvRecordSummary.setText(summary);
+        layoutRecordSummary.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * 打开当天的记录详情（流量 / 痛经 / 备注），保存后刷新本弹窗并通知宿主日历。
+     */
+    private void openRecordDetail() {
+        if (currentDate == null || isFutureDate()) {
+            return;
+        }
+        String dateId = CycleCalculator.formatDateId(currentDate);
+        RecordDetailBottomSheet detail = RecordDetailBottomSheet.newInstance(
+                dateId, RecordDetailBottomSheet.MODE_ALL);
+        detail.setOnRecordSavedListener(() -> {
+            updateDisplay();
+            updateDayReminders();
+            if (phaseChangedListener != null) {
+                phaseChangedListener.onPhaseChanged();
+            }
+        });
+        detail.show(getChildFragmentManager(), "RecordDetailBottomSheet");
     }
 
     /**

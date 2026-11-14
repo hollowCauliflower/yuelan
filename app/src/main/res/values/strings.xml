@@ -488,6 +488,13 @@
     <string name="daily_suggestion_no_remind_today">Don\'t remind me today</string>
     <string name="daily_suggestion_reminder_section">Day Reminders</string>
     <string name="daily_suggestion_close">Got it</string>
+    <!-- Suggestion title when viewing a date other than today from the calendar -->
+    <string name="daily_suggestion_title_day">Suggestion for the Day</string>
+    <!-- Record summary matching the "Recorded" mark on the calendar cell; tap to view/edit -->
+    <string name="daily_suggestion_recorded">Recorded</string>
+    <string name="daily_suggestion_record_flow">Flow %1$s</string>
+    <string name="daily_suggestion_record_pain">Pain %1$s</string>
+    <string name="daily_suggestion_record_phase_only">Phase only</string>
 
     <!-- Calendar -->
     <string name="calendar_weekday_sun">Sun</string>
