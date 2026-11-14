@@ -178,9 +178,38 @@
     <string name="calendar_prediction_marker">预</string>
     <string name="calendar_recorded_mark">已记录</string>
     <string name="calendar_recorded_prefix">记·</string>
+    <string name="reminder_ring_duration_label">响铃时长</string>
+    <string name="reminder_ring_1">1 分钟</string>
+    <string name="reminder_ring_3">3 分钟</string>
+    <string name="reminder_ring_5">5 分钟</string>
+    <string name="reminder_ring_10">10 分钟</string>
+    <string name="reminder_ring_forever">一直响</string>
+    <string name="alarm_full_screen_ring_hint">将在 %1$d 分钟后自动静音</string>
+    <string name="alarm_full_screen_silenced">已自动静音，请点击下方按钮关闭</string>
     <string name="reminder_mode_label">提醒方式</string>
+    <string name="reminder_exact_alarm_warning">⚠ 提醒可能被系统延后：未获得「闹钟与提醒」权限，点此开启（否则到点可能延迟最多一小时）</string>
     <string name="reminder_mode_date">自选日期</string>
     <string name="reminder_mode_cycle">按周期节点</string>
+    <string name="reminder_mode_phase">阶段区间</string>
+    <string name="reminder_phase_hint">阶段内每天同一时间提醒，阶段结束后自动停止</string>
+    <string name="reminder_phase_card_format">%1$s · %2$d天</string>
+    <string name="reminder_summary_badge_once">仅一次</string>
+    <string name="reminder_summary_badge_daily">每天</string>
+    <string name="reminder_summary_badge_cycle">每周期</string>
+    <string name="reminder_summary_badge_interval_format">每%1$d天</string>
+    <string name="reminder_summary_phase_title">整个%1$s</string>
+    <string name="reminder_summary_phase_sub">阶段内每天提醒，阶段结束后自动停止</string>
+    <string name="reminder_summary_phase_sub_days">阶段内每天提醒，共 %1$d 天</string>
+    <string name="reminder_summary_once_sub">到点提醒一次</string>
+    <string name="reminder_summary_start_format">从 %1$s 开始</string>
+    <string name="reminder_summary_until_format">至 %1$s</string>
+    <string name="reminder_summary_forever">长期有效</string>
+    <string name="reminder_summary_next_format">下次 %1$s</string>
+    <string name="reminder_summary_month_day_title">%1$d 日</string>
+    <string name="reminder_summary_multi_title">共 %1$d 天</string>
+    <string name="reminder_month_day_pick_title">选择每月提醒日期</string>
+    <string name="reminder_month_day_value">每月 %1$d 日</string>
+    <string name="reminder_span_meta_format">每周期·%1$s · 每天</string>
     <string name="reminder_node_period_start">经期开始</string>
     <string name="reminder_node_period_end">经期结束</string>
     <string name="reminder_node_follicle">卵泡期开始</string>
@@ -271,8 +300,8 @@
     <!-- 常用提醒快捷项 -->
     <string name="reminder_presets_label">常用提醒</string>
     <!-- 预设说明：无周期设置时 / 有周期设置且命中阶段时（%s=阶段名） -->
-    <string name="reminder_presets_hint_fixed">提醒按所选日期触发，不随周期自动变化</string>
-    <string name="reminder_presets_hint_phase">当前处于%s，该阶段常用项已排在前面；提醒按固定日期触发</string>
+    <string name="reminder_presets_hint_fixed">点击常用项可一键填充标题、备注与推荐时间</string>
+    <string name="reminder_presets_hint_phase">当前处于%s，该阶段常用项已排在前面；带阶段归属的常用项会套用“阶段区间”，整个阶段每天提醒</string>
     <string name="reminder_preset_progesterone_title">吃黄体酮</string>
     <string name="reminder_preset_progesterone_message">按医嘱服用黄体酮 / 地屈孕酮</string>
     <string name="reminder_preset_folic_acid_title">补叶酸</string>
@@ -654,6 +683,9 @@
     <string name="reminder_alarm_channel_name">强提醒闹钟</string>
     <string name="reminder_alarm_channel_description">到点全屏提醒并响铃</string>
     <string name="reminder_full_screen_permission_title">开启全屏通知</string>
-    <string name="reminder_full_screen_permission_message">系统当前不允许本应用使用全屏通知，强提醒到点可能只显示横幅。请在系统设置中允许「全屏通知」，才能点亮屏幕全屏提醒。</string>
+    <string name="reminder_full_screen_permission_message">系统当前不允许本应用使用全屏通知，强提醒到点可能只显示横幅。请在系统设置中允许「全屏通知」，才能点亮屏幕全屏提醒。\nColorOS / 一加还需在「特殊应用权限」里允许「后台弹出界面」和「锁屏显示」。</string>
+    <string name="reminder_full_screen_overlay_message">亮屏使用手机时，系统不会自动弹出全屏闹钟页面。允许「显示在其他应用上层」后，强提醒可以直接全屏弹出；不开启时会用闹钟铃声 + 高优先级横幅提醒。</string>
+    <string name="reminder_full_screen_warning_notification">⚠ 未允许「全屏通知」，到点只会显示横幅，点此去允许</string>
+    <string name="reminder_full_screen_warning_overlay">⚠ 未允许「显示在其他应用上层」，亮屏时以横幅提醒，点此去允许</string>
 
 </resources>

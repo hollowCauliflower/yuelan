@@ -1,6 +1,7 @@
 package work.huacai.yuelan.activities;
 
 import android.Manifest;
+import android.app.AlarmManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -17,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +42,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.IntConsumer;
 
 import work.huacai.yuelan.R;
 import work.huacai.yuelan.adapter.ReminderAdapter;
@@ -77,8 +80,6 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
     private static final String PREF_REMINDER = "reminder_settings";
     /** 是否已展示过首次开启提醒的系统权限引导 */
     private static final String KEY_REMINDER_SETUP_GUIDED = "reminder_setup_guided";
-    /** 是否已经提示过“开启全屏通知”（只提示一次） */
-    private static final String KEY_FULL_SCREEN_GUIDED = "reminder_full_screen_guided";
 
     private final ReminderDao reminderDao = new ReminderDaoImpl();
     private ReminderAdapter adapter;
@@ -107,6 +108,21 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
     protected void onResume() {
         super.onResume();
         loadData();
+        refreshExactAlarmBanner();
+    }
+
+    /**
+     * 刷新「精确闹钟未授权」提示。
+     * <p>未获得「闹钟与提醒」权限时，系统会把闹钟放进最长一小时的窗口里延后送达，
+     * 用户会感觉“到点没提醒”，因此常驻一条可点击的提示直到授权。
+     */
+    private void refreshExactAlarmBanner() {
+        TextView warning = findViewById(R.id.tv_exact_alarm_warning);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        boolean exact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+                || (alarmManager != null && alarmManager.canScheduleExactAlarms());
+        warning.setVisibility(exact ? View.GONE : View.VISIBLE);
+        warning.setOnClickListener(v -> openReminderPermissionSettings());
     }
 
     /** 重新读取提醒列表并刷新空状态 */
@@ -154,9 +170,11 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
     /**
      * 打开新增 / 编辑弹窗。
      * <p>
-     * 提醒方式分两类：「自选时间」支持仅一次 / 每天 / 每周 / 每月 / 间隔五种重复规则，
-     * 一次配置即可长期生效（不再需要逐个添加日期）；「按周期节点」在每个周期的指定节点
-     * （经期开始、排卵期开始等）触发一次，由调度器按最新周期设置动态推算下一次日期。
+     * 提醒方式分三类：「自选日期」支持仅一次 / 每天 / 每周 / 每月 / 间隔五种重复规则；
+     * 「周期节点」在每个周期的指定节点触发一次；「阶段区间」在某一个阶段内的每一天
+     * 同一时间提醒（如整个黄体期每天吃药）。
+     * <p>
+     * 顶部摘要卡随选择实时刷新，表单分区只展开当前方式需要的设置，避免弹窗过长。
      *
      * @param reminder 为 null 表示新增，否则编辑该提醒
      */
@@ -170,10 +188,15 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
         TextView tvTime = content.findViewById(R.id.tv_time);
         SwitchCompat switchEnabled = content.findViewById(R.id.switch_enabled);
         SwitchCompat switchFullScreen = content.findViewById(R.id.switch_full_screen);
+        TextView tvFullScreenWarning = content.findViewById(R.id.tv_full_screen_warning);
+        View layoutRingDuration = content.findViewById(R.id.layout_ring_duration);
+        ViewGroup layoutRingDurations = content.findViewById(R.id.layout_ring_durations);
         TextView tvModeDate = content.findViewById(R.id.tv_mode_date);
         TextView tvModeCycle = content.findViewById(R.id.tv_mode_cycle);
+        TextView tvModePhase = content.findViewById(R.id.tv_mode_phase);
         View layoutDateMode = content.findViewById(R.id.layout_date_mode);
         View layoutCycleMode = content.findViewById(R.id.layout_cycle_mode);
+        View layoutPhaseMode = content.findViewById(R.id.layout_phase_mode);
         View layoutRepeatEnd = content.findViewById(R.id.layout_repeat_end);
         View layoutStartDate = content.findViewById(R.id.layout_start_date);
         View layoutMultiDate = content.findViewById(R.id.layout_multi_date);
@@ -183,10 +206,19 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
         ViewGroup layoutRepeatRules = content.findViewById(R.id.layout_repeat_rules);
         ViewGroup layoutEndRules = content.findViewById(R.id.layout_end_rules);
         ViewGroup layoutWeekdayChips = content.findViewById(R.id.layout_weekday_chips);
-        ViewGroup layoutMonthDayChips = content.findViewById(R.id.layout_month_day_chips);
         ViewGroup layoutMultiDateChips = content.findViewById(R.id.layout_multi_date_chips);
         TextView tvIntervalValue = content.findViewById(R.id.tv_interval_value);
-        TextView tvRepeatPreview = content.findViewById(R.id.tv_repeat_preview);
+        TextView tvMonthDay = content.findViewById(R.id.tv_month_day);
+        TextView tvSummaryTime = content.findViewById(R.id.tv_summary_time);
+        TextView tvSummaryBadge = content.findViewById(R.id.tv_summary_badge);
+        TextView tvSummaryTitle = content.findViewById(R.id.tv_summary_title);
+        TextView tvSummarySub = content.findViewById(R.id.tv_summary_sub);
+        TextView[] phaseViews = {
+                content.findViewById(R.id.tv_phase_0),
+                content.findViewById(R.id.tv_phase_1),
+                content.findViewById(R.id.tv_phase_2),
+                content.findViewById(R.id.tv_phase_3)
+        };
         Slider sliderInterval = content.findViewById(R.id.slider_interval);
         TextView[] nodeViews = {
                 content.findViewById(R.id.tv_node_period_start),
@@ -203,23 +235,33 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
         };
 
         // ===== 表单状态 =====
+        final int modeDate = 0;
+        final int modeCycle = 1;
+        final int modePhase = 2;
         Calendar startDate = Calendar.getInstance();
         final int[] timeValue = {9, 0};
-        final boolean[] cycleMode = {reminder != null && reminder.isCycleMode()};
+        final int[] mode = {modeDate};
         final int[] cycleNode = {Reminder.NODE_PERIOD_START};
+        final int[] phaseIndex = {3};
         final int[] repeatType = {Reminder.REPEAT_NONE};
         final int[] endMonths = {0};
         final boolean[] weekdays = new boolean[8];
         final int[] monthDay = {startDate.get(Calendar.DAY_OF_MONTH)};
         final int[] interval = {2};
+        /** 强提醒响铃时长（分钟，0 = 一直响）；新建默认 3 分钟 */
+        final int[] ringDuration = {3};
         /** “指定多个日期”模式下的已选日期（yyyyMMdd，升序） */
         final List<Integer> multiDates = new ArrayList<>();
+
+        // 各阶段实际天数，用于在阶段卡片上展示“黄体期 · 12天”
+        final int[] phaseDays = loadPhaseDays();
 
         if (reminder != null) {
             etTitle.setText(reminder.getTitle());
             etMessage.setText(reminder.getMessage());
             switchEnabled.setChecked(reminder.isEnabled());
             switchFullScreen.setChecked(reminder.isAlarm());
+            ringDuration[0] = reminder.getRingDuration();
             if (reminder.getAlarmTime() != null) {
                 String[] parts = reminder.getAlarmTime().split(":");
                 if (parts.length == 2) {
@@ -231,7 +273,14 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
                     }
                 }
             }
-            if (reminder.isCycleMode()) {
+            if (reminder.isSpanMode()) {
+                mode[0] = modePhase;
+                int index = ReminderCycleHelper.spanPhaseIndex(reminder.getCycleNode());
+                if (index >= 0) {
+                    phaseIndex[0] = index;
+                }
+            } else if (reminder.isCycleMode()) {
+                mode[0] = modeCycle;
                 cycleNode[0] = reminder.getCycleNode();
             } else {
                 Date parsed = CycleCalculator.parseDateId(reminder.getDateId());
@@ -311,6 +360,23 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
             endChips.add(chip);
         }
 
+        // 强提醒响铃时长：1 / 3 / 5 / 10 分钟，或一直响到用户关闭
+        final int[] ringOptions = {1, 3, 5, 10, Reminder.RING_FOREVER};
+        final int[] ringLabels = {R.string.reminder_ring_1, R.string.reminder_ring_3,
+                R.string.reminder_ring_5, R.string.reminder_ring_10,
+                R.string.reminder_ring_forever};
+        final List<TextView> ringChips = new ArrayList<>();
+        for (int i = 0; i < ringOptions.length; i++) {
+            final int index = i;
+            TextView chip = createChip(getString(ringLabels[i]), dpToPx(10), chipPadV);
+            chip.setOnClickListener(v -> {
+                ringDuration[0] = ringOptions[index];
+                refresh[0].run();
+            });
+            layoutRingDurations.addView(chip);
+            ringChips.add(chip);
+        }
+
         final int[] weekdayOrder = {Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,
                 Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY};
         final int[] weekdayLabels = {R.string.reminder_weekday_mon, R.string.reminder_weekday_tue,
@@ -330,18 +396,23 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
             weekdayChips.add(chip);
         }
 
-        final List<TextView> monthDayChips = new ArrayList<>();
-        for (int day = 1; day <= 31; day++) {
-            final int value = day;
-            TextView chip = createChip(String.valueOf(day), dpToPx(9), chipPadV);
-            chip.setMinWidth(dpToPx(38));
-            chip.setOnClickListener(v -> {
-                monthDay[0] = value;
+        // 每月只保留一个可点击的日期值，不再铺 31 个标签
+        tvMonthDay.setOnClickListener(v -> {
+            MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
+                    .setTitleText(R.string.reminder_month_day_pick_title)
+                    .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                    .build();
+            picker.addOnPositiveButtonClickListener(selection -> {
+                if (selection == null) {
+                    return;
+                }
+                Calendar picked = Calendar.getInstance();
+                picked.setTime(CycleCalculator.localFromUtc(selection));
+                monthDay[0] = picked.get(Calendar.DAY_OF_MONTH);
                 refresh[0].run();
             });
-            layoutMonthDayChips.addView(chip);
-            monthDayChips.add(chip);
-        }
+            picker.show(getSupportFragmentManager(), "reminder_month_day_picker");
+        });
 
         sliderInterval.setValue(interval[0]);
         sliderInterval.addOnChangeListener((slider, value, fromUser) -> {
@@ -349,14 +420,23 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
             refresh[0].run();
         });
 
-        // 所有状态变化统一在这里刷新：选中态、分区显隐、预览文案
+        // 所有状态变化统一在这里刷新：选中态、分区显隐、顶部摘要
         refresh[0] = () -> {
-            applyChipStyle(tvModeDate, !cycleMode[0]);
-            applyChipStyle(tvModeCycle, cycleMode[0]);
-            layoutCycleMode.setVisibility(cycleMode[0] ? View.VISIBLE : View.GONE);
-            layoutDateMode.setVisibility(cycleMode[0] ? View.GONE : View.VISIBLE);
+            applyChipStyle(tvModeDate, mode[0] == modeDate);
+            applyChipStyle(tvModeCycle, mode[0] == modeCycle);
+            applyChipStyle(tvModePhase, mode[0] == modePhase);
+            layoutCycleMode.setVisibility(mode[0] == modeCycle ? View.VISIBLE : View.GONE);
+            layoutPhaseMode.setVisibility(mode[0] == modePhase ? View.VISIBLE : View.GONE);
+            layoutDateMode.setVisibility(mode[0] == modeDate ? View.VISIBLE : View.GONE);
             for (int i = 0; i < nodeViews.length; i++) {
                 applyChipStyle(nodeViews[i], nodeValues[i] == cycleNode[0]);
+            }
+            for (int i = 0; i < phaseViews.length; i++) {
+                String name = MenstrualCycle.getByIndex(i).getDisplayName(this);
+                phaseViews[i].setText(phaseDays != null && phaseDays[i] > 0
+                        ? getString(R.string.reminder_phase_card_format, name, phaseDays[i])
+                        : name);
+                applyChipStyle(phaseViews[i], i == phaseIndex[0]);
             }
             for (int i = 0; i < repeatChips.size(); i++) {
                 applyChipStyle(repeatChips.get(i), repeatValues[i] == repeatType[0]);
@@ -367,12 +447,15 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
             for (int i = 0; i < weekdayChips.size(); i++) {
                 applyChipStyle(weekdayChips.get(i), weekdays[weekdayOrder[i]]);
             }
-            for (int i = 0; i < monthDayChips.size(); i++) {
-                applyChipStyle(monthDayChips.get(i), i + 1 == monthDay[0]);
+            for (int i = 0; i < ringChips.size(); i++) {
+                applyChipStyle(ringChips.get(i), ringOptions[i] == ringDuration[0]);
             }
+            // 响铃时长只对强提醒有意义，关闭强提醒时整行隐藏
+            layoutRingDuration.setVisibility(switchFullScreen.isChecked()
+                    ? View.VISIBLE : View.GONE);
 
             boolean repeat = repeatType[0] != Reminder.REPEAT_NONE;
-            boolean showDateOptions = !cycleMode[0];
+            boolean showDateOptions = mode[0] == modeDate;
             boolean multiDate = showDateOptions && repeatType[0] == Reminder.REPEAT_MULTI_DATE;
             // 指定多个日期时开始日期由已选日期决定，隐藏开始日期与结束条件
             layoutStartDate.setVisibility(multiDate ? View.GONE : View.VISIBLE);
@@ -394,38 +477,37 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
                     ? R.string.reminder_start_date_label : R.string.reminder_date_label);
             tvDate.setText(DATE_FORMAT.format(startDate.getTime()));
             tvIntervalValue.setText(getString(R.string.reminder_interval_value, interval[0]));
+            tvMonthDay.setText(getString(R.string.reminder_month_day_value, monthDay[0]));
 
-            if (cycleMode[0]) {
-                tvRepeatPreview.setVisibility(View.GONE);
-                return;
-            }
-            tvRepeatPreview.setVisibility(View.VISIBLE);
-            String timeText = formatTime(timeValue);
-            String preview;
-            if (!repeat) {
-                preview = getString(R.string.reminder_preview_once,
-                        DATE_FORMAT.format(startDate.getTime()), timeText);
-            } else if (repeatType[0] == Reminder.REPEAT_MULTI_DATE) {
-                preview = getString(R.string.reminder_preview_multi_date,
-                        multiDates.size(), timeText);
+            // 强提醒开启但系统权限不足时，直接把原因与修复入口放在开关下面
+            boolean needFullScreen = !ReminderNotificationHelper.canUseFullScreenIntent(this);
+            boolean needOverlay = !ReminderNotificationHelper.canDrawOverlays(this);
+            if (switchFullScreen.isChecked() && (needFullScreen || needOverlay)) {
+                tvFullScreenWarning.setVisibility(View.VISIBLE);
+                tvFullScreenWarning.setText(needFullScreen
+                        ? R.string.reminder_full_screen_warning_notification
+                        : R.string.reminder_full_screen_warning_overlay);
             } else {
-                String rule = describeRepeatRule(repeatType[0], weekdays, monthDay[0], interval[0]);
-                preview = getString(R.string.reminder_preview_repeat,
-                        DATE_FORMAT.format(startDate.getTime()), rule, timeText);
-                if (endMonths[0] > 0) {
-                    preview += getString(R.string.reminder_preview_until,
-                            DATE_FORMAT.format(endDate(startDate, endMonths[0]).getTime()));
-                }
+                tvFullScreenWarning.setVisibility(View.GONE);
             }
-            tvRepeatPreview.setText(preview);
+
+            bindSummary(tvSummaryTime, tvSummaryBadge, tvSummaryTitle, tvSummarySub,
+                    mode[0], modePhase, modeCycle, phaseIndex[0], cycleNode[0], repeatType[0],
+                    startDate, endMonths[0], multiDates, weekdays, monthDay[0], interval[0],
+                    timeValue);
         };
+        refresh[0].run();
 
         tvModeDate.setOnClickListener(v -> {
-            cycleMode[0] = false;
+            mode[0] = modeDate;
             refresh[0].run();
         });
         tvModeCycle.setOnClickListener(v -> {
-            cycleMode[0] = true;
+            mode[0] = modeCycle;
+            refresh[0].run();
+        });
+        tvModePhase.setOnClickListener(v -> {
+            mode[0] = modePhase;
             refresh[0].run();
         });
         for (int i = 0; i < nodeViews.length; i++) {
@@ -435,11 +517,35 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
                 refresh[0].run();
             });
         }
+        for (int i = 0; i < phaseViews.length; i++) {
+            final int index = i;
+            phaseViews[i].setOnClickListener(v -> {
+                mode[0] = modePhase;
+                phaseIndex[0] = index;
+                refresh[0].run();
+            });
+        }
+
+        // 强提醒开关变化时刷新权限提示；点击提示直达对应系统设置
+        switchFullScreen.setOnCheckedChangeListener((buttonView, isChecked) -> refresh[0].run());
+        tvFullScreenWarning.setOnClickListener(v -> {
+            if (!ReminderNotificationHelper.canUseFullScreenIntent(this)) {
+                openFullScreenSettings();
+            } else {
+                openOverlaySettings();
+            }
+        });
 
         // 常用提醒快捷项：一键填充标题 / 备注 / 推荐时间（如黄体酮按医嘱晚上服用）；
-        // 命中当前阶段的预设会排在前面并高亮，选中后填充品牌粉选中态
+        // 命中当前阶段的预设会排在前面并高亮，选中后填充品牌粉选中态。
+        // 带阶段归属的预设（如黄体酮 → 黄体期）会顺带切到“阶段区间”，整个阶段每天提醒。
         bindPresets(content.findViewById(R.id.layout_presets), etTitle, etMessage, tvTime,
-                timeValue, content.findViewById(R.id.tv_presets_hint), () -> refresh[0].run());
+                timeValue, content.findViewById(R.id.tv_presets_hint), () -> refresh[0].run(),
+                index -> {
+                    mode[0] = modePhase;
+                    phaseIndex[0] = index;
+                    refresh[0].run();
+                });
 
         tvDate.setOnClickListener(v -> {
             MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
@@ -490,7 +596,29 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
                     String timeText = formatTime(timeValue);
                     boolean enabled = switchEnabled.isChecked();
 
-                    if (cycleMode[0]) {
+                    if (mode[0] == modePhase) {
+                        // 阶段区间：从阶段起点到下一阶段起点（不含）每天提醒
+                        int[] nodes = ReminderCycleHelper.phaseSpanNodes(phaseIndex[0]);
+                        if (nodes == null) {
+                            return;
+                        }
+                        Reminder toSave = reminder != null ? reminder : new Reminder();
+                        toSave.setTitle(title);
+                        toSave.setMessage(message);
+                        toSave.setReminderType("custom");
+                        toSave.setTargetDay(0);
+                        toSave.setCycleNode(nodes[0]);
+                        toSave.setCycleNodeEnd(nodes[1]);
+                        toSave.setRepeatType(Reminder.REPEAT_NONE);
+                        toSave.setRepeatConfig(null);
+                        toSave.setRepeatEndDay(0);
+                        toSave.setAlarmTime(timeText);
+                        toSave.setEnabled(enabled);
+                        toSave.setAlarm(switchFullScreen.isChecked());
+                        // 响铃时长只在强提醒下生效；关闭强提醒时保留设置，便于再次打开
+                        toSave.setRingDuration(ringDuration[0]);
+                        persistReminder(toSave);
+                    } else if (mode[0] == modeCycle) {
                         // 按周期节点：单条记录，targetDay 不使用
                         Reminder toSave = reminder != null ? reminder : new Reminder();
                         toSave.setTitle(title);
@@ -498,12 +626,15 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
                         toSave.setReminderType("custom");
                         toSave.setTargetDay(0);
                         toSave.setCycleNode(cycleNode[0]);
+                        toSave.setCycleNodeEnd(Reminder.NODE_NONE);
                         toSave.setRepeatType(Reminder.REPEAT_NONE);
                         toSave.setRepeatConfig(null);
                         toSave.setRepeatEndDay(0);
                         toSave.setAlarmTime(timeText);
                         toSave.setEnabled(enabled);
                         toSave.setAlarm(switchFullScreen.isChecked());
+                        // 响铃时长只在强提醒下生效；关闭强提醒时保留设置，便于再次打开
+                        toSave.setRingDuration(ringDuration[0]);
                         persistReminder(toSave);
                     } else {
                         // 自选时间：一条记录保存重复规则，由调度器计算每次触发时间
@@ -537,6 +668,7 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
                         toSave.setTargetDay(type == Reminder.REPEAT_MULTI_DATE
                                 ? multiDates.get(0) : toDayId(startDate));
                         toSave.setCycleNode(Reminder.NODE_NONE);
+                        toSave.setCycleNodeEnd(Reminder.NODE_NONE);
                         toSave.setRepeatType(type);
                         toSave.setRepeatConfig(config);
                         toSave.setRepeatEndDay(type == Reminder.REPEAT_NONE
@@ -545,6 +677,8 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
                         toSave.setAlarmTime(timeText);
                         toSave.setEnabled(enabled);
                         toSave.setAlarm(switchFullScreen.isChecked());
+                        // 响铃时长只在强提醒下生效；关闭强提醒时保留设置，便于再次打开
+                        toSave.setRingDuration(ringDuration[0]);
                         persistReminder(toSave);
                     }
 
@@ -588,38 +722,136 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
         return chip;
     }
 
-    /** 生成重复规则的预览描述（与 ReminderRepeatHelper 的展示口径保持一致） */
-    private String describeRepeatRule(int repeatType, boolean[] weekdays,
-                                      int monthDay, int interval) {
-        if (repeatType == Reminder.REPEAT_DAILY) {
-            return getString(R.string.reminder_repeat_daily);
+    /**
+     * 刷新顶部摘要卡：把当前选择翻译成「时间 + 节奏 + 补充说明」。
+     * <p>这是弹窗里唯一一处“结果预览”，替代了原来底部单独的一块预览文本。
+     */
+    private void bindSummary(TextView tvSummaryTime, TextView tvSummaryBadge,
+                             TextView tvSummaryTitle, TextView tvSummarySub,
+                             int mode, int modePhase, int modeCycle, int phaseIndex, int cycleNode,
+                             int repeatType, Calendar startDate, int endMonths,
+                             List<Integer> multiDates, boolean[] weekdays,
+                             int monthDay, int interval, int[] timeValue) {
+        tvSummaryTime.setText(formatTime(timeValue));
+
+        if (mode == modePhase) {
+            int[] days = loadPhaseDays();
+            String phaseName = MenstrualCycle.getByIndex(phaseIndex).getDisplayName(this);
+            tvSummaryBadge.setText(R.string.reminder_summary_badge_daily);
+            tvSummaryTitle.setText(getString(R.string.reminder_summary_phase_title, phaseName));
+            tvSummarySub.setText(days != null && days[phaseIndex] > 0
+                    ? getString(R.string.reminder_summary_phase_sub_days, days[phaseIndex])
+                    : getString(R.string.reminder_summary_phase_sub));
+            return;
         }
-        if (repeatType == Reminder.REPEAT_WEEKLY) {
-            int[] order = {Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,
-                    Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY};
-            int[] labels = {R.string.reminder_weekday_mon, R.string.reminder_weekday_tue,
-                    R.string.reminder_weekday_wed, R.string.reminder_weekday_thu,
-                    R.string.reminder_weekday_fri, R.string.reminder_weekday_sat,
-                    R.string.reminder_weekday_sun};
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < order.length; i++) {
-                if (!weekdays[order[i]]) {
-                    continue;
-                }
-                if (builder.length() > 0) {
-                    builder.append("、");
-                }
-                builder.append(getString(labels[i]));
+
+        if (mode == modeCycle) {
+            tvSummaryBadge.setText(R.string.reminder_summary_badge_cycle);
+            tvSummaryTitle.setText(nodeLabel(cycleNode));
+            Date next = ReminderCycleHelper.nextNodeDate(cycleNode);
+            tvSummarySub.setText(next != null
+                    ? getString(R.string.reminder_summary_next_format, DATE_FORMAT.format(next))
+                    : getString(R.string.reminder_cycle_pending_setup));
+            return;
+        }
+
+        String startText = DATE_FORMAT.format(startDate.getTime());
+        String untilText = endMonths > 0
+                ? getString(R.string.reminder_summary_until_format,
+                        DATE_FORMAT.format(endDate(startDate, endMonths).getTime()))
+                : getString(R.string.reminder_summary_forever);
+        switch (repeatType) {
+            case Reminder.REPEAT_DAILY:
+                tvSummaryBadge.setText(R.string.reminder_repeat_daily);
+                tvSummaryTitle.setText(getString(R.string.reminder_summary_start_format, startText));
+                tvSummarySub.setText(untilText);
+                break;
+            case Reminder.REPEAT_WEEKLY:
+                tvSummaryBadge.setText(R.string.reminder_repeat_weekly);
+                tvSummaryTitle.setText(joinWeekdayNames(weekdays));
+                tvSummarySub.setText(untilText);
+                break;
+            case Reminder.REPEAT_MONTHLY:
+                tvSummaryBadge.setText(R.string.reminder_repeat_monthly);
+                tvSummaryTitle.setText(getString(R.string.reminder_summary_month_day_title, monthDay));
+                tvSummarySub.setText(untilText);
+                break;
+            case Reminder.REPEAT_INTERVAL:
+                tvSummaryBadge.setText(
+                        getString(R.string.reminder_summary_badge_interval_format, interval));
+                tvSummaryTitle.setText(getString(R.string.reminder_summary_start_format, startText));
+                tvSummarySub.setText(untilText);
+                break;
+            case Reminder.REPEAT_MULTI_DATE:
+                tvSummaryBadge.setText(R.string.reminder_repeat_multi_date);
+                tvSummaryTitle.setText(getString(R.string.reminder_summary_multi_title,
+                        multiDates.size()));
+                tvSummarySub.setText("");
+                break;
+            default:
+                tvSummaryBadge.setText(R.string.reminder_summary_badge_once);
+                tvSummaryTitle.setText(startText);
+                tvSummarySub.setText(R.string.reminder_summary_once_sub);
+                break;
+        }
+    }
+
+    /** 读取四个阶段的天数；没有周期设置时返回 null */
+    private int[] loadPhaseDays() {
+        MenstrualCycleRecord record = new MenstrualCycleRecordDaoImpl().selectLast();
+        if (record == null || record.getStartTime() == null || record.getTotalCycleDay() <= 0) {
+            return null;
+        }
+        return CycleCalculator.calculatePhaseDays(
+                record.getMenstrualPeriodDay(), record.getTotalCycleDay());
+    }
+
+    /** 周期节点的展示名称 */
+    private String nodeLabel(int cycleNode) {
+        int res;
+        switch (cycleNode) {
+            case Reminder.NODE_PERIOD_END:
+                res = R.string.reminder_node_period_end;
+                break;
+            case Reminder.NODE_FOLLICLE_START:
+                res = R.string.reminder_node_follicle;
+                break;
+            case Reminder.NODE_OVULATION_START:
+                res = R.string.reminder_node_ovulation;
+                break;
+            case Reminder.NODE_LUTEAL_START:
+                res = R.string.reminder_node_luteal;
+                break;
+            case Reminder.NODE_BEFORE_PERIOD:
+                res = R.string.reminder_node_before_period;
+                break;
+            case Reminder.NODE_PERIOD_START:
+            default:
+                res = R.string.reminder_node_period_start;
+                break;
+        }
+        return getString(res);
+    }
+
+    /** 把选中的星期拼成“一、三、五” */
+    private String joinWeekdayNames(boolean[] weekdays) {
+        int[] order = {Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,
+                Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY};
+        int[] labels = {R.string.reminder_weekday_mon, R.string.reminder_weekday_tue,
+                R.string.reminder_weekday_wed, R.string.reminder_weekday_thu,
+                R.string.reminder_weekday_fri, R.string.reminder_weekday_sat,
+                R.string.reminder_weekday_sun};
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < order.length; i++) {
+            if (!weekdays[order[i]]) {
+                continue;
             }
-            return getString(R.string.reminder_repeat_weekly_format, builder.toString());
+            if (builder.length() > 0) {
+                builder.append("、");
+            }
+            builder.append(getString(labels[i]));
         }
-        if (repeatType == Reminder.REPEAT_MONTHLY) {
-            return getString(R.string.reminder_repeat_monthly_format, String.valueOf(monthDay));
-        }
-        if (repeatType == Reminder.REPEAT_INTERVAL) {
-            return getString(R.string.reminder_repeat_interval_format, interval);
-        }
-        return "";
+        return builder.toString();
     }
 
     /** 星期多选转 repeat_config（1=周日 … 7=周六，逗号分隔） */
@@ -885,16 +1117,18 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
      * @param timeValue 时间工作副本 [hour, minute]，与保存逻辑共用
      * @param tvHint    预设说明文本，可为 null
      * @param onChanged 预设改变时间后的刷新回调，可为 null
+     * @param onPhaseSelected 预设带阶段归属时回调阶段下标，把提醒方式切到“阶段区间”
      */
     private void bindPresets(ViewGroup container, EditText etTitle, EditText etMessage,
                              TextView tvTime, int[] timeValue, TextView tvHint,
-                             Runnable onChanged) {
+                             Runnable onChanged, IntConsumer onPhaseSelected) {
         if (container == null) {
             return;
         }
         container.removeAllViews();
         int padH = dpToPx(12);
-        int padV = dpToPx(6);
+        int padV = dpToPx(7);
+        int marginEnd = dpToPx(8);
 
         MenstrualCycle currentPhase = detectCurrentPhase();
         List<Preset> ordered = new ArrayList<>(Arrays.asList(PRESETS));
@@ -909,8 +1143,11 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
             chip.setTextSize(12);
             chip.setPadding(padH, padV, padH, padV);
 
-            // 间距由 ChipGroup 的 chipSpacing 统一控制
-            container.addView(chip);
+            // 横向排列，间距由 marginEnd 控制
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.setMarginEnd(marginEnd);
+            container.addView(chip, params);
             presetChips.add(chip);
 
             chip.setOnClickListener(v -> {
@@ -921,6 +1158,10 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
                 timeValue[1] = preset.minute;
                 tvTime.setText(String.format(Locale.getDefault(), "%02d:%02d",
                         preset.hour, preset.minute));
+                // 吃药这类预设天然覆盖整个阶段，顺手切到“阶段区间”省去用户再选一次
+                if (preset.phase != null && onPhaseSelected != null) {
+                    onPhaseSelected.accept(preset.phase.getIndex());
+                }
                 if (onChanged != null) {
                     onChanged.run();
                 }
@@ -1021,28 +1262,41 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
     }
 
     /**
-     * 强提醒首次使用引导：Android 14+ 若未授予“全屏通知”，
-     * 到点只会显示横幅而不会全屏点亮，这里提示用户去系统设置开启（只弹一次）。
+     * 强提醒首次使用引导：全屏通知（Android 14+）或“显示在其他应用上层”未授权时，
+     * 到点只能看到横幅而不会全屏点亮，这里提示用户去系统设置开启。
+     * <p>每次保存强提醒时都会检查权限，已授权则不再打扰。
      */
     private void maybeShowFullScreenGuide() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        boolean needFullScreen = !ReminderNotificationHelper.canUseFullScreenIntent(this);
+        boolean needOverlay = !ReminderNotificationHelper.canDrawOverlays(this);
+        if (!needFullScreen && !needOverlay) {
             return;
         }
-        if (ReminderNotificationHelper.canUseFullScreenIntent(this)) {
-            return;
-        }
-        SharedPreferences prefs = getSharedPreferences(PREF_REMINDER, MODE_PRIVATE);
-        if (prefs.getBoolean(KEY_FULL_SCREEN_GUIDED, false)) {
-            return;
-        }
-        prefs.edit().putBoolean(KEY_FULL_SCREEN_GUIDED, true).apply();
-
         AppDialogFactory.showConfirm(this,
                 getString(R.string.reminder_full_screen_permission_title),
-                getString(R.string.reminder_full_screen_permission_message),
+                getString(needFullScreen
+                        ? R.string.reminder_full_screen_permission_message
+                        : R.string.reminder_full_screen_overlay_message),
                 R.string.reminder_guide_settings,
                 R.string.reminder_guide_dismiss,
-                this::openFullScreenSettings);
+                needFullScreen ? this::openFullScreenSettings : this::openOverlaySettings);
+    }
+
+    /**
+     * 跳转系统「显示在其他应用上层」授权页；不可用时退回应用详情页。
+     */
+    private void openOverlaySettings() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && openSystemIntent(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + getPackageName())))) {
+            return;
+        }
+        if (openSystemIntent(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.parse("package:" + getPackageName())))) {
+            return;
+        }
+        Toast.makeText(this, R.string.reminder_exact_alarm_open_failed,
+                Toast.LENGTH_LONG).show();
     }
 
     /**

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 提醒弹窗顶部摘要卡：品牌粉浅底到弹窗表面的柔和渐变 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:endColor="@color/card_surface"
+        android:startColor="@color/tile_pink" />
+    <corners android:radius="18dp" />
+</shape>

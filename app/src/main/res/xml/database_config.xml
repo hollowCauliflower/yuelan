@@ -11,7 +11,7 @@
 <database>
     <!-- 数据库文件名与结构版本号（版本号必须与 DatabaseHelper.onUpgrade 的分支对应） -->
     <name>menstruation.db</name>
-    <version>7</version>
+    <version>8</version>
 
     <tables>
         <!-- 周期分段设置：每轮实际周期一行；start_time 为分段起点（yyyyMMdd），
@@ -95,7 +95,9 @@
                     alarm_time TEXT,
                     is_enabled INTEGER NOT NULL DEFAULT 1,
                     is_alarm INTEGER NOT NULL DEFAULT 0,
+                    ring_duration INTEGER NOT NULL DEFAULT 0,
                     cycle_node INTEGER NOT NULL DEFAULT 0,
+                    cycle_node_end INTEGER NOT NULL DEFAULT 0,
                     repeat_type INTEGER NOT NULL DEFAULT 0,
                     repeat_config TEXT,
                     repeat_end_day INTEGER NOT NULL DEFAULT 0,

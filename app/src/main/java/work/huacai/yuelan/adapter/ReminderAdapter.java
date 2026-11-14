@@ -19,6 +19,7 @@ import work.huacai.yuelan.R;
 import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.ReminderCycleHelper;
 import work.huacai.yuelan.helper.ReminderRepeatHelper;
+import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.Reminder;
 
 /**
@@ -80,7 +81,20 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
         holder.tvTitle.setText(reminder.getTitle());
 
         String dateText;
-        if (reminder.isCycleMode()) {
+        if (reminder.isSpanMode()) {
+            // 阶段区间提醒：展示"每周期·黄体期 · 每天"和区间内下一次日期
+            int phaseIndex = ReminderCycleHelper.spanPhaseIndex(reminder.getCycleNode());
+            String phaseName = MenstrualCycle.getByIndex(Math.max(phaseIndex, 0))
+                    .getDisplayName(holder.itemView.getContext());
+            Date next = ReminderCycleHelper.nextSpanOccurrence(reminder,
+                    System.currentTimeMillis());
+            dateText = holder.itemView.getContext()
+                    .getString(R.string.reminder_span_meta_format, phaseName)
+                    + (next != null
+                    ? " · " + holder.itemView.getContext()
+                            .getString(R.string.reminder_next_prefix) + " " + DATE_FORMAT.format(next)
+                    : "");
+        } else if (reminder.isCycleMode()) {
             // 周期节点提醒：展示"每周期·节点名"和下一次节点日期
             String nodeName = nodeName(holder, reminder.getCycleNode());
             Date next = ReminderCycleHelper.nextNodeDate(reminder.getCycleNode());

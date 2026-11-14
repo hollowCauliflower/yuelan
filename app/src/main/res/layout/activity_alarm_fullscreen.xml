@@ -45,6 +45,17 @@
             android:textColor="@color/text_body"
             android:textSize="16sp" />
 
+        <!-- 响铃时长提示：响铃时长 > 0 时显示“将在 N 分钟后自动静音”，0 时隐藏 -->
+        <TextView
+            android:id="@+id/tv_alarm_ring_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:textColor="@color/text_hint"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
         <!-- 关闭按钮：点击后停止铃声/震动并退出全屏页 -->
         <TextView
             android:id="@+id/btn_alarm_dismiss"

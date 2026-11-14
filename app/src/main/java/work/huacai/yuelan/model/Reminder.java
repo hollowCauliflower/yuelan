@@ -10,11 +10,16 @@ package work.huacai.yuelan.model;
  * {@code repeatType > 0} 表示"重复规则"（每天 / 每周 / 每月 / 间隔，targetDay 作为系列开始日期）；
  * {@code cycleNode > 0} 表示"按周期节点"（每个周期的指定阶段节点触发，见 {@link #NODE_PERIOD_START}
  * 等常量），此时 targetDay 不使用。
+ * <p>
+ * 在周期节点基础上，{@code cycleNodeEnd > 0} 表示"按阶段区间"：从 {@code cycleNode}
+ * 到 {@code cycleNodeEnd}（不含）之间的每一天都提醒一次，用于"整个黄体期每天吃药"这类场景。
  */
 public class Reminder {
 
     /** 周期节点：固定日期（默认值，按 targetDay 触发） */
     public static final int NODE_NONE = 0;
+    /** 响铃时长：一直响，直到用户点“关闭提醒” */
+    public static final int RING_FOREVER = 0;
     /** 周期节点：经期开始（预测月经来潮当天） */
     public static final int NODE_PERIOD_START = 1;
     /** 周期节点：经期结束 */
@@ -57,8 +62,20 @@ public class Reminder {
     private boolean enabled = true;
     /** 是否使用系统闹钟提醒 */
     private boolean alarm;
+    /**
+     * 强提醒的响铃时长（分钟）。
+     * <p>{@link #RING_FOREVER} 表示一直响到用户点“关闭提醒”，>0 表示响满该分钟数后
+     * 自动停止铃声与震动（全屏页面保留，仍需手动关闭）。
+     */
+    private int ringDuration = RING_FOREVER;
     /** 周期节点（0 = 固定日期提醒，>0 = 按周期节点提醒） */
     private int cycleNode = NODE_NONE;
+    /**
+     * 阶段区间的结束节点（0 = 单日节点提醒；>0 = 从 cycleNode 到该节点之前每天提醒）。
+     * <p>例如黄体期区间为 {@code cycleNode = NODE_LUTEAL_START}、
+     * {@code cycleNodeEnd = NODE_PERIOD_START}（下一周期起点，不含）。
+     */
+    private int cycleNodeEnd = NODE_NONE;
     /** 重复规则（0 = 不重复，见 REPEAT_* 常量） */
     private int repeatType = REPEAT_NONE;
     /**
@@ -135,12 +152,37 @@ public class Reminder {
         this.alarm = alarm;
     }
 
+    public int getRingDuration() {
+        return ringDuration;
+    }
+
+    public void setRingDuration(int ringDuration) {
+        this.ringDuration = ringDuration;
+    }
+
     public int getCycleNode() {
         return cycleNode;
     }
 
     public void setCycleNode(int cycleNode) {
         this.cycleNode = cycleNode;
+    }
+
+    public int getCycleNodeEnd() {
+        return cycleNodeEnd;
+    }
+
+    public void setCycleNodeEnd(int cycleNodeEnd) {
+        this.cycleNodeEnd = cycleNodeEnd;
+    }
+
+    /**
+     * 是否按阶段区间提醒（周期节点模式的扩展：区间内每天提醒一次）。
+     *
+     * @return 阶段区间模式返回 true
+     */
+    public boolean isSpanMode() {
+        return cycleNode > NODE_NONE && cycleNodeEnd > NODE_NONE;
     }
 
     /**

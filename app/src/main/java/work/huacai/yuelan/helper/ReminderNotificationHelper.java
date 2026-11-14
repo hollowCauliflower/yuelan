@@ -12,6 +12,7 @@ import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -39,8 +40,14 @@ public final class ReminderNotificationHelper {
 
     /** 自定义提醒事项使用的通知渠道 id */
     public static final String CHANNEL_ID = "custom_reminder";
-    /** 强提醒（全屏闹钟）使用的通知渠道 id，声音走闹钟通道 */
-    public static final String ALARM_CHANNEL_ID = "custom_reminder_alarm";
+    /**
+     * 强提醒（全屏闹钟）使用的通知渠道 id，声音走闹钟通道。
+     * <p>渠道属性创建后不可修改，旧渠道 {@code custom_reminder_alarm} 是静音的，
+     * 这里换成 v2 并在创建时删除旧渠道，避免老用户一直拿到静音横幅。
+     */
+    public static final String ALARM_CHANNEL_ID = "custom_reminder_alarm_v2";
+    /** 旧版强提醒渠道（静音），升级时删除 */
+    private static final String LEGACY_ALARM_CHANNEL_ID = "custom_reminder_alarm";
 
     /** 通知 id 基数，避免与本应用其它通知冲突 */
     private static final int NOTIFICATION_ID_BASE = 20000;
@@ -121,7 +128,15 @@ public final class ReminderNotificationHelper {
             return;
         }
         NotificationManager manager = context.getSystemService(NotificationManager.class);
-        if (manager == null || manager.getNotificationChannel(ALARM_CHANNEL_ID) != null) {
+        if (manager == null) {
+            return;
+        }
+        // 旧渠道是静音的，且渠道属性无法再修改，这里直接删除让新渠道生效
+        if (manager.getNotificationChannel(LEGACY_ALARM_CHANNEL_ID) != null) {
+            manager.deleteNotificationChannel(LEGACY_ALARM_CHANNEL_ID);
+            Log.i(TAG, "delete legacy silent alarm channel");
+        }
+        if (manager.getNotificationChannel(ALARM_CHANNEL_ID) != null) {
             return;
         }
         NotificationChannel channel = new NotificationChannel(ALARM_CHANNEL_ID,
@@ -131,10 +146,30 @@ public final class ReminderNotificationHelper {
         channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
         channel.enableVibration(true);
         channel.setVibrationPattern(new long[]{0, 500, 500});
-        // 全屏闹钟页面自己循环播放铃声，渠道不再出声，避免“通知响一次 + 页面再响”叠音；
-        // 若系统未允许全屏通知，show() 会退回普通提醒渠道（带声音）
-        channel.setSound(null, null);
+        // 渠道本身带闹钟铃声：即使系统没弹出全屏页面（例如亮屏使用中），
+        // 也会以响亮的闹钟横幅提醒，而不是静音横幅。
+        // 全屏页面拉起后会取消这条通知并自己循环播放，避免叠音。
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        if (alarmSound == null) {
+            alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        }
+        channel.setSound(alarmSound, new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .build());
         manager.createNotificationChannel(channel);
+    }
+
+    /**
+     * 是否允许“显示在其他应用上层”。
+     * <p>亮屏使用中系统不会拉起 full-screen intent，只有拥有悬浮窗权限的应用
+     * 才能从后台直接启动全屏闹钟页，因此把它作为强提醒的增强能力。
+     *
+     * @param context 任意 Context
+     * @return 已授权返回 true
+     */
+    public static boolean canDrawOverlays(Context context) {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context);
     }
 
     /**
@@ -180,11 +215,26 @@ public final class ReminderNotificationHelper {
     /**
      * 发出到点提醒通知；强提醒会附带全屏 intent，
      * 由 {@link work.huacai.yuelan.activities.AlarmFullScreenActivity} 全屏点亮并响铃。
+     * <p>
+     * 声音由通知渠道提供：强提醒走带闹钟铃声的 {@link #ALARM_CHANNEL_ID}，
+     * 这样即使系统没拉起全屏页（亮屏使用中、未授权等），也会是响亮的闹钟横幅；
+     * 全屏页真正启动后会先取消本通知、再自己循环响铃，避免叠音。
      *
      * @param fullScreen true 表示使用强提醒（全屏闹钟）
      */
     public static void show(Context context, long reminderId, String title, String message,
                             boolean fullScreen) {
+        show(context, reminderId, title, message, fullScreen, 0);
+    }
+
+    /**
+     * 发出到点提醒通知，并指定强提醒的响铃时长。
+     *
+     * @param fullScreen          true 表示使用强提醒（全屏闹钟）
+     * @param ringDurationMinutes 响铃时长（分钟，0 = 一直响到用户关闭）
+     */
+    public static void show(Context context, long reminderId, String title, String message,
+                            boolean fullScreen, int ringDurationMinutes) {
         ensureChannel(context);
         if (fullScreen) {
             ensureAlarmChannel(context);
@@ -206,6 +256,7 @@ public final class ReminderNotificationHelper {
             alarmIntent.putExtra(AlarmFullScreenActivity.EXTRA_ID, reminderId);
             alarmIntent.putExtra(AlarmFullScreenActivity.EXTRA_TITLE, title);
             alarmIntent.putExtra(AlarmFullScreenActivity.EXTRA_MESSAGE, text);
+            alarmIntent.putExtra(AlarmFullScreenActivity.EXTRA_RING_MINUTES, ringDurationMinutes);
             fullScreenIntent = PendingIntent.getActivity(context, notificationId(reminderId),
                     alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         }
@@ -236,8 +287,8 @@ public final class ReminderNotificationHelper {
                         : NotificationCompat.PRIORITY_HIGH)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
-                // 全屏页面已负责响铃/震动，通知本身静音，避免重复提醒
-                .setSilent(fullScreenIntent != null)
+                // 声音由通知渠道提供（强提醒走闹钟渠道）：
+                // 全屏页面能拉起时会先取消这条通知，再自己循环播放，避免叠音
                 .setWhen(System.currentTimeMillis())
                 .setShowWhen(true)
                 .setContentIntent(contentIntent);

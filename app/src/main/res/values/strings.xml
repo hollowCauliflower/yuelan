@@ -179,9 +179,38 @@
     <string name="calendar_prediction_marker">P</string>
     <string name="calendar_recorded_mark">Recorded</string>
     <string name="calendar_recorded_prefix">✓</string>
+    <string name="reminder_ring_duration_label">Ring duration</string>
+    <string name="reminder_ring_1">1 min</string>
+    <string name="reminder_ring_3">3 min</string>
+    <string name="reminder_ring_5">5 min</string>
+    <string name="reminder_ring_10">10 min</string>
+    <string name="reminder_ring_forever">Until dismissed</string>
+    <string name="alarm_full_screen_ring_hint">Will silence automatically in %1$d minutes</string>
+    <string name="alarm_full_screen_silenced">Silenced automatically — tap the button below to close</string>
     <string name="reminder_mode_label">Mode</string>
+    <string name="reminder_exact_alarm_warning">⚠ Reminders may be delayed: \"Alarms &amp; reminders\" is not allowed. Tap to enable (otherwise delivery can be up to an hour late)</string>
     <string name="reminder_mode_date">Custom dates</string>
     <string name="reminder_mode_cycle">Cycle-based</string>
+    <string name="reminder_mode_phase">Phase range</string>
+    <string name="reminder_phase_hint">Reminds every day inside this phase, and stops when the phase ends</string>
+    <string name="reminder_phase_card_format">%1$s · %2$d d</string>
+    <string name="reminder_summary_badge_once">Once</string>
+    <string name="reminder_summary_badge_daily">Daily</string>
+    <string name="reminder_summary_badge_cycle">Every cycle</string>
+    <string name="reminder_summary_badge_interval_format">Every %1$d d</string>
+    <string name="reminder_summary_phase_title">All of %1$s</string>
+    <string name="reminder_summary_phase_sub">Reminds every day in this phase, then stops automatically</string>
+    <string name="reminder_summary_phase_sub_days">Reminds every day in this phase, %1$d days in total</string>
+    <string name="reminder_summary_once_sub">Reminds once at that time</string>
+    <string name="reminder_summary_start_format">Starts %1$s</string>
+    <string name="reminder_summary_until_format">until %1$s</string>
+    <string name="reminder_summary_forever">No end date</string>
+    <string name="reminder_summary_next_format">next %1$s</string>
+    <string name="reminder_summary_month_day_title">Day %1$d</string>
+    <string name="reminder_summary_multi_title">%1$d days</string>
+    <string name="reminder_month_day_pick_title">Pick a day of month</string>
+    <string name="reminder_month_day_value">Day %1$d monthly</string>
+    <string name="reminder_span_meta_format">Every cycle · %1$s · daily</string>
     <string name="reminder_node_period_start">Period starts</string>
     <string name="reminder_node_period_end">Period ends</string>
     <string name="reminder_node_follicle">Follicular phase starts</string>
@@ -272,8 +301,8 @@
     <!-- Common reminder presets -->
     <string name="reminder_presets_label">Quick presets</string>
     <!-- 预设说明：无周期设置时 / 有周期设置且命中阶段时（%s=阶段名） -->
-    <string name="reminder_presets_hint_fixed">Reminders fire on the chosen date and don\'t follow cycle changes</string>
-    <string name="reminder_presets_hint_phase">You\'re in %s — common items for this phase are listed first; reminders fire on fixed dates</string>
+    <string name="reminder_presets_hint_fixed">Tap a preset to fill the title, note and suggested time</string>
+    <string name="reminder_presets_hint_phase">You\'re in %s — phase presets are listed first, and phase-aware presets switch to a daily phase reminder</string>
     <string name="reminder_preset_progesterone_title">Take progesterone</string>
     <string name="reminder_preset_progesterone_message">Take progesterone / dydrogesterone as prescribed</string>
     <string name="reminder_preset_folic_acid_title">Take folic acid</string>
@@ -652,6 +681,9 @@
     <string name="reminder_alarm_channel_name">Strong reminder alarm</string>
     <string name="reminder_alarm_channel_description">Shows a full-screen alert and rings at the scheduled time</string>
     <string name="reminder_full_screen_permission_title">Allow full-screen notifications</string>
-    <string name="reminder_full_screen_permission_message">Full-screen notifications are not allowed for this app, so strong reminders may only show a banner. Allow them in system settings to wake the screen with a full-screen alert.</string>
+    <string name="reminder_full_screen_permission_message">Full-screen notifications are not allowed for this app, so strong reminders may only show a banner. Allow them in system settings to wake the screen with a full-screen alert.\nOn ColorOS / OnePlus, also allow \"Background pop-up\" and \"Show on lock screen\" in special app permissions.</string>
+    <string name="reminder_full_screen_overlay_message">The system will not open a full-screen alarm while you are using the phone. Allow \"Display over other apps\" so strong reminders can pop up in full screen; otherwise you get an alarm ringtone plus a high-priority banner.</string>
+    <string name="reminder_full_screen_warning_notification">⚠ Full-screen notifications are off — only a banner will appear. Tap to allow</string>
+    <string name="reminder_full_screen_warning_overlay">⚠ \"Display over other apps\" is off — a banner will be used while the screen is on. Tap to allow</string>
 
 </resources>

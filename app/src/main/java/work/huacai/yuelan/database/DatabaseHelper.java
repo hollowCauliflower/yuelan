@@ -186,6 +186,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 Log.e(TAG, "reminder 指定多个日期规则迁移失败", e);
             }
         }
+        if (oldVersion < 8) {
+            // 7 → 8：reminder 追加两列（未发布前合并到同一个版本，避免版本号无意义自增）：
+            // - cycle_node_end：阶段区间提醒的结束节点（0 表示单日节点提醒）；
+            // - ring_duration：强提醒响铃时长（分钟，0 = 一直响）。
+            // 存量提醒两列均为 0，行为与升级前一致。
+            try {
+                db.execSQL("ALTER TABLE reminder ADD COLUMN cycle_node_end INTEGER NOT NULL DEFAULT 0");
+                db.execSQL("ALTER TABLE reminder ADD COLUMN ring_duration INTEGER NOT NULL DEFAULT 0");
+                Log.i(TAG, "reminder 增加 cycle_node_end / ring_duration 列成功");
+            } catch (Exception e) {
+                Log.e(TAG, "reminder 增加阶段区间/响铃时长列失败", e);
+            }
+        }
     }
 
     /**

@@ -38,6 +38,21 @@
 
         </LinearLayout>
 
+        <!-- 精确闹钟未授权时提示：否则提醒可能被系统延后最多一小时 -->
+        <TextView
+            android:id="@+id/tv_exact_alarm_warning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/chip_unselected_background"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:text="@string/reminder_exact_alarm_warning"
+            android:textColor="@color/brand_primary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_reminders"
             android:layout_width="match_parent"

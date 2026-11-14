@@ -9,8 +9,11 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
@@ -23,6 +26,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import work.huacai.yuelan.R;
+import work.huacai.yuelan.helper.ReminderNotificationHelper;
 
 /**
  * 强提醒（全屏闹钟）页面。
@@ -41,6 +45,20 @@ public class AlarmFullScreenActivity extends AppCompatActivity {
     public static final String EXTRA_TITLE = "alarm_reminder_title";
     /** 提醒备注 */
     public static final String EXTRA_MESSAGE = "alarm_reminder_message";
+    /** 响铃时长（分钟，0 = 一直响到用户关闭） */
+    public static final String EXTRA_RING_MINUTES = "alarm_ring_minutes";
+
+    /** 到点后自动静音的延时任务（响铃时长 > 0 时启用） */
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable autoSilenceRunnable = () -> {
+        stopAlarmSoundAndVibration();
+        // 静音后不再强制亮屏，节省电量；页面保留，仍需用户确认关闭
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        TextView hint = findViewById(R.id.tv_alarm_ring_hint);
+        if (hint != null) {
+            hint.setText(R.string.alarm_full_screen_silenced);
+        }
+    };
 
     /** 循环播放的闹钟铃声；创建失败时为 null */
     @Nullable
@@ -70,7 +88,13 @@ public class AlarmFullScreenActivity extends AppCompatActivity {
         }
 
         bindContent();
+        // 通知渠道自带闹钟铃声；页面接手后先撤掉通知，避免“通知响一次 + 页面循环响”叠音
+        long reminderId = getIntent().getLongExtra(EXTRA_ID, -1);
+        if (reminderId > 0) {
+            ReminderNotificationHelper.cancel(this, reminderId);
+        }
         startAlarmSoundAndVibration();
+        scheduleAutoSilence();
     }
 
     /**
@@ -81,8 +105,13 @@ public class AlarmFullScreenActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         bindContent();
+        long reminderId = intent.getLongExtra(EXTRA_ID, -1);
+        if (reminderId > 0) {
+            ReminderNotificationHelper.cancel(this, reminderId);
+        }
         stopAlarmSoundAndVibration();
         startAlarmSoundAndVibration();
+        scheduleAutoSilence();
     }
 
     /**
@@ -104,7 +133,30 @@ public class AlarmFullScreenActivity extends AppCompatActivity {
         tvMessage.setText(message == null || message.isEmpty()
                 ? getString(R.string.reminder_notification_default_text) : message);
 
+        // 响铃时长提示：0 表示一直响，不展示提示
+        TextView tvRingHint = findViewById(R.id.tv_alarm_ring_hint);
+        int ringMinutes = getIntent().getIntExtra(EXTRA_RING_MINUTES, 0);
+        if (tvRingHint != null) {
+            if (ringMinutes > 0) {
+                tvRingHint.setVisibility(View.VISIBLE);
+                tvRingHint.setText(getString(R.string.alarm_full_screen_ring_hint, ringMinutes));
+            } else {
+                tvRingHint.setVisibility(View.GONE);
+            }
+        }
+
         btnDismiss.setOnClickListener(v -> dismissAlarm());
+    }
+
+    /**
+     * 按设置的响铃时长安排自动静音；0 表示不自动停。
+     */
+    private void scheduleAutoSilence() {
+        handler.removeCallbacks(autoSilenceRunnable);
+        int minutes = getIntent().getIntExtra(EXTRA_RING_MINUTES, 0);
+        if (minutes > 0) {
+            handler.postDelayed(autoSilenceRunnable, minutes * 60L * 1000L);
+        }
     }
 
     /**
@@ -167,6 +219,7 @@ public class AlarmFullScreenActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        handler.removeCallbacks(autoSilenceRunnable);
         stopAlarmSoundAndVibration();
         super.onDestroy();
     }

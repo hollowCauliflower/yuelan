@@ -444,6 +444,24 @@ public class CalendarFragment extends Fragment {
         for (Reminder reminder : reminderDao.selectAll()) {
             if (!reminder.isEnabled()) continue;
 
+            if (reminder.isSpanMode()) {
+                // 阶段区间提醒：阶段内每一天都挂一个粉色点，与每日建议同范围
+                Calendar spanStart = Calendar.getInstance();
+                spanStart.add(Calendar.DAY_OF_MONTH, -186);
+                Calendar spanEnd = Calendar.getInstance();
+                spanEnd.add(Calendar.DAY_OF_MONTH, 62);
+                for (Date spanDate : ReminderCycleHelper.spanDatesBetween(reminder,
+                        spanStart.getTime(), spanEnd.getTime())) {
+                    CalendarView.EventData event = new CalendarView.EventData();
+                    event.setTitle(reminder.getTitle());
+                    event.description = reminder.getMessage() != null ? reminder.getMessage() : "";
+                    event.tag = "reminder";
+                    event.setDate(toCalendarKey(CycleCalculator.formatDateId(spanDate)));
+                    addEvent(eventMap, event.date, event);
+                }
+                continue;
+            }
+
             if (reminder.isCycleMode()) {
                 // 周期节点提醒：按当前周期推算前后各一段范围内的节点日期，
                 // 与每日建议同范围，让节点在日历上可见（粉色点）

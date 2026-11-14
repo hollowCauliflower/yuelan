@@ -152,7 +152,9 @@ public class ReminderDaoImpl implements ReminderDao {
         values.put("alarm_time", reminder.getAlarmTime());
         values.put("is_enabled", reminder.isEnabled() ? 1 : 0);
         values.put("is_alarm", reminder.isAlarm() ? 1 : 0);
+        values.put("ring_duration", reminder.getRingDuration());
         values.put("cycle_node", reminder.getCycleNode());
+        values.put("cycle_node_end", reminder.getCycleNodeEnd());
         values.put("repeat_type", reminder.getRepeatType());
         values.put("repeat_config", reminder.getRepeatConfig());
         values.put("repeat_end_day", reminder.getRepeatEndDay());
@@ -170,9 +172,17 @@ public class ReminderDaoImpl implements ReminderDao {
         reminder.setAlarmTime(cursor.getString(cursor.getColumnIndexOrThrow("alarm_time")));
         reminder.setEnabled(cursor.getInt(cursor.getColumnIndexOrThrow("is_enabled")) == 1);
         reminder.setAlarm(cursor.getInt(cursor.getColumnIndexOrThrow("is_alarm")) == 1);
+        // ring_duration 列是版本 8 新增；老库升级异常时容忍缺列，默认一直响
+        int ringIndex = cursor.getColumnIndex("ring_duration");
+        reminder.setRingDuration(ringIndex >= 0
+                ? cursor.getInt(ringIndex) : Reminder.RING_FOREVER);
         // cycle_node 列是版本 5 新增；老库升级异常时容忍缺列，默认固定日期模式
         int nodeIndex = cursor.getColumnIndex("cycle_node");
         reminder.setCycleNode(nodeIndex >= 0 ? cursor.getInt(nodeIndex) : Reminder.NODE_NONE);
+        // cycle_node_end 列是版本 8 新增；老库升级异常时容忍缺列，默认单日节点提醒
+        int nodeEndIndex = cursor.getColumnIndex("cycle_node_end");
+        reminder.setCycleNodeEnd(nodeEndIndex >= 0
+                ? cursor.getInt(nodeEndIndex) : Reminder.NODE_NONE);
         // repeat_* 列是版本 6 新增；老库升级异常时容忍缺列，默认不重复
         int repeatTypeIndex = cursor.getColumnIndex("repeat_type");
         reminder.setRepeatType(repeatTypeIndex >= 0

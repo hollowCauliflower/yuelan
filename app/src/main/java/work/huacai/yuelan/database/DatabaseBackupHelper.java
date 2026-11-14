@@ -310,6 +310,8 @@ public class DatabaseBackupHelper {
                 item.put("is_alarm", getInt(cursor, "is_alarm"));
                 // 周期节点与重复规则：保证备份恢复后提醒行为与导出前一致
                 item.put("cycle_node", getInt(cursor, "cycle_node"));
+                item.put("cycle_node_end", getInt(cursor, "cycle_node_end"));
+                item.put("ring_duration", getInt(cursor, "ring_duration"));
                 item.put("repeat_type", getInt(cursor, "repeat_type"));
                 item.put("repeat_config", getString(cursor, "repeat_config"));
                 item.put("repeat_end_day", getInt(cursor, "repeat_end_day"));
@@ -428,8 +430,8 @@ public class DatabaseBackupHelper {
     private static void insertReminders(SQLiteDatabase db, JSONArray array) throws JSONException {
         if (array == null) return;
         String sql = "INSERT INTO reminder (title, message, reminder_type, target_day, alarm_time, "
-                + "is_enabled, is_alarm, cycle_node, repeat_type, repeat_config, repeat_end_day, "
-                + "created_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "is_enabled, is_alarm, ring_duration, cycle_node, cycle_node_end, repeat_type, "
+                + "repeat_config, repeat_end_day, created_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         for (int i = 0; i < array.length(); i++) {
             JSONObject item = array.getJSONObject(i);
             db.execSQL(sql, new Object[]{
@@ -440,8 +442,10 @@ public class DatabaseBackupHelper {
                     item.optString("alarm_time", null),
                     item.optInt("is_enabled", 1),
                     item.optInt("is_alarm", 0),
-                    // 旧备份没有这些字段时回退为“固定日期、不重复”
+                    // 旧备份没有这些字段时回退为“固定日期、不重复、一直响”
+                    item.optInt("ring_duration", 0),
                     item.optInt("cycle_node", 0),
+                    item.optInt("cycle_node_end", 0),
                     item.optInt("repeat_type", 0),
                     item.optString("repeat_config", null),
                     item.optInt("repeat_end_day", 0),
