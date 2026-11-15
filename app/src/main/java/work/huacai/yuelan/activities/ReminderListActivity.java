@@ -1091,18 +1091,11 @@ public class ReminderListActivity extends AppCompatActivity implements ReminderA
 
     /**
      * 计算当前所处周期阶段；没有周期设置时返回 null。
+     * <p>与首页/日历同源：按实际记录 + 周期设置 + 阶段锚点取今天的阶段，
+     * 避免常用提醒的排序和“当前处于某阶段”的提示与实际显示的阶段不一致。
      */
     private MenstrualCycle detectCurrentPhase() {
-        MenstrualCycleRecord record = new MenstrualCycleRecordDaoImpl().selectLast();
-        if (record == null || record.getStartTime() == null) {
-            return null;
-        }
-        int[] phaseArray = CycleCalculator.calculatePhaseDays(
-                record.getMenstrualPeriodDay(), record.getTotalCycleDay());
-        int dayInCycle = CycleCalculator.getDayInCurrentCycle(
-                record.getStartTime(), record.getTotalCycleDay());
-        return CycleCalculator.getMenstrualCycleForPhase(
-                CycleCalculator.getPhaseIndex(dayInCycle, phaseArray));
+        return ReminderCycleHelper.phaseOn(new Date());
     }
 
     /**

@@ -27,15 +27,12 @@ import java.util.Map;
 
 import work.huacai.yuelan.R;
 import work.huacai.yuelan.dao.MenstrualRecordDao;
-import work.huacai.yuelan.dao.PhaseAnchorDao;
 import work.huacai.yuelan.dao.impl.MenstrualCycleRecordDaoImpl;
 import work.huacai.yuelan.dao.impl.MenstrualRecordDaoImpl;
-import work.huacai.yuelan.dao.impl.PhaseAnchorDaoImpl;
 import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.PhaseContinuityHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualRecord;
-import work.huacai.yuelan.model.PhaseAnchor;
 
 /**
  * 阶段范围编辑器（批量涂抹版）。
@@ -115,7 +112,6 @@ public final class PhaseRangeEditor {
         }
 
         MenstrualRecordDao recordDao = new MenstrualRecordDaoImpl();
-        PhaseAnchorDao anchorDao = new PhaseAnchorDaoImpl();
 
         // ---------- 弹窗内容：范围标签 + 提示 + 调色板 + 统计 + 月历 ----------
         LinearLayout content = new LinearLayout(context);
@@ -262,19 +258,19 @@ public final class PhaseRangeEditor {
         // 日期范围放在正文首行，标题保持短小，避免长标题在弹窗里折行
         AppDialogFactory.showForm(context, context.getString(R.string.phase_range_title), content,
                 R.string.dialog_save, R.string.dialog_cancel,
-                dialog -> saveRange(context, fromDateId, days, recordDao, anchorDao, dialog, listener));
+                dialog -> saveRange(context, fromDateId, days, recordDao, dialog, listener));
     }
 
     /**
      * 构建范围内每一天的默认阶段：有实际记录用实际阶段，
-     * 否则按"分段 + 锚点"推算预测阶段；无法推算时默认卵泡期。
+     * 否则按周期分段推算预测阶段；无法推算时默认卵泡期。
      * <p>通过 {@link PhaseContinuityHelper#loadSnapshot} 一次性读库，避免逐日查询。
      */
     private static List<DayEntry> buildDays(Context context, Date from, Date end) {
         List<DayEntry> days = new ArrayList<>();
         MenstrualRecordDao recordDao = new MenstrualRecordDaoImpl();
         PhaseContinuityHelper.PhaseSnapshot snapshot = PhaseContinuityHelper.loadSnapshot(
-                recordDao, new MenstrualCycleRecordDaoImpl(), new PhaseAnchorDaoImpl());
+                recordDao, new MenstrualCycleRecordDaoImpl());
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(from);
@@ -298,12 +294,12 @@ public final class PhaseRangeEditor {
      * <p>
      * 校验失败时保持弹窗打开，只弹一条提示，避免用户丢失已做的涂抹结果；
      * 若起始补签日被涂成月经期，则提示后果并允许"只保存这一天"，
-     * 不写分段、不动锚点，预测周期保持原样。
+     * 不写分段，预测周期保持原样。
      *
      * @param fromDateId 进入编辑器时的补签日期（yyyyMMdd）
      */
     private static void saveRange(Context context, String fromDateId, List<DayEntry> days,
-                                  MenstrualRecordDao recordDao, PhaseAnchorDao anchorDao,
+                                  MenstrualRecordDao recordDao,
                                   Dialog dialog, OnSavedListener listener) {
         String invalid = validate(context, days);
         if (invalid != null) {
@@ -344,13 +340,7 @@ public final class PhaseRangeEditor {
             }
         }
 
-        // 重写锚点：让今天之后的预测继续按用户最后一次选择的阶段顺延，
-        // 避免保存范围后明天又跳回旧的预测顺序
-        anchorDao.clear();
-        DayEntry last = days.get(days.size() - 1);
-        if (last.phase != MenstrualCycle.MENSTRUAL_PERIOD) {
-            anchorDao.upsert(new PhaseAnchor(last.date, last.phase.getIndex()));
-        }
+        // 阶段锚点机制已移除：范围保存只写入所选日期的实际记录，不改变后续预测顺序
 
         dialog.dismiss();
         notifySaved(context, listener);

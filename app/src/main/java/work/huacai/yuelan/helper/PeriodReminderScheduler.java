@@ -13,17 +13,16 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import work.huacai.yuelan.dao.impl.MenstrualCycleRecordDaoImpl;
-import work.huacai.yuelan.model.MenstrualCycleRecord;
+import work.huacai.yuelan.model.Reminder;
 import work.huacai.yuelan.receiver.PeriodReminderReceiver;
 
 /**
  * 经期提醒的闹钟调度器。
  * <p>
  * 与“自定义提醒”（{@link ReminderAlarmScheduler}）不同，经期提醒不是用户指定的固定日期，
- * 而是根据最近一次周期记录推算：
+ * 而是根据当前阶段模型推算：
  * <pre>
- * 下次月经开始日 = 当前周期起始日 + 周期天数
+ * 下次月经开始日 = 下一个“经期第一天”（与日历显示同源，叠加阶段锚点与实际记录）
  * 提醒时间       = 下次月经开始日 - 提前天数，再套用用户设定的时/分
  * </pre>
  * 由于周期会不断滚动，这里只安排“下一次”提醒；闹钟触发后会由
@@ -195,22 +194,6 @@ public final class PeriodReminderScheduler {
      * @return 触发时间毫秒值；无法推算时返回 -1
      */
     private static long computeNextTrigger(Context context, long minTriggerAt) {
-        MenstrualCycleRecord record;
-        try {
-            record = new MenstrualCycleRecordDaoImpl().selectLast();
-        } catch (Exception e) {
-            Log.e(TAG, "读取周期记录失败", e);
-            return -1;
-        }
-        if (record == null || record.getStartTime() == null) {
-            return -1;
-        }
-
-        int cycleDays = record.getTotalCycleDay();
-        if (cycleDays <= 0) {
-            return -1;
-        }
-
         SharedPreferences prefs = getPrefs(context);
         int daysBefore = prefs.getInt(KEY_DAYS, 3);
         int hour = prefs.getInt(KEY_HOUR, 9);
@@ -220,42 +203,46 @@ public final class PeriodReminderScheduler {
         // 允许的最早触发时间：正常排程为“现在”，重排时为“现在 + 1 天”
         long threshold = Math.max(now, minTriggerAt);
 
-        Date firstCycleStart = CycleCalculator.getCurrentCycleStart(record.getStartTime(), cycleDays);
-        if (firstCycleStart == null) {
+        // 与日历、首页“下次月经”同口径：按当前阶段模型（含阶段锚点）找下一个经期第一天，
+        // 而不是简单用“周期起点 + 周期天数”，否则阶段被调整过后提醒会落在错误日期
+        Date periodStart = ReminderCycleHelper.nextPeriodStart();
+        if (periodStart == null) {
+            Log.e(TAG, "无法推算下次经期：缺少周期设置");
             return -1;
         }
 
-        Calendar cycleStart = Calendar.getInstance();
-        cycleStart.setTime(firstCycleStart);
-
-        for (int i = 0; i <= MAX_CYCLE_LOOKAHEAD; i++) {
-            // 预测的月经开始日 = 本周期起始日 + 一个完整周期
-            Calendar predictedStart = (Calendar) cycleStart.clone();
-            predictedStart.add(Calendar.DAY_OF_MONTH, cycleDays);
-
-            // 提醒日 = 预测开始日 - 提前提醒天数，并套用用户设定的时分
-            Calendar reminderAt = (Calendar) predictedStart.clone();
+        for (int i = 0; i <= MAX_CYCLE_LOOKAHEAD && periodStart != null; i++) {
+            // 提醒日 = 下次经期开始日 - 提前提醒天数，并套用用户设定的时分
+            Calendar reminderAt = Calendar.getInstance();
+            reminderAt.setTime(periodStart);
             reminderAt.add(Calendar.DAY_OF_MONTH, -daysBefore);
             reminderAt.set(Calendar.HOUR_OF_DAY, hour);
             reminderAt.set(Calendar.MINUTE, minute);
             reminderAt.set(Calendar.SECOND, 0);
             reminderAt.set(Calendar.MILLISECOND, 0);
-
             long reminderMillis = reminderAt.getTimeInMillis();
-            long predictedStartMillis = predictedStart.getTimeInMillis();
+
+            Calendar periodStartCal = Calendar.getInstance();
+            periodStartCal.setTime(periodStart);
+            periodStartCal.set(Calendar.HOUR_OF_DAY, 0);
+            periodStartCal.set(Calendar.MINUTE, 0);
+            periodStartCal.set(Calendar.SECOND, 0);
+            periodStartCal.set(Calendar.MILLISECOND, 0);
+            long periodStartMillis = periodStartCal.getTimeInMillis();
 
             if (reminderMillis >= threshold) {
                 return reminderMillis;
             }
-            if (predictedStartMillis > threshold) {
+            if (periodStartMillis > threshold) {
                 // 提醒日已过、但月经还没来：本次不限制最早时间时立即提醒一次
                 if (minTriggerAt <= now) {
                     return now + IMMEDIATE_DELAY_MILLIS;
                 }
             }
 
-            // 整个周期都已过去，继续推下一个周期
-            cycleStart.add(Calendar.DAY_OF_MONTH, cycleDays);
+            // 整个周期都已过去，继续找下一个经期开始日
+            periodStart = ReminderCycleHelper.nextNodeDateAfter(
+                    Reminder.NODE_PERIOD_START, periodStart);
         }
         return -1;
     }

@@ -62,21 +62,6 @@
             </sql>
         </table>
 
-        <!-- 阶段锚点：用户手动修改非经期阶段后，记录“某天应从哪个阶段开始”的基准；
-             anchor_date 为主键，同一日期重复写入时由 DAO 做 UPDATE 覆盖 -->
-        <table>
-            <name>phase_anchor</name>
-            <sql>
-                <![CDATA[
-                CREATE TABLE phase_anchor (
-                    anchor_date TEXT PRIMARY KEY,
-                    phase_index INTEGER NOT NULL,
-                    created_time TEXT DEFAULT (datetime('now', 'localtime'))
-                )
-                ]]>
-            </sql>
-        </table>
-
         <!-- 自定义提醒：target_day（yyyyMMdd）用于固定日期模式；
              cycle_node > 0 表示按周期节点提醒；repeat_type > 0 表示按重复规则提醒，
              后两者由调度器按最新周期/规则动态计算下一次触发时间。

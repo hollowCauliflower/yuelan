@@ -30,6 +30,7 @@ import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -46,6 +47,8 @@ import work.huacai.yuelan.helper.DailyPromptHelper;
 import work.huacai.yuelan.helper.PeriodReminderScheduler;
 import work.huacai.yuelan.helper.GenerateSuggestionHelper;
 import work.huacai.yuelan.helper.OpenMeteoHelper;
+import work.huacai.yuelan.helper.ReminderAlarmScheduler;
+import work.huacai.yuelan.helper.ReminderCycleHelper;
 import work.huacai.yuelan.helper.WeatherCacheHelper;
 import work.huacai.yuelan.helper.WeatherLocationHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
@@ -354,8 +357,8 @@ public class HomeFragment extends Fragment {
         if (menstrualCycleRecord == null) {
             return false;
         }
-        MenstrualCycle cycle = CycleCalculator.getMenstrualCycleForDate(
-                new Date(), startTime, phaseArray, totalCycleDay);
+        // 与首页/日历同源：按实际记录 + 周期设置 + 阶段锚点取今天的阶段
+        MenstrualCycle cycle = ReminderCycleHelper.phaseOn(new Date());
         return cycle == MenstrualCycle.MENSTRUAL_PERIOD;
     }
 
@@ -409,9 +412,8 @@ public class HomeFragment extends Fragment {
             record = new MenstrualRecord();
             record.setId(todayId);
             if (menstrualCycleRecord != null) {
-                MenstrualCycle cycle = CycleCalculator.getMenstrualCycleForDate(
-                        new Date(), startTime, phaseArray, totalCycleDay);
-                record.setMenstrualCycle(cycle);
+                // 新记录的默认阶段同样要按阶段锚点推算，避免写入与界面显示不一致的阶段
+                record.setMenstrualCycle(ReminderCycleHelper.phaseOn(new Date()));
             }
             record.setIsPrediction(0);
         }
@@ -476,7 +478,7 @@ public class HomeFragment extends Fragment {
         if (menstrualCycleRecord == null) return false;
 
         DailyPromptHelper.PromptType type =
-                DailyPromptHelper.getPromptType(requireContext(), menstrualCycleRecord);
+                DailyPromptHelper.getPromptType(requireContext());
         if (type == DailyPromptHelper.PromptType.NONE) {
             return false;
         }
@@ -699,6 +701,8 @@ public class HomeFragment extends Fragment {
         // 按新参数重算预测记录，并把基准日对齐到刚指定的起始日
         dao.syncActualStartAndRegenerate(requireContext());
         PeriodReminderScheduler.apply(requireContext());
+        // 周期参数/基准日改变后，周期节点与阶段区间提醒的日期也会变，需要重排闹钟
+        ReminderAlarmScheduler.rescheduleAll(requireContext());
 
         // 刷新首页展示
         startTime = menstrualCycleRecord.getStartTime();
@@ -750,8 +754,18 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        int cycleDay = CycleCalculator.getDayInCurrentCycle(startTime, totalCycleDay);
-        currentCycleStart = CycleCalculator.getCurrentCycleStart(startTime, totalCycleDay);
+        // 阶段锚点会把阶段顺序整体重排，因此“第几天/当前阶段”必须以重排后的周期起点为准，
+        // 否则会出现首页显示黄体期、当日建议却显示卵泡期的情况
+        Date periodStart = ReminderCycleHelper.currentPeriodStart();
+        int cycleDay;
+        if (periodStart != null) {
+            currentCycleStart = periodStart;
+            cycleDay = CycleCalculator.daysBetween(periodStart,
+                    CycleCalculator.normalizeDate(new Date())) + 1;
+        } else {
+            cycleDay = CycleCalculator.getDayInCurrentCycle(startTime, totalCycleDay);
+            currentCycleStart = CycleCalculator.getCurrentCycleStart(startTime, totalCycleDay);
+        }
 
         Log.d(TAG, "cycleDay=" + cycleDay + ", currentCycleStart=" + CycleCalculator.formatDateShort(currentCycleStart));
 
@@ -787,17 +801,22 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    /** 下次月经日 = 当前周期开始日期 + 一个完整周期天数 */
+    /** 下次月经日 = 下一个经期第一天（与日历阶段显示同源，已叠加阶段锚点） */
     private void updateNextMenstrualTime() {
+        Date nextPeriod = ReminderCycleHelper.nextPeriodStart();
+        if (nextPeriod != null) {
+            tvNextMenstrualTime.setText(CycleCalculator.formatDateDisplay(nextPeriod));
+            return;
+        }
         if (currentCycleStart == null) return;
 
         Calendar nextMenstrualCal = Calendar.getInstance();
         nextMenstrualCal.setTime(currentCycleStart);
         nextMenstrualCal.add(Calendar.DAY_OF_MONTH, totalCycleDay);
 
-        String nextPeriod = CycleCalculator.formatDateDisplay(nextMenstrualCal.getTime());
-        Log.d(TAG, "nextPeriod = " + nextPeriod);
-        tvNextMenstrualTime.setText(nextPeriod);
+        String nextPeriodText = CycleCalculator.formatDateDisplay(nextMenstrualCal.getTime());
+        Log.d(TAG, "nextPeriod = " + nextPeriodText);
+        tvNextMenstrualTime.setText(nextPeriodText);
     }
 
     /**
@@ -808,10 +827,15 @@ public class HomeFragment extends Fragment {
     private void updateNextPhase(int cycleDay) {
         if (phaseArray == null) return;
 
-        // 先定位当前阶段下标，再取其下一个阶段的日期区间
-        int currentPhase = CycleCalculator.getPhaseIndex(cycleDay, phaseArray);
-        Date[] nextPhaseDateArray = CycleCalculator.calculatePhaseDateRange(
-                currentPhase + 1, currentCycleStart, phaseArray, totalCycleDay);
+        // 与日历阶段显示同源：按阶段锚点重排后的顺序找今天之后的下一个阶段，
+        // 不再用“第几天 + 固定阶段长度”推算（阶段被调整过时会错位）
+        Date[] nextPhaseDateArray = ReminderCycleHelper.nextPhaseRangeAfterToday();
+        if (nextPhaseDateArray == null) {
+            // 兜底：无锚点或推算失败时仍按周期设置计算
+            int currentPhase = CycleCalculator.getPhaseIndex(cycleDay, phaseArray);
+            nextPhaseDateArray = CycleCalculator.calculatePhaseDateRange(
+                    currentPhase + 1, currentCycleStart, phaseArray, totalCycleDay);
+        }
 
         if (nextPhaseDateArray != null) {
             String nextPhaseText = CycleCalculator.formatDateDisplay(nextPhaseDateArray[0])
@@ -873,8 +897,8 @@ public class HomeFragment extends Fragment {
         int insertCount = 0;
 
         while (!nextDate.after(today)) {
-            MenstrualCycle cycle = CycleCalculator.getMenstrualCycleForDate(
-                    nextDate, startTime, phaseArray, totalCycleDay);
+            // 补全历史预测记录时也要带上阶段锚点，保证和首页/日历显示的阶段一致
+            MenstrualCycle cycle = ReminderCycleHelper.phaseOn(nextDate);
 
             if (cycle != null) {
                 MenstrualRecord record = new MenstrualRecord();
@@ -933,14 +957,24 @@ public class HomeFragment extends Fragment {
     private void updateTodayReminders() {
         if (cardTodayReminders == null || layoutTodayReminders == null) return;
 
-        String todayId = CycleCalculator.formatDateId(new Date());
-        int today = Integer.parseInt(todayId);
+        Date todayDate = CycleCalculator.normalizeDate(new Date());
         ReminderDao reminderDao = new ReminderDaoImpl();
-        List<Reminder> reminders = reminderDao.selectByDay(today);
+        // 与日历/当日提醒同口径：周期节点、阶段区间、重复规则展开到今天的都算今日提醒
+        List<Reminder> reminders = new ArrayList<>();
+        for (Reminder reminder : reminderDao.selectAll()) {
+            if (reminder != null && ReminderCycleHelper.occursOn(reminder, todayDate)) {
+                reminders.add(reminder);
+            }
+        }
+        reminders.sort((r1, r2) -> {
+            String t1 = r1.getAlarmTime() == null ? "" : r1.getAlarmTime();
+            String t2 = r2.getAlarmTime() == null ? "" : r2.getAlarmTime();
+            return t1.compareTo(t2);
+        });
 
         layoutTodayReminders.removeAllViews();
 
-        if (reminders == null || reminders.isEmpty()) {
+        if (reminders.isEmpty()) {
             cardTodayReminders.setVisibility(View.GONE);
             return;
         }

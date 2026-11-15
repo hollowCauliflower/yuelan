@@ -24,7 +24,6 @@ import work.huacai.yuelan.helper.GenerateSuggestionHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
-import work.huacai.yuelan.model.PhaseAnchor;
 
 /**
  * {@link MenstrualCycleRecordDao} 的实现，管理 menstrual_cycle_record 表。
@@ -294,14 +293,10 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
                 menstrualCycleRecord.getMenstrualPeriodDay(),
                 menstrualCycleRecord.getTotalCycleDay());
 
-        // 阶段锚点：用户手动修改非经期阶段并选择顺延后续预测时写入；
-        // 锚点早于当前分段起点时自动失效（Calculator 内部判定），无需清理后再生成
-        PhaseAnchor anchor = new PhaseAnchorDaoImpl().selectLatest();
-        Date anchorDate = anchor != null ? anchor.getAnchorDate() : null;
-        int anchorIndex = anchor != null ? anchor.getPhaseIndex() : -1;
-
+        // 阶段锚点机制已移除：直接用当前周期参数生成预测，
+        // 周期长度变化由实际经期记录形成的新分段处理
         generateRangeRecords(currentDate, today, menstrualCycleRecord.getStartTime(),
-                phaseArray, menstrualCycleRecord.getTotalCycleDay(), anchorDate, anchorIndex, context);
+                phaseArray, menstrualCycleRecord.getTotalCycleDay(), null, -1, context);
     }
 
     /**
@@ -564,16 +559,13 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
             if (settings == null || settings.getStartTime() == null) {
                 return;
             }
-
-            // 4) 新分段形成后清理早于当前分段起点的阶段锚点（旧分段内的锚点不再生效）
-            new PhaseAnchorDaoImpl().deleteBefore(CycleCalculator.formatDateId(settings.getStartTime()));
         }
 
         // 5) 中间分段（已结束的真实周期）按实际周期长度重算预测，
-        //    避免陈旧预测在新锚点之前再冒出一轮月经期
+        //    避免陈旧预测在新周期开始前再冒出一轮月经期
         regenerateMidSegments(context);
 
-        // 6) 按最新分段参数（叠加阶段锚点）重算当前周期的预测记录
+        // 6) 按最新分段参数重算当前周期的预测记录
         insertToToday(settings, context);
     }
 

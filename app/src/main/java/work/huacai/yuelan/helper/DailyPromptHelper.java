@@ -4,14 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import java.util.Calendar;
 import java.util.Date;
 
 import work.huacai.yuelan.dao.impl.MenstrualRecordDaoImpl;
 import work.huacai.yuelan.model.MenstrualCycle;
-import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
 
 /**
@@ -56,13 +53,11 @@ public final class DailyPromptHelper {
     /**
      * 判断今天应该弹出哪种引导。
      *
-     * @param context      上下文，用于读取 SP
-     * @param cycleRecord  当前周期设置，用于推算下次经期
+     * @param context 上下文，用于读取 SP
      * @return 引导类型；若用户已勾选"今天不再提醒"或不属于关键日期，返回 {@link PromptType#NONE}
      */
     @NonNull
-    public static PromptType getPromptType(@NonNull Context context,
-                                           @Nullable MenstrualCycleRecord cycleRecord) {
+    public static PromptType getPromptType(@NonNull Context context) {
         if (shouldSkipToday(context)) {
             return PromptType.NONE;
         }
@@ -84,23 +79,14 @@ public final class DailyPromptHelper {
         }
 
         // 2) 没有预测记录或已是实际记录时，检查是否临近下次经期
-        if (cycleRecord == null || cycleRecord.getStartTime() == null
-                || cycleRecord.getTotalCycleDay() <= 0) {
+        // 下次经期按当前阶段模型推算（含阶段锚点），保证引导弹窗与日历/首页显示一致
+        Date nextPeriod = ReminderCycleHelper.nextPeriodStart();
+        if (nextPeriod == null) {
             return PromptType.NONE;
         }
-
-        Date currentCycleStart = CycleCalculator.getCurrentCycleStart(
-                cycleRecord.getStartTime(), cycleRecord.getTotalCycleDay());
-        if (currentCycleStart == null) {
-            return PromptType.NONE;
-        }
-
-        Calendar nextPeriod = Calendar.getInstance();
-        nextPeriod.setTime(currentCycleStart);
-        nextPeriod.add(Calendar.DAY_OF_MONTH, cycleRecord.getTotalCycleDay());
 
         int daysUntil = CycleCalculator.daysBetween(CycleCalculator.normalizeDate(new Date()),
-                nextPeriod.getTime());
+                nextPeriod);
         // 下次经期还没到且在阈值内：弹出临近提醒（已经到了的话上面月经期分支会先命中）
         if (daysUntil > 0 && daysUntil <= APPROACHING_THRESHOLD_DAYS) {
             return PromptType.APPROACHING_PERIOD;

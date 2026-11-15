@@ -574,7 +574,8 @@ public class SettingsFragment extends Fragment {
             // 原地更新最近一条设置，避免频繁调整时表记录不断增长
             dao.updateLatest(currentCycleRecord);
         }
-        // 按新参数重新生成到今天的预测记录，并把基准日对齐到最近的实际经期
+        // 用户重新定义周期参数后，按新参数重新生成到今天的预测记录，
+        // 并把基准日对齐到最近的实际经期
         dao.syncActualStartAndRegenerate(requireContext());
         // 周期参数改变后重排经期提醒与周期节点提醒
         PeriodReminderScheduler.apply(requireContext());

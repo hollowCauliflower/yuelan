@@ -37,21 +37,17 @@ import java.util.Locale;
 import work.huacai.yuelan.R;
 import work.huacai.yuelan.dao.MenstrualCycleRecordDao;
 import work.huacai.yuelan.dao.MenstrualRecordDao;
-import work.huacai.yuelan.dao.PhaseAnchorDao;
 import work.huacai.yuelan.dao.ReminderDao;
 import work.huacai.yuelan.dao.impl.MenstrualCycleRecordDaoImpl;
 import work.huacai.yuelan.dao.impl.MenstrualRecordDaoImpl;
-import work.huacai.yuelan.dao.impl.PhaseAnchorDaoImpl;
 import work.huacai.yuelan.dao.impl.ReminderDaoImpl;
 import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.PeriodReminderScheduler;
 import work.huacai.yuelan.helper.PhaseContinuityHelper;
 import work.huacai.yuelan.helper.ReminderCycleHelper;
-import work.huacai.yuelan.helper.ReminderRepeatHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
-import work.huacai.yuelan.model.PhaseAnchor;
 import work.huacai.yuelan.model.Reminder;
 
 /**
@@ -111,7 +107,6 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
     private MenstrualRecordDao recordDao;
     private ReminderDao reminderDao;
     private MenstrualCycleRecordDao cycleRecordDao;
-    private PhaseAnchorDao phaseAnchorDao;
 
     /** 阶段修改回调：通知宿主刷新日历与统计 */
     public interface OnPhaseChangedListener {
@@ -178,7 +173,6 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         recordDao = new MenstrualRecordDaoImpl();
         reminderDao = new ReminderDaoImpl();
         cycleRecordDao = new MenstrualCycleRecordDaoImpl();
-        phaseAnchorDao = new PhaseAnchorDaoImpl();
 
         // 解析参数；日期解析失败时在下面回退为今天
         if (getArguments() != null) {
@@ -323,9 +317,9 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
     }
 
     /**
-     * 指定日期是否为"月经提醒"的提醒日（预计经期首日）。
+     * 指定日期是否为“月经提醒”的提醒日（预计经期首日 - 提前提醒天数）。
      * <p>与 {@code CalendarFragment#loadCalendarEvents()} 的口径保持一致：
-     * 打开月经提醒且该日等于当前周期起点 + 周期长度时，日历会画提醒圆点。
+     * 经期首日按当前阶段模型推算（叠加阶段锚点），提醒日 = 首日 - 提前天数。
      *
      * @param dateId 日期 id（yyyyMMdd）
      * @return 是月经提醒日返回 true
@@ -334,19 +328,17 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         if (!PeriodReminderScheduler.isEnabled(requireContext())) {
             return false;
         }
-        MenstrualCycleRecord cycleRecord = cycleRecordDao.selectLast();
-        if (cycleRecord == null || cycleRecord.getStartTime() == null) {
+        Date day = CycleCalculator.parseDateId(dateId);
+        if (day == null) {
             return false;
         }
-        Date cycleStart = CycleCalculator.getCurrentCycleStart(
-                cycleRecord.getStartTime(), cycleRecord.getTotalCycleDay());
-        if (cycleStart == null) {
-            return false;
-        }
-        Calendar nextPeriod = Calendar.getInstance();
-        nextPeriod.setTime(cycleStart);
-        nextPeriod.add(Calendar.DAY_OF_MONTH, cycleRecord.getTotalCycleDay());
-        return dateId.equals(CycleCalculator.formatDateId(nextPeriod.getTime()));
+        int daysBefore = PeriodReminderScheduler.getReminderDays(requireContext());
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(day);
+        calendar.add(Calendar.DAY_OF_MONTH, daysBefore);
+        Date periodDay = CycleCalculator.normalizeDate(calendar.getTime());
+        return !ReminderCycleHelper.nodeDatesBetween(
+                Reminder.NODE_PERIOD_START, periodDay, periodDay).isEmpty();
     }
 
     /**
@@ -367,34 +359,11 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
             return reminders;
         }
         for (Reminder reminder : reminderDao.selectAll()) {
-            if (occursOn(reminder, dateId, day)) {
+            if (ReminderCycleHelper.occursOn(reminder, day)) {
                 reminders.add(reminder);
             }
         }
         return reminders;
-    }
-
-    /**
-     * 判断某条提醒是否在指定日期触发（只比较日期，忽略提醒时间）。
-     *
-     * @param reminder 提醒
-     * @param dateId   日期 id（yyyyMMdd）
-     * @param day      该日期的 00:00
-     * @return 当天触发返回 true
-     */
-    private boolean occursOn(Reminder reminder, String dateId, Date day) {
-        // 阶段区间优先于周期节点：区间模式同样带 cycleNode，必须先判断
-        if (reminder.isSpanMode()) {
-            return !ReminderCycleHelper.spanDatesBetween(reminder, day, day).isEmpty();
-        }
-        if (reminder.isCycleMode()) {
-            return !ReminderCycleHelper.nodeDatesBetween(
-                    reminder.getCycleNode(), day, day).isEmpty();
-        }
-        if (reminder.isRepeatMode()) {
-            return ReminderRepeatHelper.matches(reminder, day);
-        }
-        return dateId.equals(reminder.getDateId());
     }
 
     /** 比较 "HH:mm" 时间字符串；空值排最后 */
@@ -652,7 +621,7 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         }
         String dateId = CycleCalculator.formatDateId(currentDate);
         PhaseContinuityHelper.CheckResult check = PhaseContinuityHelper.check(
-                dateId, cycle, recordDao, cycleRecordDao, phaseAnchorDao);
+                dateId, cycle, recordDao, cycleRecordDao);
         if (check.type != PhaseContinuityHelper.Discontinuity.NONE) {
             showContinuityDialog(cycle, check);
             return;
@@ -770,13 +739,8 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         int[] phaseDays = CycleCalculator.calculatePhaseDays(
                 cycleRecord.getMenstrualPeriodDay(),
                 cycleRecord.getTotalCycleDay());
-        // 叠加阶段锚点：用户选择"顺延后续预测"后，弹窗显示的预测阶段与日历保持一致
-        PhaseAnchor anchor = phaseAnchorDao.selectLatest();
-        Date anchorDate = anchor != null ? anchor.getAnchorDate() : null;
-        int anchorIndex = anchor != null ? anchor.getPhaseIndex() : -1;
         return CycleCalculator.getMenstrualCycleForDate(
-                date, cycleRecord.getStartTime(), phaseDays, cycleRecord.getTotalCycleDay(),
-                anchorDate, anchorIndex);
+                date, cycleRecord.getStartTime(), phaseDays, cycleRecord.getTotalCycleDay());
     }
 
     /**

@@ -27,15 +27,12 @@ import java.util.Locale;
 import work.huacai.yuelan.R;
 import work.huacai.yuelan.dao.MenstrualCycleRecordDao;
 import work.huacai.yuelan.dao.MenstrualRecordDao;
-import work.huacai.yuelan.dao.PhaseAnchorDao;
 import work.huacai.yuelan.dao.impl.MenstrualCycleRecordDaoImpl;
 import work.huacai.yuelan.dao.impl.MenstrualRecordDaoImpl;
-import work.huacai.yuelan.dao.impl.PhaseAnchorDaoImpl;
 import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
-import work.huacai.yuelan.model.PhaseAnchor;
 
 /**
  * 每日建议居中弹窗。
@@ -75,7 +72,6 @@ public class DailySuggestionDialog extends DialogFragment {
     private Date currentDate;
     private MenstrualRecordDao recordDao;
     private MenstrualCycleRecordDao cycleRecordDao;
-    private PhaseAnchorDao phaseAnchorDao;
 
     /**
      * 创建居中弹窗实例。
@@ -98,7 +94,6 @@ public class DailySuggestionDialog extends DialogFragment {
         super.onCreate(savedInstanceState);
         recordDao = new MenstrualRecordDaoImpl();
         cycleRecordDao = new MenstrualCycleRecordDaoImpl();
-        phaseAnchorDao = new PhaseAnchorDaoImpl();
 
         if (getArguments() != null) {
             String dateId = getArguments().getString(ARG_DATE_ID);
@@ -270,12 +265,8 @@ public class DailySuggestionDialog extends DialogFragment {
         int[] phaseDays = CycleCalculator.calculatePhaseDays(
                 cycleRecord.getMenstrualPeriodDay(),
                 cycleRecord.getTotalCycleDay());
-        PhaseAnchor anchor = phaseAnchorDao.selectLatest();
-        Date anchorDate = anchor != null ? anchor.getAnchorDate() : null;
-        int anchorIndex = anchor != null ? anchor.getPhaseIndex() : -1;
         return CycleCalculator.getMenstrualCycleForDate(
-                date, cycleRecord.getStartTime(), phaseDays, cycleRecord.getTotalCycleDay(),
-                anchorDate, anchorIndex);
+                date, cycleRecord.getStartTime(), phaseDays, cycleRecord.getTotalCycleDay());
     }
 
     /**

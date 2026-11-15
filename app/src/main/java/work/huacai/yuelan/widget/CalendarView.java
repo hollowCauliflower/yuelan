@@ -91,10 +91,6 @@ extends View {
     private int[] periodColors;
     /** 实际记录阶段色，下标同上（实色） */
     private int[] actualPhaseColors;
-    /** 阶段锚点日期：用户手动改过阶段后，从该天起按锚点阶段顺序重排预测 */
-    private Calendar phaseAnchorDate;
-    /** 锚点阶段下标（0~3），-1 表示无锚点 */
-    private int phaseAnchorIndex = -1;
     /** 是否显示阶段底色（导航栏的经期图标可切换） */
     private boolean showPeriodColors = true;
     /** 实际记录日期 → 阶段下标；存在的日期绘制实色并显示“已记录”指示 */
@@ -692,65 +688,112 @@ extends View {
     private void drawEventIndicators(Canvas canvas, List<EventData> events, float top, float centerX, int textColor, boolean isActual) {
         this.customTextPaint.setTextAlign(Paint.Align.CENTER);
         if (this.showEventDots) {
-            float indicatorRadius = this.dp2px(2.0f);
-            float indicatorSpacing = this.dp2px(5.0f);
-            float startY = top + this.daySize - (float)this.dp2px(6.0f);
-            int maxSlots = 3;
-            int recordSlot = isActual ? 1 : 0;
-            int totalCount = events.size() + recordSlot;
-            boolean hasMore = totalCount > maxSlots;
-            int dotCount = hasMore ? maxSlots - 1 : totalCount;
-            ArrayList<EventData> sortedEvents = new ArrayList<EventData>(events);
-            sortedEvents.sort((e1, e2) -> {
-                int importance1 = this.getEventImportance(e1.tag);
-                int importance2 = this.getEventImportance(e2.tag);
-                return Integer.compare(importance2, importance1);
-            });
-            int elementCount = hasMore ? dotCount + 1 : dotCount;
-            for (int i = 0; i < elementCount; ++i) {
-                float elementX = centerX - (float)(elementCount - 1) * indicatorSpacing / 2.0f + (float)i * indicatorSpacing;
-                if (hasMore && i == elementCount - 1) {
-                    this.customTextPaint.setColor(textColor);
-                    this.customTextPaint.setTextSize((float)this.sp2px(8.0f));
-                    String moreText = "+" + (totalCount - dotCount);
-                    canvas.drawText(moreText, elementX, startY + (float)this.dp2px(2.0f), (Paint)this.customTextPaint);
-                    continue;
-                }
-                if (isActual && i == 0) {
-                    this.indicatorPaint.setColor(-1);
-                    canvas.drawCircle(elementX, startY, indicatorRadius, this.indicatorPaint);
-                    this.indicatorPaint.setColor(0x22000000);
-                    canvas.drawCircle(elementX + 0.5f, startY + 0.5f, indicatorRadius, this.indicatorPaint);
-                    continue;
-                }
-                EventData event = (EventData)sortedEvents.get(i - recordSlot);
-                this.indicatorPaint.setColor(event.color != 0 ? event.color : this.getEventColor(event.tag));
+            this.drawDotIndicators(canvas, events, top, centerX, textColor, isActual);
+        } else {
+            this.drawTextIndicators(canvas, events, top, centerX, textColor, isActual);
+        }
+    }
+
+    /**
+     * 圆点模式：白点固定代表实际记录，彩色点代表事件，超过 3 个槽位时最后一个画“+N”。
+     */
+    private void drawDotIndicators(Canvas canvas, List<EventData> events, float top, float centerX, int textColor, boolean isActual) {
+        float indicatorRadius = this.dp2px(2.0f);
+        float indicatorSpacing = this.dp2px(5.0f);
+        float startY = top + this.daySize - (float) this.dp2px(6.0f);
+        int maxSlots = 3;
+        int recordSlot = isActual ? 1 : 0;
+        int totalCount = events.size() + recordSlot;
+        boolean hasMore = totalCount > maxSlots;
+        int dotCount = hasMore ? maxSlots - 1 : totalCount;
+        ArrayList<EventData> sortedEvents = new ArrayList<EventData>(events);
+        sortedEvents.sort((e1, e2) -> {
+            int importance1 = this.getEventImportance(e1.tag);
+            int importance2 = this.getEventImportance(e2.tag);
+            return Integer.compare(importance2, importance1);
+        });
+        int elementCount = hasMore ? dotCount + 1 : dotCount;
+        for (int i = 0; i < elementCount; ++i) {
+            float elementX = centerX - (float) (elementCount - 1) * indicatorSpacing / 2.0f + (float) i * indicatorSpacing;
+            if (hasMore && i == elementCount - 1) {
+                this.customTextPaint.setColor(textColor);
+                this.customTextPaint.setTextSize((float) this.sp2px(8.0f));
+                String moreText = "+" + (totalCount - dotCount);
+                canvas.drawText(moreText, elementX, startY + (float) this.dp2px(2.0f), (Paint) this.customTextPaint);
+                continue;
+            }
+            if (isActual && i == 0) {
+                this.indicatorPaint.setColor(-1);
                 canvas.drawCircle(elementX, startY, indicatorRadius, this.indicatorPaint);
                 this.indicatorPaint.setColor(0x22000000);
                 canvas.drawCircle(elementX + 0.5f, startY + 0.5f, indicatorRadius, this.indicatorPaint);
+                continue;
             }
-        } else {
-            float maxWidth;
-            float textWidth;
-            this.customTextPaint.setColor(textColor);
-            // 文字模式下底部标记用 7sp，并贴近格子底边，避免压到上方的日期数字
-            this.customTextPaint.setTextSize((float)this.sp2px(7.0f));
-            float startY = top + this.daySize - (float)this.dp2px(1.5f);
-            String displayText = this.getDisplayTextForEvents(events);
-            if (isActual) {
-                String string2 = displayText = displayText.isEmpty() ? this.getContext().getString(R.string.calendar_recorded_mark) : this.getContext().getString(R.string.calendar_recorded_prefix) + displayText;
-            }
-            if ((textWidth = this.customTextPaint.measureText(displayText)) > (maxWidth = this.daySize * 0.86f)) {
-                if (displayText.length() > 3) {
-                    displayText = displayText.substring(0, 3) + "\u2026";
-                } else {
-                    float scale = maxWidth / textWidth;
-                    this.customTextPaint.setTextSize(this.customTextPaint.getTextSize() * scale);
-                }
-            }
-            canvas.drawText(displayText, centerX, startY, (Paint)this.customTextPaint);
-            this.customTextPaint.setTextSize((float)this.sp2px(8.0f));
+            EventData event = (EventData) sortedEvents.get(i - recordSlot);
+            this.indicatorPaint.setColor(event.color != 0 ? event.color : this.getEventColor(event.tag));
+            canvas.drawCircle(elementX, startY, indicatorRadius, this.indicatorPaint);
+            this.indicatorPaint.setColor(0x22000000);
+            canvas.drawCircle(elementX + 0.5f, startY + 0.5f, indicatorRadius, this.indicatorPaint);
         }
+    }
+
+    /**
+     * 文字模式：提醒事件改为画圆点。
+     * <p>
+     * 提醒不是“记录”，若和会议/截止日一样退化成“1项”计数，会让用户误以为
+     * 当天有记录（典型场景：阶段区间内每天都有吃药提醒，整月每格都显示“1项”）。
+     * 因此只有提醒的日期画粉色圆点；有实际记录时仍显示“已记录”；
+     * 其他事件类型保持原有的标题/数量逻辑。
+     */
+    private void drawTextIndicators(Canvas canvas, List<EventData> events, float top, float centerX, int textColor, boolean isActual) {
+        ArrayList<EventData> reminderEvents = new ArrayList<EventData>();
+        ArrayList<EventData> otherEvents = new ArrayList<EventData>();
+        for (EventData event : events) {
+            if ("reminder".equals(event.tag)) {
+                reminderEvents.add(event);
+            } else {
+                otherEvents.add(event);
+            }
+        }
+        if (!otherEvents.isEmpty()) {
+            String displayText = this.getDisplayTextForEvents(otherEvents);
+            if (isActual) {
+                displayText = displayText.isEmpty()
+                        ? this.getContext().getString(R.string.calendar_recorded_mark)
+                        : this.getContext().getString(R.string.calendar_recorded_prefix) + displayText;
+            }
+            this.drawBottomText(canvas, displayText, top, centerX, textColor);
+        } else if (!reminderEvents.isEmpty()) {
+            // 提醒统一画圆点；当天还有实际记录时第一个槽位画白点，避免“有提醒却看不到标识”
+            this.drawDotIndicators(canvas, reminderEvents, top, centerX, textColor, isActual);
+        } else if (isActual) {
+            this.drawBottomText(canvas,
+                    this.getContext().getString(R.string.calendar_recorded_mark),
+                    top, centerX, textColor);
+        }
+    }
+
+    /** 在格子底部绘制单行文字（自动缩放/截断，避免超出格子） */
+    private void drawBottomText(Canvas canvas, String displayText, float top, float centerX, int textColor) {
+        if (displayText == null || displayText.isEmpty()) {
+            return;
+        }
+        this.customTextPaint.setColor(textColor);
+        this.customTextPaint.setTextSize((float) this.sp2px(7.0f));
+        this.customTextPaint.setTextAlign(Paint.Align.CENTER);
+        float startY = top + this.daySize - (float) this.dp2px(1.5f);
+        float maxWidth = this.daySize * 0.86f;
+        float textWidth = this.customTextPaint.measureText(displayText);
+        if (textWidth > maxWidth) {
+            if (displayText.length() > 3) {
+                displayText = displayText.substring(0, 3) + "\u2026";
+            } else {
+                float scale = maxWidth / textWidth;
+                this.customTextPaint.setTextSize(this.customTextPaint.getTextSize() * scale);
+            }
+        }
+        canvas.drawText(displayText, centerX, startY, (Paint) this.customTextPaint);
+        this.customTextPaint.setTextSize((float) this.sp2px(8.0f));
     }
 
     /**
@@ -1546,25 +1589,6 @@ extends View {
     }
 
     /**
-     * 设置锚点：已知某天的阶段下标，用于在缺少完整周期设置时推算其余日期的阶段。
-     *
-     * @param date       锚点日期，传 null 表示清除
-     * @param phaseIndex 该日期所属的阶段下标（0 经期、1 卵泡、2 排卵、3 黄体）
-     */
-    public void setPhaseAnchor(Date date, int phaseIndex) {
-        if (date == null) {
-            this.phaseAnchorDate = null;
-            this.phaseAnchorIndex = -1;
-        } else {
-            this.phaseAnchorDate = Calendar.getInstance();
-            this.phaseAnchorDate.setTime(date);
-            this.normalizeToMidnight(this.phaseAnchorDate);
-            this.phaseAnchorIndex = phaseIndex;
-        }
-        this.invalidate();
-    }
-
-    /**
      * 设置是否显示阶段底色。
      * 与 {@link #togglePeriodDisplay()} 的区别：值未变化时不重绘、不回调。
      */
@@ -1600,13 +1624,6 @@ extends View {
     public void setActualRecordPhases(Map<String, Integer> phaseMap) {
         this.actualPhaseMap = phaseMap;
         this.invalidate();
-    }
-
-    private void normalizeToMidnight(Calendar cal) {
-        cal.set(11, 0);
-        cal.set(12, 0);
-        cal.set(13, 0);
-        cal.set(14, 0);
     }
 
     /**
@@ -1708,7 +1725,7 @@ extends View {
             return this.diffDays(seg.start, date);
         }
         int total = seg.totalCycleDay > 0 ? seg.totalCycleDay : this.sumDays(seg.phaseDays);
-        int seq = this.phaseAnchorDate != null && this.phaseAnchorIndex >= 0 && !this.phaseAnchorDate.before(seg.start) && !date.before(this.phaseAnchorDate) ? this.accumulatedBefore(this.phaseAnchorIndex, seg.phaseDays) + this.diffDays(this.phaseAnchorDate, date) : this.diffDays(seg.start, date);
+        int seq = this.diffDays(seg.start, date);
         return (seq % total + total) % total;
     }
 

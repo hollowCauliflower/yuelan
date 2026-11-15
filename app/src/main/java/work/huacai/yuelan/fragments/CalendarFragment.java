@@ -21,11 +21,9 @@ import java.util.Map;
 
 import work.huacai.yuelan.R;
 import work.huacai.yuelan.dao.MenstrualRecordDao;
-import work.huacai.yuelan.dao.PhaseAnchorDao;
 import work.huacai.yuelan.dao.ReminderDao;
 import work.huacai.yuelan.dao.impl.MenstrualCycleRecordDaoImpl;
 import work.huacai.yuelan.dao.impl.MenstrualRecordDaoImpl;
-import work.huacai.yuelan.dao.impl.PhaseAnchorDaoImpl;
 import work.huacai.yuelan.dao.impl.ReminderDaoImpl;
 import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.PeriodReminderScheduler;
@@ -36,7 +34,6 @@ import work.huacai.yuelan.helper.ReminderRepeatHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
-import work.huacai.yuelan.model.PhaseAnchor;
 import work.huacai.yuelan.model.Reminder;
 import work.huacai.yuelan.widget.AppDialogFactory;
 import work.huacai.yuelan.widget.CalendarView;
@@ -59,6 +56,11 @@ import work.huacai.yuelan.widget.RecordDetailBottomSheet;
  */
 public class CalendarFragment extends Fragment {
 
+    /** 提醒事项向前展开的天数（约一年，避免翻到较早月份时提醒消失） */
+    private static final int EVENT_RANGE_DAYS_BACK = 400;
+    /** 提醒事项向后展开的天数（约一年，避免翻到未来较远月份时提醒消失） */
+    private static final int EVENT_RANGE_DAYS_FORWARD = 400;
+
     private CalendarView calendarView;
     private TextView tvNextOvulation;
     private TextView tvPreviousCycle;
@@ -67,7 +69,6 @@ public class CalendarFragment extends Fragment {
 
     private MenstrualCycleRecordDaoImpl cycleRecordDao;
     private MenstrualRecordDao recordDao;
-    private PhaseAnchorDao phaseAnchorDao;
     private ReminderDao reminderDao;
     private MenstrualCycleRecord currentCycleRecord;
 
@@ -92,7 +93,6 @@ public class CalendarFragment extends Fragment {
 
         cycleRecordDao = new MenstrualCycleRecordDaoImpl();
         recordDao = new MenstrualRecordDaoImpl();
-        phaseAnchorDao = new PhaseAnchorDaoImpl();
         reminderDao = new ReminderDaoImpl();
 
         initViews(view);
@@ -208,16 +208,12 @@ public class CalendarFragment extends Fragment {
         int previousCycle = calculatePreviousCycle();
         tvPreviousCycle.setText(previousCycle > 0 ? String.valueOf(previousCycle) : "--");
 
-        String nextOvulation = calculateNextOvulation(totalCycleDay);
+        String nextOvulation = calculateNextOvulation();
         tvNextOvulation.setText(nextOvulation != null ? nextOvulation : "--");
 
-        // 当前阶段：按“周期内第几天”定位阶段并着阶段色
-        int[] phaseArray = CycleCalculator.calculatePhaseDays(
-                currentCycleRecord.getMenstrualPeriodDay(), totalCycleDay);
-        int dayInCycle = CycleCalculator.getDayInCurrentCycle(
-                currentCycleRecord.getStartTime(), totalCycleDay);
-        MenstrualCycle phase = CycleCalculator.getMenstrualCycleForPhase(
-                CycleCalculator.getPhaseIndex(dayInCycle, phaseArray));
+        // 当前阶段：与日历格子、当日建议同源（叠加阶段锚点与实际记录），
+        // 不能再用“第几天 + 固定阶段长度”推算，否则阶段被调整后两处会不一致
+        MenstrualCycle phase = ReminderCycleHelper.phaseOn(new Date());
         if (phase != null) {
             tvCurrentPhase.setText(phase.getDisplayName(requireContext()));
             tvCurrentPhase.setTextColor(ContextCompat.getColor(requireContext(),
@@ -237,53 +233,33 @@ public class CalendarFragment extends Fragment {
     /**
      * 计算下次排卵期并格式化为"开始-结束"区间文本。
      * <p>
-     * 排卵期起点 = 当前周期起点 + 经期天数 + 卵泡期天数，区间长度即排卵期天数；
-     * 若本轮排卵期已结束，则展示下一轮的排卵期区间。
+     * 按当前阶段模型（含阶段锚点与实际记录）找今天之后最近的一段排卵期，
+     * 保证与日历格子的阶段配色、首页“下个阶段”一致。
      * 与首页"下次经期"、统计页"平均周期"均不重复，作为日历页特有的补充信息。
      *
-     * @param totalCycleDay 周期总天数
      * @return 形如 11月19日-11月21日 的区间文本；无法推算时返回 null
      */
     @Nullable
-    private String calculateNextOvulation(int totalCycleDay) {
-        if (currentCycleRecord.getStartTime() == null || totalCycleDay <= 0) {
+    private String calculateNextOvulation() {
+        // 与日历阶段配色同源：按阶段锚点重排后的顺序找下一次排卵期区间
+        Date[] range = ReminderCycleHelper.nextPhaseRange(
+                MenstrualCycle.OVULATION_PERIOD, new Date());
+        if (range == null) {
             return null;
         }
-        int[] phaseArray = CycleCalculator.calculatePhaseDays(
-                currentCycleRecord.getMenstrualPeriodDay(), totalCycleDay);
-        Date cycleStart = CycleCalculator.getCurrentCycleStart(
-                currentCycleRecord.getStartTime(), totalCycleDay);
-        if (cycleStart == null) {
-            return null;
-        }
-
-        // 排卵期起点 = 周期起点 + 经期天数 + 卵泡期天数
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(cycleStart);
-        cal.add(Calendar.DAY_OF_MONTH, phaseArray[0] + phaseArray[1]);
-        Date ovulationStart = cal.getTime();
-
-        // 本轮排卵期已结束（今天已过排卵期最后一天）→ 展示下一轮的排卵期
-        Date today = CycleCalculator.normalizeDate(new Date());
-        if (CycleCalculator.daysBetween(ovulationStart, today) >= phaseArray[2]) {
-            cal.add(Calendar.DAY_OF_MONTH, totalCycleDay);
-            ovulationStart = cal.getTime();
-        }
-
-        // 区间结束日 = 起点 + 排卵期天数 - 1
-        Calendar endCal = Calendar.getInstance();
-        endCal.setTime(ovulationStart);
-        endCal.add(Calendar.DAY_OF_MONTH, Math.max(phaseArray[2] - 1, 0));
-        return CycleCalculator.formatDateCnShort(ovulationStart)
-                + "-" + CycleCalculator.formatDateCnShort(endCal.getTime());
+        return CycleCalculator.formatDateCnShort(range[0])
+                + "-" + CycleCalculator.formatDateCnShort(range[1]);
     }
 
     /**
      * 本周期已记录天数：当前周期起点（含）至今天（含）之间的实际记录条数。
      */
     private int countRecordedDaysInCurrentCycle(int totalCycleDay) {
-        Date cycleStart = CycleCalculator.getCurrentCycleStart(
-                currentCycleRecord.getStartTime(), totalCycleDay);
+        Date cycleStart = ReminderCycleHelper.currentPeriodStart();
+        if (cycleStart == null) {
+            cycleStart = CycleCalculator.getCurrentCycleStart(
+                    currentCycleRecord.getStartTime(), totalCycleDay);
+        }
         if (cycleStart == null) {
             return 0;
         }
@@ -405,15 +381,6 @@ public class CalendarFragment extends Fragment {
         calendarView.setPeriodSegments(segments, phaseColors, phaseActualColors);
         calendarView.setShowPeriodColors(true);
 
-        // 阶段锚点：用户在阶段范围编辑器保存后写入，
-        // 日历从锚点日期起重排预测阶段顺序，与实际记录保持连贯
-        PhaseAnchor anchor = phaseAnchorDao.selectLatest();
-        if (anchor != null) {
-            calendarView.setPhaseAnchor(anchor.getAnchorDate(), anchor.getPhaseIndex());
-        } else {
-            calendarView.setPhaseAnchor(null, -1);
-        }
-
         // 收集所有实际记录（is_prediction=1）的日期→阶段下标，
         // 日历据此用实色绘制实际记录日，与预测日明确区分
         Map<String, Integer> actualPhaseMap = new HashMap<>();
@@ -440,18 +407,20 @@ public class CalendarFragment extends Fragment {
     private void loadCalendarEvents() {
         Map<String, List<CalendarView.EventData>> eventMap = new HashMap<>();
 
+        // 提醒展开范围：前后各一年，避免翻到较远的月份时提醒圆点突然消失
+        Calendar rangeStart = Calendar.getInstance();
+        rangeStart.add(Calendar.DAY_OF_MONTH, -EVENT_RANGE_DAYS_BACK);
+        Calendar rangeEnd = Calendar.getInstance();
+        rangeEnd.add(Calendar.DAY_OF_MONTH, EVENT_RANGE_DAYS_FORWARD);
+
         // 只有启用状态的提醒才显示在日历上
         for (Reminder reminder : reminderDao.selectAll()) {
             if (!reminder.isEnabled()) continue;
 
             if (reminder.isSpanMode()) {
-                // 阶段区间提醒：阶段内每一天都挂一个粉色点，与每日建议同范围
-                Calendar spanStart = Calendar.getInstance();
-                spanStart.add(Calendar.DAY_OF_MONTH, -186);
-                Calendar spanEnd = Calendar.getInstance();
-                spanEnd.add(Calendar.DAY_OF_MONTH, 62);
+                // 阶段区间提醒：阶段内每一天都挂一个粉色点
                 for (Date spanDate : ReminderCycleHelper.spanDatesBetween(reminder,
-                        spanStart.getTime(), spanEnd.getTime())) {
+                        rangeStart.getTime(), rangeEnd.getTime())) {
                     CalendarView.EventData event = new CalendarView.EventData();
                     event.setTitle(reminder.getTitle());
                     event.description = reminder.getMessage() != null ? reminder.getMessage() : "";
@@ -463,14 +432,9 @@ public class CalendarFragment extends Fragment {
             }
 
             if (reminder.isCycleMode()) {
-                // 周期节点提醒：按当前周期推算前后各一段范围内的节点日期，
-                // 与每日建议同范围，让节点在日历上可见（粉色点）
-                Calendar nodeStart = Calendar.getInstance();
-                nodeStart.add(Calendar.DAY_OF_MONTH, -186);
-                Calendar nodeEnd = Calendar.getInstance();
-                nodeEnd.add(Calendar.DAY_OF_MONTH, 62);
+                // 周期节点提醒：节点当天挂粉色点
                 for (Date nodeDate : ReminderCycleHelper.nodeDatesBetween(reminder.getCycleNode(),
-                        nodeStart.getTime(), nodeEnd.getTime())) {
+                        rangeStart.getTime(), rangeEnd.getTime())) {
                     CalendarView.EventData event = new CalendarView.EventData();
                     event.setTitle(reminder.getTitle());
                     event.description = reminder.getMessage() != null ? reminder.getMessage() : "";
@@ -482,14 +446,9 @@ public class CalendarFragment extends Fragment {
             }
 
             if (reminder.isRepeatMode()) {
-                // 重复规则提醒：把规则展开成区间内的具体日期（粉色点），
-                // 与周期节点提醒保持一致的展示范围
-                Calendar repeatStart = Calendar.getInstance();
-                repeatStart.add(Calendar.DAY_OF_MONTH, -186);
-                Calendar repeatEnd = Calendar.getInstance();
-                repeatEnd.add(Calendar.DAY_OF_MONTH, 62);
+                // 重复规则提醒：把规则展开成区间内的具体日期（粉色点）
                 for (Date repeatDate : ReminderRepeatHelper.occurrencesBetween(reminder,
-                        repeatStart.getTime(), repeatEnd.getTime())) {
+                        rangeStart.getTime(), rangeEnd.getTime())) {
                     CalendarView.EventData event = new CalendarView.EventData();
                     event.setTitle(reminder.getTitle());
                     event.description = reminder.getMessage() != null ? reminder.getMessage() : "";
@@ -508,26 +467,20 @@ public class CalendarFragment extends Fragment {
             addEvent(eventMap, toCalendarKey(reminder.getDateId()), event);
         }
 
-        // 月经提醒（设置页开启时）：把下一次预计经期首日挂成一条提醒事项。
-        // 每日建议不再作为日历事项展示——它是系统预测出来的内容，不是用户设置的提醒，
-        // 若每天都挂成一项，日期列表里会天天出现同一条“建议”，淹没真正的自定义提醒。
+        // 月经提醒（设置页开启时）：在“预计经期首日 - 提前提醒天数”那天挂一条提醒事项，
+        // 与实际通知日期保持一致。经期首日按当前阶段模型推算（叠加阶段锚点），
+        // 不能再用“周期起点 + 周期天数”，否则阶段被调整后提醒会早/晚好几天。
         if (PeriodReminderScheduler.isEnabled(requireContext())) {
-            MenstrualCycleRecord cycleRecord = cycleRecordDao.selectLast();
-            if (cycleRecord != null && cycleRecord.getStartTime() != null) {
-                Date cycleStart = CycleCalculator.getCurrentCycleStart(
-                        cycleRecord.getStartTime(), cycleRecord.getTotalCycleDay());
-                if (cycleStart != null) {
-                    Calendar nextPeriod = Calendar.getInstance();
-                    nextPeriod.setTime(cycleStart);
-                    nextPeriod.add(Calendar.DAY_OF_MONTH, cycleRecord.getTotalCycleDay());
-
-                    CalendarView.EventData event = new CalendarView.EventData();
-                    event.setTitle(getString(R.string.period_reminder_notification_title));
-                    event.description = "";
-                    event.tag = "reminder";
-                    event.setDate(toCalendarKey(CycleCalculator.formatDateId(nextPeriod.getTime())));
-                    addEvent(eventMap, event.date, event);
-                }
+            int daysBefore = PeriodReminderScheduler.getReminderDays(requireContext());
+            for (Date periodStart : ReminderCycleHelper.nodeDatesBetween(
+                    Reminder.NODE_PERIOD_START, rangeStart.getTime(), rangeEnd.getTime())) {
+                Date reminderDay = shiftDays(periodStart, -daysBefore);
+                CalendarView.EventData event = new CalendarView.EventData();
+                event.setTitle(getString(R.string.period_reminder_notification_title));
+                event.description = "";
+                event.tag = "reminder";
+                event.setDate(toCalendarKey(CycleCalculator.formatDateId(reminderDay)));
+                addEvent(eventMap, event.date, event);
             }
         }
 
@@ -545,6 +498,20 @@ public class CalendarFragment extends Fragment {
             eventMap.put(key, events);
         }
         events.add(event);
+    }
+
+    /**
+     * 日期按自然日平移（返回当天 0 点）。
+     *
+     * @param day  基准日期
+     * @param days 偏移天数，可为负
+     * @return 平移后的日期
+     */
+    private Date shiftDays(Date day, int days) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(day);
+        calendar.add(Calendar.DAY_OF_MONTH, days);
+        return CycleCalculator.normalizeDate(calendar.getTime());
     }
 
     /**
@@ -569,9 +536,15 @@ public class CalendarFragment extends Fragment {
         MenstrualRecord record = recordDao.selectById(dateId);
 
         boolean hasDayReminder = false;
-        try {
-            hasDayReminder = !reminderDao.selectByDay(Integer.parseInt(dateId)).isEmpty();
-        } catch (NumberFormatException ignored) {
+        Date day = CycleCalculator.parseDateId(dateId);
+        if (day != null) {
+            // 与日历圆点、当日提醒列表同口径：周期节点/阶段区间/重复规则展开后的当天都算
+            for (Reminder reminder : reminderDao.selectAll()) {
+                if (ReminderCycleHelper.occursOn(reminder, day)) {
+                    hasDayReminder = true;
+                    break;
+                }
+            }
         }
 
         if (record != null || hasDayReminder) {
@@ -648,7 +621,7 @@ public class CalendarFragment extends Fragment {
         // 非经期阶段修改先做连贯性检查：与前后有效阶段不连贯（孤岛/倒置）时，
         // 让用户选择"逐天调整阶段范围"（弹出范围编辑器）、"仅修改当天"或取消
         PhaseContinuityHelper.CheckResult check = PhaseContinuityHelper.check(
-                dateId, cycle, recordDao, cycleRecordDao, phaseAnchorDao);
+                dateId, cycle, recordDao, cycleRecordDao);
         if (check.type != PhaseContinuityHelper.Discontinuity.NONE) {
             showContinuityDialog(dateId, cycle, check);
             return;

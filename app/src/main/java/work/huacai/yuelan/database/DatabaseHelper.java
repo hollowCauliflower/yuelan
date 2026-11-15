@@ -138,20 +138,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
 
-        if (oldVersion < 4) {
-            // 3 → 4：新增 phase_anchor 表（阶段锚点），纯新增表、无存量数据迁移
-            try {
-                db.execSQL("CREATE TABLE IF NOT EXISTS phase_anchor (" +
-                        "anchor_date TEXT PRIMARY KEY," +
-                        "phase_index INTEGER NOT NULL," +
-                        "created_time TEXT DEFAULT (datetime('now', 'localtime'))" +
-                        ")");
-                Log.i(TAG, "phase_anchor 表创建成功");
-            } catch (Exception e) {
-                Log.e(TAG, "phase_anchor 表创建失败", e);
-            }
-        }
-
         if (oldVersion < 5) {
             // 4 → 5：reminder 追加 cycle_node 列（0=固定日期，>0=按周期节点提醒），
             // ALTER 不影响存量提醒，旧数据默认固定日期模式

@@ -8,15 +8,13 @@ import java.util.Map;
 
 import work.huacai.yuelan.dao.MenstrualCycleRecordDao;
 import work.huacai.yuelan.dao.MenstrualRecordDao;
-import work.huacai.yuelan.dao.PhaseAnchorDao;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
-import work.huacai.yuelan.model.PhaseAnchor;
 
 /**
  * 阶段连贯性检查：在用户手动修改某天的非经期阶段前，
- * 判断该修改是否会与前后日期的有效阶段（实际记录优先，否则按分段+锚点推算的预测阶段）
+ * 判断该修改是否会与前后日期的有效阶段（实际记录优先，否则按周期分段推算的预测阶段）
  * 产生不连贯，并给出提示所需的上下文。
  * <p>
  * 目前识别三类不连贯：
@@ -64,13 +62,11 @@ public class PhaseContinuityHelper {
      * @param newPhase       用户选择的阶段
      * @param recordDao      记录 DAO（读取实际记录）
      * @param cycleRecordDao 周期分段 DAO（推算预测阶段）
-     * @param anchorDao      阶段锚点 DAO（推算预测阶段）
      * @return 检查结果；prevPhase / nextPhase 在无法推算时为 null
      */
     public static CheckResult check(String dateId, MenstrualCycle newPhase,
                                     MenstrualRecordDao recordDao,
-                                    MenstrualCycleRecordDao cycleRecordDao,
-                                    PhaseAnchorDao anchorDao) {
+                                    MenstrualCycleRecordDao cycleRecordDao) {
         Date date = CycleCalculator.parseDateId(dateId);
         if (date == null || newPhase == null) {
             return new CheckResult(Discontinuity.NONE, null, null);
@@ -78,13 +74,12 @@ public class PhaseContinuityHelper {
 
         List<MenstrualCycleRecord> segments = cycleRecordDao.selectAll();
         Map<String, MenstrualCycle> actualByDate = loadActualPhases(recordDao);
-        PhaseAnchor anchor = anchorDao.selectLatest();
 
         Date prevDate = addDays(date, -1);
         Date nextDate = addDays(date, 1);
 
-        MenstrualCycle prevPhase = effectivePhase(prevDate, segments, actualByDate, anchor);
-        MenstrualCycle nextPhase = effectivePhase(nextDate, segments, actualByDate, anchor);
+        MenstrualCycle prevPhase = effectivePhase(prevDate, segments, actualByDate);
+        MenstrualCycle nextPhase = effectivePhase(nextDate, segments, actualByDate);
 
         // 经期修改走分段重锚（syncActualStartAndRegenerate），不存在孤岛问题；
         // 但"前一天是黄体期"时直接补签经期会让上一轮周期没有结束就进入新一轮，
@@ -110,25 +105,22 @@ public class PhaseContinuityHelper {
     }
 
     /**
-     * 批量解析时的只读快照：把分段、实际记录、锚点一次性读入内存，
+     * 批量解析时的只读快照：把分段与实际记录一次性读入内存，
      * 之后逐日推算阶段不再访问数据库，避免范围编辑器等场景出现 N 次重复查询。
      */
     public static class PhaseSnapshot {
         private final List<MenstrualCycleRecord> segments;
         private final Map<String, MenstrualCycle> actualByDate;
-        private final PhaseAnchor anchor;
 
         PhaseSnapshot(List<MenstrualCycleRecord> segments,
-                      Map<String, MenstrualCycle> actualByDate,
-                      PhaseAnchor anchor) {
+                      Map<String, MenstrualCycle> actualByDate) {
             this.segments = segments;
             this.actualByDate = actualByDate;
-            this.anchor = anchor;
         }
 
-        /** 查询某天的有效阶段（实际记录优先，否则按分段+锚点推算） */
+        /** 查询某天的有效阶段（实际记录优先，否则按分段推算） */
         public MenstrualCycle phaseOf(Date date) {
-            return effectivePhase(CycleCalculator.normalizeDate(date), segments, actualByDate, anchor);
+            return effectivePhase(CycleCalculator.normalizeDate(date), segments, actualByDate);
         }
     }
 
@@ -137,41 +129,35 @@ public class PhaseContinuityHelper {
      *
      * @param recordDao      记录 DAO
      * @param cycleRecordDao 周期分段 DAO
-     * @param anchorDao      阶段锚点 DAO
      * @return 只读快照
      */
     public static PhaseSnapshot loadSnapshot(MenstrualRecordDao recordDao,
-                                             MenstrualCycleRecordDao cycleRecordDao,
-                                             PhaseAnchorDao anchorDao) {
-        return new PhaseSnapshot(cycleRecordDao.selectAll(), loadActualPhases(recordDao),
-                anchorDao.selectLatest());
+                                             MenstrualCycleRecordDao cycleRecordDao) {
+        return new PhaseSnapshot(cycleRecordDao.selectAll(), loadActualPhases(recordDao));
     }
 
     /**
-     * 对外的单日有效阶段查询（实际记录优先，否则分段+锚点推算）。
+     * 对外的单日有效阶段查询（实际记录优先，否则按分段推算）。
      * <p>供阶段范围编辑器初始化每天的默认阶段使用。
      *
      * @param date           目标日期
      * @param recordDao      记录 DAO
      * @param cycleRecordDao 周期分段 DAO
-     * @param anchorDao      阶段锚点 DAO
      * @return 有效阶段；无法推算时返回 null
      */
     public static MenstrualCycle resolveEffectivePhase(Date date,
                                                        MenstrualRecordDao recordDao,
-                                                       MenstrualCycleRecordDao cycleRecordDao,
-                                                       PhaseAnchorDao anchorDao) {
-        return loadSnapshot(recordDao, cycleRecordDao, anchorDao).phaseOf(date);
+                                                       MenstrualCycleRecordDao cycleRecordDao) {
+        return loadSnapshot(recordDao, cycleRecordDao).phaseOf(date);
     }
 
     /**
-     * 计算某天的有效阶段：有实际记录用实际阶段，否则按所属分段参数
-     * （叠加阶段锚点重排）推算预测阶段；无法推算返回 null。
+     * 计算某天的有效阶段：有实际记录用实际阶段，否则按所属分段参数推算预测阶段；
+     * 无法推算返回 null。
      */
     private static MenstrualCycle effectivePhase(Date date,
                                                  List<MenstrualCycleRecord> segments,
-                                                 Map<String, MenstrualCycle> actualByDate,
-                                                 PhaseAnchor anchor) {
+                                                 Map<String, MenstrualCycle> actualByDate) {
         MenstrualCycle actual = actualByDate.get(CycleCalculator.formatDateId(date));
         if (actual != null) {
             return actual;
@@ -191,11 +177,8 @@ public class PhaseContinuityHelper {
 
         int[] phaseArray = CycleCalculator.calculatePhaseDays(
                 covering.getMenstrualPeriodDay(), covering.getTotalCycleDay());
-        Date anchorDate = anchor != null ? anchor.getAnchorDate() : null;
-        int anchorIndex = anchor != null ? anchor.getPhaseIndex() : -1;
         return CycleCalculator.getMenstrualCycleForDate(
-                date, covering.getStartTime(), phaseArray, covering.getTotalCycleDay(),
-                anchorDate, anchorIndex);
+                date, covering.getStartTime(), phaseArray, covering.getTotalCycleDay());
     }
 
     /** 读取全部实际记录，构建 dateId → 实际阶段 映射 */
