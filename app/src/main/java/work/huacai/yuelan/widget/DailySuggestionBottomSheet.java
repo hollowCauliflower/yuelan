@@ -81,6 +81,10 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
 
     private TextView tvDate;
     private TextView tvPhase;
+    /** 天气行与暖心提醒行，由 {@link DailyWeatherSection} 统一加载 */
+    private TextView tvWeather;
+    private TextView tvWeatherTip;
+    private DailyWeatherSection weatherSection;
     /** 建议区块标题：今天显示"今日建议"，其他日期显示"当日建议" */
     private TextView tvSuggestionTitle;
     private TextView tvSuggestion;
@@ -203,6 +207,9 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
 
         tvDate = view.findViewById(R.id.tv_date);
         tvPhase = view.findViewById(R.id.tv_phase);
+        tvWeather = view.findViewById(R.id.tv_weather);
+        tvWeatherTip = view.findViewById(R.id.tv_weather_tip);
+        weatherSection = new DailyWeatherSection(requireContext(), tvWeather, tvWeatherTip);
         tvSuggestionTitle = view.findViewById(R.id.tv_suggestion_title);
         layoutRecordSummary = view.findViewById(R.id.layout_record_summary);
         tvRecordSummary = view.findViewById(R.id.tv_record_summary);
@@ -431,6 +438,8 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         MenstrualRecord record = recordDao.selectById(dateId);
         updateRecordSummary(record);
         MenstrualCycle cycle = record != null ? record.getMenstrualCycle() : null;
+        // 天气暖心提醒要结合当天阶段：没有记录时用推算出的预测阶段
+        MenstrualCycle displayPhase = cycle;
 
         if (cycle != null) {
             tvPhase.setText(cycle.getDisplayName(requireContext()));
@@ -442,6 +451,7 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         } else {
             // 当天没有实际记录：尝试按周期参数推算预测阶段，让用户看到预测结果后再决定是否覆盖
             MenstrualCycle predictedCycle = computePredictedPhase(currentDate);
+            displayPhase = predictedCycle;
             if (predictedCycle != null) {
                 tvPhase.setText(getString(R.string.daily_suggestion_predicted_phase,
                         predictedCycle.getDisplayName(requireContext())));
@@ -471,6 +481,11 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         layoutPhase.setAlpha(future ? 0.75f : 1.0f);
         ivPhaseEdit.setVisibility(future ? View.GONE : View.VISIBLE);
         tvFutureHint.setVisibility(future ? View.VISIBLE : View.GONE);
+
+        // 天气按当前查看的日期展示；今天的天气额外结合阶段生成暖心提醒
+        if (weatherSection != null) {
+            weatherSection.show(currentDate, displayPhase);
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package work.huacai.yuelan.helper;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -79,6 +80,146 @@ public class OpenMeteoHelper {
     }
 
     /**
+     * 查询指定日期（按当前天气地点）的天气，供每日建议按日期展示。
+     * <p>
+     * 优先读缓存；未命中时，用户在设置页指定了城市就直接用该城市坐标，
+     * 否则走系统定位（无权限/失败时由 {@link LocationHelper} 回退默认城市）。
+     * 未来 16 天内走预报接口，更早的日期走历史归档接口。
+     *
+     * @param context  任意 Context
+     * @param date     目标日期
+     * @param callback 结果回调（缓存命中时在调用线程同步回调，否则在 OkHttp 工作线程）
+     */
+    public static void fetchWeatherForDate(Context context, Date date, WeatherCallback callback) {
+        if (callback == null || date == null) {
+            return;
+        }
+
+        final String dateKey = formatApiDate(date);
+        final String locationKey = WeatherLocationHelper.getCacheKey(context);
+
+        Weather cached = WeatherCacheHelper.get(context, locationKey, dateKey);
+        if (cached != null) {
+            callback.onSuccess(cached);
+            return;
+        }
+
+        // 成功拿到天气后写入缓存，避免来回翻日期或重复打开弹窗时再次请求
+        WeatherCallback cacheAndForward = new WeatherCallback() {
+            @Override
+            public void onSuccess(Weather weather) {
+                WeatherCacheHelper.put(context, locationKey, dateKey, weather);
+                callback.onSuccess(weather);
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        };
+
+        resolveCoordinates(context, new CoordinateCallback() {
+            @Override
+            public void onCoordinates(double lat, double lon) {
+                new OpenMeteoHelper().getWeatherForDate(lat, lon, dateKey, cacheAndForward);
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    /**
+     * 预热今天与明天的天气缓存。
+     * <p>每日建议弹窗会自动弹出，若等弹窗打开后才定位+请求，天气行会迟到一两秒；
+     * 首页 resume 时先预热，弹窗通常可以直接命中缓存。失败静默忽略，不影响本地建议。
+     *
+     * @param context 任意 Context
+     */
+    public static void prefetchDailyWeather(Context context) {
+        final Date today = new Date();
+        Calendar tomorrowCal = Calendar.getInstance();
+        tomorrowCal.setTime(today);
+        tomorrowCal.add(Calendar.DAY_OF_MONTH, 1);
+        final Date tomorrow = tomorrowCal.getTime();
+
+        final String locationKey = WeatherLocationHelper.getCacheKey(context);
+        final String todayKey = formatApiDate(today);
+        final String tomorrowKey = formatApiDate(tomorrow);
+
+        resolveCoordinates(context, new CoordinateCallback() {
+            @Override
+            public void onCoordinates(double lat, double lon) {
+                prefetchOne(context, lat, lon, locationKey, todayKey);
+                prefetchOne(context, lat, lon, locationKey, tomorrowKey);
+            }
+
+            @Override
+            public void onError(String error) {
+                // 预热失败不打扰用户，弹窗打开时会再按需请求一次
+            }
+        });
+    }
+
+    /** 单个日期的预热：已有缓存就跳过，否则请求并写入缓存 */
+    private static void prefetchOne(Context context, double lat, double lon,
+                                    String locationKey, String dateKey) {
+        if (WeatherCacheHelper.get(context, locationKey, dateKey) != null) {
+            return;
+        }
+        new OpenMeteoHelper().getWeatherForDate(lat, lon, dateKey, new WeatherCallback() {
+            @Override
+            public void onSuccess(Weather weather) {
+                WeatherCacheHelper.put(context, locationKey, dateKey, weather);
+            }
+
+            @Override
+            public void onError(String error) {
+                // 预热失败静默处理
+            }
+        });
+    }
+
+    /**
+     * 解析当前天气地点的坐标：手动城市直接用配置坐标，否则走系统定位。
+     */
+    private static void resolveCoordinates(Context context, CoordinateCallback callback) {
+        WeatherLocationHelper.City city = WeatherLocationHelper.getSelectedCity(context);
+        if (city != null) {
+            callback.onCoordinates(city.getLat(), city.getLon());
+            return;
+        }
+
+        new LocationHelper(context).startLocation(new LocationHelper.LocationCallback() {
+            @Override
+            public void onLocationResult(double lat, double lon, boolean isDefault) {
+                callback.onCoordinates(lat, lon);
+            }
+
+            @Override
+            public void onLocationError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    /** 把日期格式化为接口要求的 yyyy-MM-dd */
+    private static String formatApiDate(Date date) {
+        synchronized (DATE_FORMAT) {
+            return DATE_FORMAT.format(date);
+        }
+    }
+
+    /** 坐标解析回调 */
+    private interface CoordinateCallback {
+        void onCoordinates(double lat, double lon);
+
+        void onError(String error);
+    }
+
+    /**
      * 查询今天的天气。
      *
      * @param lat      纬度
@@ -116,7 +257,9 @@ public class OpenMeteoHelper {
         }
 
         String baseUrl = apiType.equals("forecast") ? FORECAST_URL : ARCHIVE_URL;
-        // 只要每日最高温与天气码，且时区跟随坐标自动推断
+        // 只要每日最高温与天气码，且时区跟随坐标自动推断。
+        // 注意：预报接口的 start_date 本身可以向前覆盖最近几天，
+        // 但不能再叠加 past_days（两者互斥，会直接返回参数错误）。
         String url = baseUrl + "?latitude=" + lat + "&longitude=" + lon
                 + "&daily=temperature_2m_max,weathercode"
                 + "&start_date=" + date + "&end_date=" + date
@@ -158,16 +301,25 @@ public class OpenMeteoHelper {
 
                     Log.d(TAG, "Response: " + json);
 
-                    // 字段映射：daily.time / daily.temperature_2m_max / daily.weathercode 均为数组，
-                    // 这里固定只取第 0 个元素（即请求的那一天）
+                    // 字段映射：daily.time / daily.temperature_2m_max / daily.weathercode 均为数组；
+                    // 预报接口带 past_days 时数组会包含过去几天，必须按日期找到下标，不能固定取 0
                     WeatherResponse weatherResponse = sharedGson.fromJson(json, WeatherResponse.class);
                     if (weatherResponse != null && weatherResponse.daily != null
                             && weatherResponse.daily.time != null
                             && weatherResponse.daily.time.length > 0) {
+                        int index = indexOfDate(weatherResponse.daily, date);
+                        if (index < 0
+                                || weatherResponse.daily.weathercode == null
+                                || index >= weatherResponse.daily.weathercode.length
+                                || weatherResponse.daily.temperature_2m_max == null
+                                || index >= weatherResponse.daily.temperature_2m_max.length) {
+                            callback.onError("返回数据缺少目标日期");
+                            return;
+                        }
 
-                        String weatherText = decodeWeatherCode(weatherResponse.daily.weathercode[0]);
-                        double tempValue = weatherResponse.daily.temperature_2m_max[0];
-                        // 统一带上“℃”，供 GenerateSuggestionHelper 再解析回整数
+                        String weatherText = decodeWeatherCode(weatherResponse.daily.weathercode[index]);
+                        double tempValue = weatherResponse.daily.temperature_2m_max[index];
+                        // 统一带上“℃”，便于展示与解析
                         String temp = tempValue + "℃";
                         Weather data = new Weather(date, weatherText, temp);
                         callback.onSuccess(data);
@@ -211,8 +363,8 @@ public class OpenMeteoHelper {
     /**
      * 根据目标日期选择可用的接口。
      * <p>
-     * 规则：目标日期在 [今天, 今天+16] 内走预报接口；
-     * 早于今天 5 天以上走归档接口；今天之前的 0~5 天属于归档数据延迟区，返回 null 表示暂不可查。
+     * 规则：目标日期在 [今天-5, 今天+16] 内走预报接口（过去几天用 {@code past_days} 补齐，
+     * 这样"昨天/前天"也能查到天气）；更早的日期走归档接口；超过 16 天返回 null。
      *
      * @param targetDate 目标日期（yyyy-MM-dd）
      * @return "forecast" / "archive"；不可查询时返回 null
@@ -245,18 +397,33 @@ public class OpenMeteoHelper {
 
         long diffDays = (target.getTime() - todayStart.getTime()) / (24 * 60 * 60 * 1000);
 
-        if (diffDays >= 0) {
-            // 未来日期：预报接口最多覆盖 16 天
-            return diffDays <= 16 ? "forecast" : null;
-        } else {
-            // 历史日期：需超过归档延迟才能查到
-            return Math.abs(diffDays) > ARCHIVE_DELAY_DAYS ? "archive" : null;
+        if (diffDays >= -ARCHIVE_DELAY_DAYS && diffDays <= 16) {
+            // 预报接口同时覆盖最近 5 天的过去日期（past_days）与未来 16 天
+            return "forecast";
         }
+        // 更早的历史日期：走归档接口
+        return diffDays < -ARCHIVE_DELAY_DAYS ? "archive" : null;
+    }
+
+    /**
+     * 在接口返回的日期数组中查找目标日期的下标。
+     *
+     * @param daily 接口 daily 节点
+     * @param date  目标日期（yyyy-MM-dd）
+     * @return 对应下标；找不到时返回 -1
+     */
+    private int indexOfDate(Daily daily, String date) {
+        for (int i = 0; i < daily.time.length; i++) {
+            if (date.equals(daily.time[i])) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
      * 把 Open-Meteo 的 WMO 天气码翻译为中文描述。
-     * <p>返回词表需与 {@code GenerateSuggestionHelper} 中的关键字匹配逻辑保持一致。
+     * <p>返回词表需与 {@link WeatherSuggestionHelper} 中的关键字匹配逻辑保持一致。
      *
      * @param code WMO weathercode
      * @return 中文天气描述；未知码返回“未知”

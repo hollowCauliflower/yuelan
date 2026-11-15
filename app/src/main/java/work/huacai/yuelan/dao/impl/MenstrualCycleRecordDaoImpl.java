@@ -1,14 +1,10 @@
 package work.huacai.yuelan.dao.impl;
 
-import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-
-import androidx.core.content.ContextCompat;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,27 +15,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import work.huacai.yuelan.dao.MenstrualCycleRecordDao;
 import work.huacai.yuelan.dao.MenstrualRecordDao;
 import work.huacai.yuelan.database.DatabaseHelper;
 import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.GenerateSuggestionHelper;
-import work.huacai.yuelan.helper.LocationHelper;
-import work.huacai.yuelan.helper.OpenMeteoHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
 import work.huacai.yuelan.model.PhaseAnchor;
-import work.huacai.yuelan.model.Weather;
 
 /**
  * {@link MenstrualCycleRecordDao} 的实现，管理 menstrual_cycle_record 表。
  * <p>
  * 除了读写用户设置的周期参数外，还负责根据周期推算每天的阶段，
- * 批量生成 menstrual_record 中的预测记录，并异步补充带有天气信息的建议文案。
+ * 批量生成 menstrual_record 中的预测记录及其阶段建议文案。
  */
 public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
 
@@ -47,9 +38,6 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
 
     /** created_time 列的格式；SimpleDateFormat 非线程安全，使用处均加锁 */
     private static final SimpleDateFormat DATE_FORMAT_CREATED = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-
-    /** 单线程池：逐日插入记录时会触发多次天气请求，串行执行可避免并发请求与建议覆盖 */
-    private static final ExecutorService suggestionExecutor = Executors.newSingleThreadExecutor();
 
     private final DatabaseHelper databaseHelper = DatabaseHelper.getDatabaseHelper();
 
@@ -381,13 +369,11 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
      * @param totalCycleDay 有效周期总天数（中间分段传实际间隔）
      * @param anchorDate    阶段锚点日期；null 表示无锚点
      * @param anchorIndex   锚点阶段下标（0~3），-1 表示无锚点
-     * @param context       用于生成建议文案与定位/天气
+     * @param context       用于生成建议文案
      */
     private void generateRangeRecords(Date rangeStart, Date rangeEnd, Date cycleBase,
                                       int[] phaseArray, int totalCycleDay,
                                       Date anchorDate, int anchorIndex, Context context) {
-        Date today = CycleCalculator.normalizeDate(new Date());
-
         // 预取区间内已有记录：id -> {是否预测, 阶段名}
         Map<String, ExistingRecordState> existing = loadExistingStates(
                 CycleCalculator.formatDateId(rangeStart),
@@ -406,8 +392,6 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
         int insertCount = 0;
         int updateCount = 0;
         int skippedActualCount = 0;
-        // 今天的日期 id，用于判断是否需要刷新“今天”的建议（天气每天都会变）
-        String todayId = CycleCalculator.formatDateId(today);
 
         while (!currentDate.after(rangeEnd)) {
             MenstrualCycle cycle = CycleCalculator.getMenstrualCycleForDate(
@@ -421,7 +405,7 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
             if (cycle != null) {
                 // 记录 id 用日期串（yyyyMMdd），天然充当主键并保证同日只生成一条
                 String recordId = CycleCalculator.formatDateId(currentDate);
-                String localSuggestion = cycle.getTips(context);
+                String localSuggestion = GenerateSuggestionHelper.generateSuggestion(context, cycle);
                 ExistingRecordState state = existing.get(recordId);
 
                 if (state == null) {
@@ -436,7 +420,6 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
                         Log.e(TAG, "插入失败: " + recordId);
                     } else {
                         insertCount++;
-                        fetchAndUpdateSuggestionAsync(context, cycle, recordId);
                     }
                 } else if (state.prediction) {
                     // 预测记录：阶段变化或建议缺失时刷新，避免基准日变化后仍展示旧阶段/旧建议
@@ -457,15 +440,6 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
                         if (updated > 0) {
                             updateCount++;
                         }
-                    }
-
-                    // 阶段变化、建议缺失或“今天”的记录：结合当天天气重新生成建议。
-                    // 之前只在阶段变化时刷新，导致阶段不变的日子里天气/建议文案一直停在旧内容。
-                    // 只对今天额外刷新，避免每次保存设置都为整段周期发起大量天气请求。
-                    boolean needSuggestionRefresh = phaseChanged || missingSuggestion
-                            || recordId.equals(todayId);
-                    if (needSuggestionRefresh) {
-                        fetchAndUpdateSuggestionAsync(context, cycle, recordId);
                     }
                 } else {
                     // 用户实际记录，保持原样
@@ -711,49 +685,13 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
     }
 
     /**
-     * 把“定位 + 天气 + 生成建议 + 回写数据库”的流程丢到单线程池执行。
-     * <p>
-     * 网络请求不能在调用线程（可能是主线程）做，因此整体异步化；失败只记录日志，不重试。
-     *
-     * @param context  用于权限检查、定位与天气请求
-     * @param cycle    该天所属的周期阶段
-     * @param recordId 需要更新建议的记录 id
-     */
-    private void fetchAndUpdateSuggestionAsync(Context context, MenstrualCycle cycle, String recordId) {
-        Log.d(TAG, "开始异步获取天气建议: " + recordId);
-        suggestionExecutor.execute(() -> {
-            fetchSuggestionWithWeather(context, cycle, new SuggestionCallback() {
-                @Override
-                public void onSuggestionGenerated(String suggestion) {
-                    Log.d(TAG, "========== 更新建议 ==========");
-                    Log.d(TAG, "日期ID: " + recordId);
-                    Log.d(TAG, "完整建议: " + suggestion);
-                    
-                    if (suggestion != null && !suggestion.isEmpty()) {
-                        MenstrualRecordDao dao = new MenstrualRecordDaoImpl();
-                        int updated = dao.updateSuggestion(recordId, suggestion);
-                        Log.d(TAG, "更新结果: " + updated + " 行受影响");
-                    } else {
-                        Log.w(TAG, "建议为空，跳过更新");
-                    }
-                }
-
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "获取建议失败 [" + recordId + "]: " + error);
-                }
-            });
-        });
-    }
-
-    /**
      * 保存周期设置，并在同一个事务中初始化到今天的每日记录。
      * <p>
      * 事务语义：{@link #insert} 失败会抛出异常并回滚，不会留下半套数据；
      * 注意 {@link #insertToToday} 内部使用的仍是同一个数据库连接，因此其写入也在该事务内。
      *
      * @param menstrualCycleRecord 周期设置
-     * @param context              用于生成建议文案与定位/天气
+     * @param context              用于生成建议文案
      * @return 事务提交成功返回 true；抛出异常回滚后返回 false
      */
     @Override
@@ -782,56 +720,6 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
     }
 
     /**
-     * 定位 → 取当前天气 → 生成建议。
-     * <p>
-     * 未授予定位权限时直接回调错误（不写建议），由调用方决定是否忽略；
-     * 定位成功后才发起天气请求，两步任一失败都会走 {@link SuggestionCallback#onError}。
-     *
-     * @param context  用于权限检查与网络请求
-     * @param cycle    当前周期阶段
-     * @param callback 结果回调
-     */
-    private void fetchSuggestionWithWeather(Context context, MenstrualCycle cycle, SuggestionCallback callback) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "Location permission not granted");
-            callback.onError("Location permission not granted");
-            return;
-        }
-
-        LocationHelper locationHelper = new LocationHelper(context);
-        OpenMeteoHelper weatherHelper = new OpenMeteoHelper();
-
-        locationHelper.startLocation(new LocationHelper.LocationCallback() {
-            @Override
-            public void onLocationResult(double lat, double lon, boolean isDefault) {
-                Log.d(TAG, "定位成功: lat=" + lat + ", lon=" + lon + ", isDefault=" + isDefault);
-
-                weatherHelper.getCurrentWeather(lat, lon, new OpenMeteoHelper.WeatherCallback() {
-                    @Override
-                    public void onSuccess(Weather weather) {
-                        Log.d(TAG, "天气获取成功: " + weather.getWeatherText() + ", " + weather.getTemperature());
-                        String suggestion = GenerateSuggestionHelper.generateSuggestion(context, cycle, weather);
-                        callback.onSuggestionGenerated(suggestion);
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        Log.e(TAG, "天气获取失败: " + error);
-                        callback.onError("天气获取失败: " + error);
-                    }
-                });
-            }
-
-            @Override
-            public void onLocationError(String error) {
-                Log.e(TAG, "定位失败: " + error);
-                callback.onError("定位获取失败: " + error);
-            }
-        });
-    }
-
-    /**
      * 生成当前时间的字符串形式，用于写入 updated_time。
      *
      * @return 当前时间（yyyy-MM-dd HH:mm:ss）
@@ -840,24 +728,5 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
         synchronized (DATE_FORMAT_CREATED) {
             return DATE_FORMAT_CREATED.format(new Date());
         }
-    }
-
-    /**
-     * 建议生成结果的回调，两个回调方法互斥（成功或失败只会触发一个）。
-     */
-    public interface SuggestionCallback {
-        /**
-         * 建议生成完成。
-         *
-         * @param suggestion 完整建议文本，可能为空
-         */
-        void onSuggestionGenerated(String suggestion);
-
-        /**
-         * 定位、天气或权限等环节失败。
-         *
-         * @param error 失败原因描述
-         */
-        void onError(String error);
     }
 }

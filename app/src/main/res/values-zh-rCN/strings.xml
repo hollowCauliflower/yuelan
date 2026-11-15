@@ -290,6 +290,12 @@
     <string name="settings_about_app">关于应用</string>
     <string name="settings_version_label">版本号</string>
     <string name="settings_custom_reminder">自定义提醒</string>
+    <!-- 天气设置：每日建议里天气提示使用的地点 -->
+    <string name="settings_weather_section">天气设置</string>
+    <string name="settings_weather_location">天气地点</string>
+    <string name="settings_weather_location_device">跟随系统定位</string>
+    <!-- 已解析出系统定位城市时，在设置项后补充城市名 -->
+    <string name="settings_weather_location_device_with_city">跟随系统定位（%1$s）</string>
     <string name="reminder_manage_title">自定义提醒</string>
     <string name="reminder_add">新建提醒</string>
     <string name="reminder_new_title">新建提醒</string>
@@ -466,6 +472,21 @@
     <string name="daily_suggestion_no_record_suggestion">该日期暂无记录</string>
     <string name="daily_suggestion_future_hint">未来日期仅展示预测，当天到来后才能记录</string>
     <string name="daily_suggestion_predicted_phase">预测：%1$s</string>
+    <!-- 每日建议里的天气提示：今天 / 过去 / 未来三种称呼 -->
+    <string name="daily_suggestion_weather_today">今日天气：%1$s · 最高 %2$s</string>
+    <string name="daily_suggestion_weather_past">当日天气：%1$s · 最高 %2$s</string>
+    <string name="daily_suggestion_weather_future">预测天气：%1$s · 最高 %2$s</string>
+    <!-- 天气 × 阶段的暖心提醒 -->
+    <string name="weather_tip_period_cold">降温了，经期腹部更容易受凉，注意保暖、少碰冰饮。</string>
+    <string name="weather_tip_period_rain">有雨雪，经期别淋湿受凉，回家可以热敷一下腹部。</string>
+    <string name="weather_tip_period_hot">天气炎热，经期注意补水，卫生用品勤更换。</string>
+    <string name="weather_tip_luteal_cold">降温明显，黄体期身体更敏感，注意保暖和休息。</string>
+    <string name="weather_tip_luteal_rain">阴雨天容易情绪低落，黄体期记得给自己留点放松时间。</string>
+    <string name="weather_tip_ovulation_hot">天气炎热，排卵期注意补水，避免长时间暴晒。</string>
+    <string name="weather_tip_follicular_rain">雨天出行注意安全，卵泡期适合做点轻运动。</string>
+    <string name="weather_tip_follicular_sunny">天气不错，卵泡期适合出门走走、晒晒太阳。</string>
+    <string name="weather_tip_tomorrow_drop">明天最高温比今天低 %1$d℃，记得提前准备保暖。</string>
+    <string name="weather_tip_tomorrow_drop_period">明天最高温比今天低 %1$d℃，经期遇冷腹痛可能加重，提前准备好保暖。</string>
     <string name="phase_edit_island_message">这一天前后都是%1$s，只修改这一天会形成不连贯的记录。请批量调整该日期至今的阶段。</string>
     <string name="phase_edit_backward_message">前一天是%1$s，所选阶段在周期顺序上更早。请批量调整该日期至今的阶段。</string>
     <string name="phase_edit_option_resequence">批量调整阶段</string>
@@ -530,14 +551,6 @@
     <string name="calendar_tag_deploy">部署</string>
     <string name="calendar_tag_summary">总结</string>
     <string name="calendar_tag_default">事项</string>
-
-    <!-- Weather -->
-    <string name="weather_rainy">雨天，出门记得带伞。</string>
-    <string name="weather_snowy">下雪天，注意保暖，路面湿滑小心行走。</string>
-    <string name="weather_foggy">雾天出行注意安全。</string>
-    <string name="weather_sunny">晴朗的好天气。</string>
-    <string name="weather_cold">天气寒冷，注意保暖。</string>
-    <string name="weather_hot">天气炎热，注意防晒补水。</string>
 
     <!-- Dialog -->
     <string name="dialog_confirm">确认</string>

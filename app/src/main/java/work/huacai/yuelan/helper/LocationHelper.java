@@ -16,17 +16,18 @@ import androidx.core.app.ActivityCompat;
  * 定位辅助类。
  * <p>
  * 只请求一次定位（{@code requestSingleUpdate}），优先使用网络定位；
- * 无权限、定位开关关闭、请求异常或 15 秒超时都降级为默认坐标（北京），
+ * 无权限、定位开关关闭、请求异常或 15 秒超时都降级为默认坐标（南昌），
  * 这样天气请求始终有值可用，不会阻塞首页加载。
+ * 用户也可以在设置页手动指定天气城市，此时不会走这里。
  * 注意：单个实例只服务于一次定位请求。
  */
 public class LocationHelper {
 
     /** 定位超时时间，超时后回退到默认坐标 */
     private static final long LOCATION_TIMEOUT_MS = 15000;
-    /** 默认纬度 / 经度（北京），用作定位失败时的兜底位置 */
-    private static final double DEFAULT_LAT = 39.9;
-    private static final double DEFAULT_LON = 116.4;
+    /** 默认纬度 / 经度（南昌），用作定位失败时的兜底位置 */
+    private static final double DEFAULT_LAT = 28.6829;
+    private static final double DEFAULT_LON = 115.8582;
 
     private final Context context;
     private final LocationManager locationManager;
@@ -70,10 +71,11 @@ public class LocationHelper {
     public void startLocation(LocationCallback callback) {
         this.callback = callback;
 
-        // 未授予精确定位权限时直接报错，避免 SecurityException
+        // 未授予精确定位权限时回退默认坐标，保证天气建议仍然可用（与 README 说明一致），
+        // 同时避免 SecurityException
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            callback.onLocationError("缺少定位权限");
+            callback.onLocationResult(DEFAULT_LAT, DEFAULT_LON, true);
             return;
         }
 

@@ -20,6 +20,7 @@ import android.widget.NumberPicker;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -32,8 +33,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import work.huacai.yuelan.R;
 import work.huacai.yuelan.dao.MenstrualCycleRecordDao;
@@ -46,13 +45,13 @@ import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.DailyPromptHelper;
 import work.huacai.yuelan.helper.PeriodReminderScheduler;
 import work.huacai.yuelan.helper.GenerateSuggestionHelper;
-import work.huacai.yuelan.helper.LocationHelper;
 import work.huacai.yuelan.helper.OpenMeteoHelper;
+import work.huacai.yuelan.helper.WeatherCacheHelper;
+import work.huacai.yuelan.helper.WeatherLocationHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
 import work.huacai.yuelan.model.Reminder;
-import work.huacai.yuelan.model.Weather;
 import work.huacai.yuelan.widget.AppDialogFactory;
 import work.huacai.yuelan.widget.CircularPeriodProgressBar;
 import work.huacai.yuelan.widget.DailySuggestionBottomSheet;
@@ -79,8 +78,6 @@ public class HomeFragment extends Fragment {
     private static final String KEY_LOCATION_PERMISSION_ASKED = "location_permission_asked";
     /** 缺少周期数据时显示的占位符 */
     private static final String PLACEHOLDER = "--";
-    /** 单线程池：用于补全记录后异步拉取定位/天气并生成建议，避免阻塞主线程 */
-    private static final ExecutorService suggestionExecutor = Executors.newSingleThreadExecutor();
 
     private CircularPeriodProgressBar circularProgressBar;
     private TextView currentDayView;
@@ -200,6 +197,8 @@ public class HomeFragment extends Fragment {
         super.onResume();
         displayCycleInfo();
         requestLocationPermission();
+        // 提前预热今天/明天的天气缓存：自动弹出的今日建议通常能直接读到，避免天气行迟到导致的弹窗跳动
+        OpenMeteoHelper.prefetchDailyWeather(requireContext());
         updateTodayRecord();
         updateTodayReminders();
         // 每日引导（经期/排卵期/临近经期）优先于每日建议，避免两个弹窗同时弹出
@@ -207,6 +206,24 @@ public class HomeFragment extends Fragment {
         if (!promptShown) {
             maybeShowDailySuggestion();
         }
+    }
+
+    /**
+     * 定位权限结果：授权后天气来源会从默认城市变成真实定位，
+     * 需要清掉默认城市缓存并重新预热，避免当天继续显示兜底城市的天气。
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != LOCATION_PERMISSION_REQUEST) {
+            return;
+        }
+        if (!WeatherLocationHelper.isDeviceMode(requireContext())) {
+            return;
+        }
+        WeatherCacheHelper.clear(requireContext());
+        OpenMeteoHelper.prefetchDailyWeather(requireContext());
     }
 
     /**
@@ -866,7 +883,7 @@ public class HomeFragment extends Fragment {
                 record.setMenstrualCycle(cycle);
                 record.setPrediction(true);
 
-                String localSuggestion = cycle.getTips(requireContext());
+                String localSuggestion = GenerateSuggestionHelper.generateSuggestion(requireContext(), cycle);
                 record.setSuggestion(localSuggestion);
 
                 Log.d(TAG, "补充记录: " + recordId + ", 阶段: " + cycle.name() + ", 建议: " + localSuggestion);
@@ -876,9 +893,6 @@ public class HomeFragment extends Fragment {
                     Log.e(TAG, "补充记录失败: " + recordId);
                 } else {
                     insertCount++;
-                    final String finalRecordId = recordId;
-                    final MenstrualCycle finalCycle = cycle;
-                    fetchAndUpdateSuggestionAsync(finalCycle, finalRecordId);
                 }
             }
             nextCal.add(Calendar.DAY_OF_MONTH, 1);
@@ -886,84 +900,6 @@ public class HomeFragment extends Fragment {
         }
 
         Log.i(TAG, "补充完成，共插入 " + insertCount + " 条记录");
-    }
-
-    /**
-     * 在后台线程拉取天气并生成建议，成功后回写到对应记录
-     *
-     * @param cycle    记录所属阶段
-     * @param recordId 记录 id（yyyyMMdd）
-     */
-    private void fetchAndUpdateSuggestionAsync(MenstrualCycle cycle, String recordId) {
-        if (getContext() == null) return;
-
-        suggestionExecutor.execute(() -> {
-            fetchSuggestionWithWeather(cycle, new SuggestionCallback() {
-                @Override
-                public void onSuggestionGenerated(String suggestion) {
-                    if (suggestion != null && !suggestion.isEmpty()) {
-                        MenstrualRecordDao dao = new MenstrualRecordDaoImpl();
-                        int updated = dao.updateSuggestion(recordId, suggestion);
-                        Log.d(TAG, "补充建议更新 [" + recordId + "]: " + updated + " 行, 内容: " + suggestion);
-                    }
-                }
-
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "补充建议获取失败 [" + recordId + "]: " + error);
-                }
-            });
-        });
-    }
-
-    /**
-     * 定位 -> 取当前天气 -> 生成建议，任一步失败都回调 onError
-     */
-    private void fetchSuggestionWithWeather(MenstrualCycle cycle, SuggestionCallback callback) {
-        if (getContext() == null) {
-            callback.onError("Context is null");
-            return;
-        }
-
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            callback.onError("Location permission not granted");
-            return;
-        }
-
-        LocationHelper locationHelper = new LocationHelper(requireContext());
-        OpenMeteoHelper weatherHelper = new OpenMeteoHelper();
-
-        locationHelper.startLocation(new LocationHelper.LocationCallback() {
-            @Override
-            public void onLocationResult(double lat, double lon, boolean isDefault) {
-                Log.d(TAG, "定位成功: lat=" + lat + ", lon=" + lon);
-                weatherHelper.getCurrentWeather(lat, lon, new OpenMeteoHelper.WeatherCallback() {
-                    @Override
-                    public void onSuccess(Weather weather) {
-                        Log.d(TAG, "天气获取成功: " + weather.getWeatherText());
-                        String suggestion = GenerateSuggestionHelper.generateSuggestion(requireContext(), cycle, weather);
-                        callback.onSuggestionGenerated(suggestion);
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        callback.onError("天气获取失败: " + error);
-                    }
-                });
-            }
-
-            @Override
-            public void onLocationError(String error) {
-                callback.onError("定位失败: " + error);
-            }
-        });
-    }
-
-    /** 建议生成的异步回调 */
-    private interface SuggestionCallback {
-        void onSuggestionGenerated(String suggestion);
-        void onError(String error);
     }
 
     /**

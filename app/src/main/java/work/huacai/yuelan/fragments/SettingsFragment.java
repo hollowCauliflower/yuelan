@@ -56,6 +56,8 @@ import work.huacai.yuelan.helper.PeriodReminderScheduler;
 import work.huacai.yuelan.helper.ReminderNotificationHelper;
 import work.huacai.yuelan.helper.ThemeHelper;
 import work.huacai.yuelan.helper.UpdateChecker;
+import work.huacai.yuelan.helper.WeatherCacheHelper;
+import work.huacai.yuelan.helper.WeatherLocationHelper;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.widget.AppDialogFactory;
 
@@ -97,6 +99,8 @@ public class SettingsFragment extends Fragment {
     private TextView tvVersion;
     /** 当前主题模式的展示文案 */
     private TextView tvThemeMode;
+    /** 天气地点：跟随定位或用户指定的城市 */
+    private TextView tvWeatherLocation;
     /** 设置页里当前图标风格的预览图标 */
     private ImageView ivAppIconPreview;
 
@@ -202,6 +206,7 @@ public class SettingsFragment extends Fragment {
         tvVersion = view.findViewById(R.id.tv_version);
         tvThemeMode = view.findViewById(R.id.tv_theme_mode);
         tvThemeMode.setText(getThemeModeName(ThemeHelper.getSavedMode(requireContext())));
+        tvWeatherLocation = view.findViewById(R.id.tv_weather_location);
         ivAppIconPreview = view.findViewById(R.id.iv_app_icon_preview);
         AppIconHelper.loadAppIcon(requireContext(), ivAppIconPreview);
 
@@ -226,6 +231,14 @@ public class SettingsFragment extends Fragment {
     private void loadData() {
         loadReminderSettings();
         loadCycleSettings();
+        tvWeatherLocation.setText(WeatherLocationHelper.getDisplayName(requireContext()));
+        // 跟随系统定位时异步反查城市名，把展示补全成"跟随系统定位（南昌）"
+        if (WeatherLocationHelper.isDeviceMode(requireContext())) {
+            WeatherLocationHelper.resolveDeviceCityName(requireContext(), cityName -> {
+                if (!isAdded() || tvWeatherLocation == null) return;
+                tvWeatherLocation.setText(WeatherLocationHelper.getDisplayName(requireContext()));
+            });
+        }
     }
 
     /**
@@ -310,6 +323,7 @@ public class SettingsFragment extends Fragment {
         View layoutAgreement = view.findViewById(R.id.layout_agreement);
         View layoutAppIcon = view.findViewById(R.id.layout_app_icon);
         View layoutThemeMode = view.findViewById(R.id.layout_theme_mode);
+        View layoutWeatherLocation = view.findViewById(R.id.layout_weather_location);
         View layoutCheckUpdate = view.findViewById(R.id.layout_check_update);
         SwitchCompat switchPeriodReminder = view.findViewById(R.id.switch_period_reminder);
 
@@ -330,6 +344,9 @@ public class SettingsFragment extends Fragment {
         }
         if (layoutThemeMode != null) {
             layoutThemeMode.setOnClickListener(v -> showThemeModeDialog());
+        }
+        if (layoutWeatherLocation != null) {
+            layoutWeatherLocation.setOnClickListener(v -> showWeatherLocationDialog());
         }
         if (layoutCheckUpdate != null) {
             // 手动检查更新：与启动时自动检查复用同一套逻辑
@@ -1042,6 +1059,37 @@ public class SettingsFragment extends Fragment {
         } catch (ActivityNotFoundException e) {
             Toast.makeText(requireContext(), R.string.settings_no_file_picker, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * 选择天气地点：跟随系统定位，或手动指定城市。
+     * <p>
+     * 手动指定城市后，即使没有定位权限也能获取该城市的天气；
+     * 切换后清空天气缓存，保证下次展示立刻使用新地点。
+     */
+    private void showWeatherLocationDialog() {
+        String[] items = WeatherLocationHelper.getOptionNames(requireContext());
+        int checked = WeatherLocationHelper.getOptionIndex(requireContext());
+        AppDialogFactory.showSingleChoice(requireContext(),
+                getString(R.string.settings_weather_location), items, checked, which -> {
+                    if (which == 0) {
+                        WeatherLocationHelper.setDeviceMode(requireContext());
+                    } else {
+                        WeatherLocationHelper.setCity(requireContext(),
+                                WeatherLocationHelper.CITIES[which - 1]);
+                    }
+                    WeatherCacheHelper.clear(requireContext());
+                    tvWeatherLocation.setText(
+                            WeatherLocationHelper.getDisplayName(requireContext()));
+                    // 切回跟随定位时重新解析城市名，补全"跟随系统定位（xx）"
+                    if (which == 0) {
+                        WeatherLocationHelper.resolveDeviceCityName(requireContext(), cityName -> {
+                            if (!isAdded() || tvWeatherLocation == null) return;
+                            tvWeatherLocation.setText(
+                                    WeatherLocationHelper.getDisplayName(requireContext()));
+                        });
+                    }
+                });
     }
 
     /**

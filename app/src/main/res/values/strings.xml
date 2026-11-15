@@ -291,6 +291,12 @@
     <string name="settings_about_app">About App</string>
     <string name="settings_version_label">Version</string>
     <string name="settings_custom_reminder">Custom Reminder</string>
+    <!-- Weather settings: location used by the weather hint in daily suggestions -->
+    <string name="settings_weather_section">Weather</string>
+    <string name="settings_weather_location">Weather location</string>
+    <string name="settings_weather_location_device">Follow device location</string>
+    <!-- Appends the resolved city when device location is used -->
+    <string name="settings_weather_location_device_with_city">Device location (%1$s)</string>
     <string name="reminder_manage_title">Custom Reminders</string>
     <string name="reminder_add">Add reminder</string>
     <string name="reminder_new_title">New Reminder</string>
@@ -467,6 +473,21 @@
     <string name="daily_suggestion_no_record_suggestion">No record for this date</string>
     <string name="daily_suggestion_future_hint">Future dates are predictions only. Records can be made once the day arrives.</string>
     <string name="daily_suggestion_predicted_phase">Predicted: %1$s</string>
+    <!-- Weather hint in daily suggestions: today / past / future wording -->
+    <string name="daily_suggestion_weather_today">Today: %1$s · high %2$s</string>
+    <string name="daily_suggestion_weather_past">That day: %1$s · high %2$s</string>
+    <string name="daily_suggestion_weather_future">Forecast: %1$s · high %2$s</string>
+    <!-- Weather × phase warm reminders -->
+    <string name="weather_tip_period_cold">It is getting colder. During your period the belly is more sensitive to cold — keep warm and avoid iced drinks.</string>
+    <string name="weather_tip_period_rain">Rain or snow today. During your period, avoid getting wet and cold — a warm compress can help.</string>
+    <string name="weather_tip_period_hot">Hot weather. During your period, stay hydrated and change sanitary products often.</string>
+    <string name="weather_tip_luteal_cold">A clear temperature drop. Your body is more sensitive in the luteal phase — keep warm and rest well.</string>
+    <string name="weather_tip_luteal_rain">Rainy days can lower your mood. In the luteal phase, leave yourself some time to relax.</string>
+    <string name="weather_tip_ovulation_hot">Hot weather. During ovulation, stay hydrated and avoid long exposure to the sun.</string>
+    <string name="weather_tip_follicular_rain">Take care on rainy roads. The follicular phase is a good time for light exercise.</string>
+    <string name="weather_tip_follicular_sunny">Nice weather today. The follicular phase is a good time to go out and get some sun.</string>
+    <string name="weather_tip_tomorrow_drop">Tomorrow\'s high will be %1$d℃ lower than today — get warm clothes ready.</string>
+    <string name="weather_tip_tomorrow_drop_period">Tomorrow\'s high will be %1$d℃ lower. Cold can worsen period cramps — prepare warm clothing in advance.</string>
     <string name="phase_edit_island_message">The days before and after are both %1$s. Changing only this day breaks continuity. Please adjust phases from this date to today in bulk.</string>
     <string name="phase_edit_backward_message">The previous day is %1$s. The phase you picked is earlier in the cycle order. Please adjust phases from this date to today in bulk.</string>
     <string name="phase_edit_option_resequence">Adjust phases in bulk</string>
@@ -531,14 +552,6 @@
     <string name="calendar_tag_deploy">Deploy</string>
     <string name="calendar_tag_summary">Summary</string>
     <string name="calendar_tag_default">Event</string>
-
-    <!-- Weather -->
-    <string name="weather_rainy">Rainy day, remember to take an umbrella.</string>
-    <string name="weather_snowy">Snowy day, keep warm and walk carefully on slippery roads.</string>
-    <string name="weather_foggy">Foggy day, drive and walk carefully.</string>
-    <string name="weather_sunny">Nice sunny weather.</string>
-    <string name="weather_cold">Cold weather, keep warm.</string>
-    <string name="weather_hot">Hot weather, protect from sun and stay hydrated.</string>
 
     <!-- Dialog -->
     <string name="dialog_confirm">Confirm</string>

@@ -60,6 +60,10 @@ public class DailySuggestionDialog extends DialogFragment {
 
     private TextView tvDate;
     private TextView tvPhase;
+    /** 天气行与暖心提醒行，由 {@link DailyWeatherSection} 统一加载 */
+    private TextView tvWeather;
+    private TextView tvWeatherTip;
+    private DailyWeatherSection weatherSection;
     private TextView tvSuggestion;
     private TextView tvPrevDay;
     private TextView tvNextDay;
@@ -121,6 +125,9 @@ public class DailySuggestionDialog extends DialogFragment {
 
         tvDate = view.findViewById(R.id.tv_date);
         tvPhase = view.findViewById(R.id.tv_phase);
+        tvWeather = view.findViewById(R.id.tv_weather);
+        tvWeatherTip = view.findViewById(R.id.tv_weather_tip);
+        weatherSection = new DailyWeatherSection(requireContext(), tvWeather, tvWeatherTip);
         tvSuggestion = view.findViewById(R.id.tv_suggestion);
         tvPrevDay = view.findViewById(R.id.tv_prev_day);
         tvNextDay = view.findViewById(R.id.tv_next_day);
@@ -183,6 +190,8 @@ public class DailySuggestionDialog extends DialogFragment {
         String dateId = CycleCalculator.formatDateId(currentDate);
         MenstrualRecord record = recordDao.selectById(dateId);
         MenstrualCycle cycle = record != null ? record.getMenstrualCycle() : null;
+        // 天气暖心提醒要结合当天阶段：没有记录时用推算出的预测阶段
+        MenstrualCycle displayPhase = cycle;
 
         if (cycle != null) {
             tvPhase.setText(cycle.getDisplayName(requireContext()));
@@ -195,6 +204,7 @@ public class DailySuggestionDialog extends DialogFragment {
             // 当天还没有落库记录（典型场景：跨零点后进入应用，新一天的预测记录尚未生成）：
             // 先按当前周期参数推算阶段，避免把“有预测的今天”误显示成“无记录”
             MenstrualCycle predictedCycle = computePredictedPhase(currentDate);
+            displayPhase = predictedCycle;
             if (predictedCycle != null) {
                 tvPhase.setText(getString(R.string.daily_suggestion_predicted_phase,
                         predictedCycle.getDisplayName(requireContext())));
@@ -215,6 +225,11 @@ public class DailySuggestionDialog extends DialogFragment {
         boolean canGoNext = CycleCalculator.normalizeDate(currentDate).before(today);
         tvNextDay.setEnabled(canGoNext);
         tvNextDay.setAlpha(canGoNext ? 1.0f : 0.5f);
+
+        // 天气按当前查看的日期展示；今天的天气额外结合阶段生成暖心提醒
+        if (weatherSection != null) {
+            weatherSection.show(currentDate, displayPhase);
+        }
     }
 
     /**

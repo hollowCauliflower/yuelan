@@ -38,6 +38,27 @@
 
     </LinearLayout>
 
+    <!-- 今日天气：仅查看今天时展示，定位/网络失败时隐藏 -->
+    <TextView
+        android:id="@+id/tv_weather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:textColor="@color/text_sub"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <!-- 天气 × 阶段的暖心提醒：没有需要提醒的组合时隐藏 -->
+    <TextView
+        android:id="@+id/tv_weather_tip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:lineSpacingExtra="2dp"
+        android:textColor="@color/text_body"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"

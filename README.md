@@ -276,7 +276,7 @@ Windows 下也可以直接双击：
 
 - Java 8、AndroidX AppCompat、Material Components 1.9
 - 自定义 View：`CalendarView`、`CircularPeriodProgressBar`、`CycleRhythmView`
-- 数据存储：SQLite + 自研 DAO（`dao/`、`database/`），SharedPreferences 保存设置
+- 数据存储：SQLite ，SharedPreferences 保存设置
 - 网络：OkHttp / `HttpURLConnection`（天气、更新检查）
 - 图表：MPAndroidChart v3.1.0
 - JSON：Gson / `org.json`
