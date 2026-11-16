@@ -299,7 +299,7 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    /** 追加一条只读的"经期提醒"事项（没有数据库提醒行，因此不提供开关） */
+    /** 追加一条只读的“月经提醒”事项（没有数据库提醒行，因此不提供开关） */
     private void addPeriodReminderItem() {
         View item = LayoutInflater.from(requireContext())
                 .inflate(R.layout.item_today_reminder, layoutDayReminders, false);
@@ -308,9 +308,14 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         TextView tvMessage = item.findViewById(R.id.tv_message);
         SwitchCompat switchEnabled = item.findViewById(R.id.switch_enabled);
 
-        tvTime.setVisibility(View.GONE);
+        // 与自定义提醒保持同样的信息密度：时间 + 提前天数说明，
+        // 而不是只显示一个“月经提醒”标题
+        tvTime.setVisibility(View.VISIBLE);
+        tvTime.setText(PeriodReminderScheduler.getReminderTimeText(requireContext()));
         tvTitle.setText(R.string.period_reminder_notification_title);
-        tvMessage.setVisibility(View.GONE);
+        tvMessage.setVisibility(View.VISIBLE);
+        tvMessage.setText(getString(R.string.period_reminder_notification_text,
+                PeriodReminderScheduler.getReminderDays(requireContext())));
         switchEnabled.setVisibility(View.GONE);
 
         layoutDayReminders.addView(item);

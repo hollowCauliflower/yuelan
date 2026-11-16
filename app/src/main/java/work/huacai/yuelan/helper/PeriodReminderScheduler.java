@@ -10,6 +10,7 @@ import android.util.Log;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -86,6 +87,19 @@ public final class PeriodReminderScheduler {
      */
     public static int getReminderDays(Context context) {
         return getPrefs(context).getInt(KEY_DAYS, 3);
+    }
+
+    /**
+     * 读取经期提醒的提醒时间，格式化为 HH:mm。
+     * <p>与自定义提醒的时间展示保持一致，供日历当日提醒列表等界面复用。
+     *
+     * @param context 任意 Context
+     * @return 形如 09:00 的时间文本
+     */
+    public static String getReminderTimeText(Context context) {
+        SharedPreferences prefs = getPrefs(context);
+        return String.format(Locale.getDefault(), "%02d:%02d",
+                prefs.getInt(KEY_HOUR, 9), prefs.getInt(KEY_MINUTE, 0));
     }
 
     /**
