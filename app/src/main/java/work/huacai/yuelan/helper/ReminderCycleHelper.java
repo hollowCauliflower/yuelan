@@ -422,22 +422,34 @@ public final class ReminderCycleHelper {
         }
     }
 
-    /** 单个周期分段：起始日 + 该轮使用的阶段天数与总长度 */
+    /**
+     * 单个周期分段：起始日 + 生效阶段天数与总长度。
+     * <p>
+     * 中间分段（已经开始的真实周期）按“到下一段起点的真实间隔”拉伸阶段，
+     * 只有最后一段（当前周期）才按总天数取模循环，保证提醒日期与日历配色同源：
+     * 若中间分段仍按保存时的预设长度取模，会在下一段开始前再冒出一轮经期，
+     * 提醒圆点就会落在日历上并不属于经期的空白日期里。
+     */
     private static final class Segment {
         final Date start;
         final int[] phases;
         final int total;
+        /** true = 最后一段，按 total 取模循环；false = 中间分段，只铺满到下一段起点之前 */
+        final boolean cycles;
 
-        Segment(Date start, int[] phases, int total) {
+        Segment(Date start, int[] phases, int total, boolean cycles) {
             this.start = start;
             this.phases = phases;
             this.total = total;
+            this.cycles = cycles;
         }
     }
 
     /** 读取当前阶段模型；没有任何周期分段时返回 null */
     private static PhaseModel loadModel() {
-        List<Segment> segments = new ArrayList<>();
+        List<Date> starts = new ArrayList<>();
+        List<int[]> rawPhases = new ArrayList<>();
+        List<Integer> rawTotals = new ArrayList<>();
         List<MenstrualCycleRecord> records = new MenstrualCycleRecordDaoImpl().selectAll();
         if (records != null) {
             for (MenstrualCycleRecord record : records) {
@@ -446,13 +458,40 @@ public final class ReminderCycleHelper {
                     continue;
                 }
                 int total = record.getTotalCycleDay();
-                int[] phases = CycleCalculator.calculatePhaseDays(
-                        record.getMenstrualPeriodDay(), total);
-                segments.add(new Segment(record.getStartTime(), phases, total));
+                starts.add(record.getStartTime());
+                rawPhases.add(CycleCalculator.calculatePhaseDays(
+                        record.getMenstrualPeriodDay(), total));
+                rawTotals.add(total);
             }
         }
-        if (segments.isEmpty()) {
+        if (starts.isEmpty()) {
             return null;
+        }
+
+        List<Segment> segments = new ArrayList<>();
+        for (int i = 0; i < starts.size(); i++) {
+            Date start = starts.get(i);
+            int[] phases = rawPhases.get(i);
+            int total = rawTotals.get(i);
+            if (i + 1 >= starts.size()) {
+                // 最后一段：当前周期还没结束，按设置的总天数循环
+                segments.add(new Segment(start, phases, total, true));
+                continue;
+            }
+            // 中间分段：用「本段起点 → 下一段起点」的真实间隔重排阶段，
+            // 与 CalendarView/预测记录生成保持同一口径
+            int actualTotal = CycleCalculator.daysBetween(start, starts.get(i + 1));
+            int[] effective;
+            if (actualTotal <= 0 || actualTotal == total) {
+                effective = phases;
+            } else if (actualTotal < phases[0] + 18) {
+                // 间隔太短放不下完整四阶段：只保留经期标记，其余日期不预测
+                effective = new int[]{phases[0], 0, 0, 0};
+            } else {
+                effective = CycleCalculator.calculatePhaseDays(phases[0], actualTotal);
+            }
+            segments.add(new Segment(start, effective,
+                    actualTotal > 0 ? actualTotal : total, false));
         }
 
         Map<String, MenstrualCycle> actualPhases = new HashMap<>();
@@ -480,9 +519,43 @@ public final class ReminderCycleHelper {
         if (segment == null) {
             return -1;
         }
-        MenstrualCycle predicted = CycleCalculator.getMenstrualCycleForDate(
-                day, segment.start, segment.phases, segment.total);
-        return predicted != null ? predicted.getIndex() : -1;
+        int diff = CycleCalculator.daysBetween(segment.start, day);
+        int seq;
+        if (segment.cycles) {
+            // 最后一段：跨周期取模，兼容日期早于分段起点导致的负天数
+            seq = Math.floorMod(diff, segment.total);
+        } else {
+            // 中间分段：超出四阶段总和（短间隔分段只保留经期）时不预测
+            if (diff >= sumDays(segment.phases)) {
+                return -1;
+            }
+            seq = diff;
+        }
+        return phaseIndexBySequence(seq, segment.phases);
+    }
+
+    /** 四个阶段天数求和 */
+    private static int sumDays(int[] phaseDays) {
+        int sum = 0;
+        for (int days : phaseDays) {
+            sum += days;
+        }
+        return sum;
+    }
+
+    /**
+     * 按顺序累加阶段天数，判断 seq（周期内第 0 起的天数）落在哪个阶段。
+     * 超出四阶段总和时返回最后一个阶段下标，由调用方先行过滤越界情况。
+     */
+    private static int phaseIndexBySequence(int seq, int[] phaseDays) {
+        int accumulated = 0;
+        for (int i = 0; i < phaseDays.length; i++) {
+            if (seq < accumulated + phaseDays[i]) {
+                return i;
+            }
+            accumulated += phaseDays[i];
+        }
+        return phaseDays.length - 1;
     }
 
     /** 当前生效的周期总天数（取最新分段；无分段时返回 0） */

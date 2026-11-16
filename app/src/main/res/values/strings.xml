@@ -151,7 +151,7 @@
     <string name="calendar_legend_predicted">Predicted</string>
     <!-- 首次进入日历页的图例说明弹框（只弹一次） -->
     <string name="calendar_legend_guide_title">Understanding Calendar Colors</string>
-    <string name="calendar_legend_guide_message">Solid blocks are days you actually recorded; light tints are predictions calculated from your cycle. Colors apply to all four phases in the same way.</string>
+    <string name="calendar_legend_guide_message">Solid blocks are days you actually recorded; light tints are predictions calculated from your cycle. Colors apply to all four phases in the same way. \"Recorded\" below a date means you have a record for that day; pink dots mark reminders (if you also have a record that day, the first dot is white). Tap a date to see details.</string>
     <string name="calendar_cycle_info">Cycle Info</string>
     <string name="calendar_predicted_cycle_with_unit">Predicted Cycle (days)</string>
     <string name="calendar_previous_cycle_with_unit">Previous Cycle (days)</string>

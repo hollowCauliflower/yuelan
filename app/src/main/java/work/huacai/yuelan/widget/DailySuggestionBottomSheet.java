@@ -317,9 +317,9 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
     }
 
     /**
-     * 指定日期是否为“月经提醒”的提醒日（预计经期首日 - 提前提醒天数）。
+     * 指定日期是否为“下一次月经提醒”的提醒日（预计经期首日 - 提前提醒天数）。
      * <p>与 {@code CalendarFragment#loadCalendarEvents()} 的口径保持一致：
-     * 经期首日按当前阶段模型推算（叠加阶段锚点），提醒日 = 首日 - 提前天数。
+     * 只认当前这一次即将到来的经期，历史周期不再补挂只读事项。
      *
      * @param dateId 日期 id（yyyyMMdd）
      * @return 是月经提醒日返回 true
@@ -328,17 +328,16 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         if (!PeriodReminderScheduler.isEnabled(requireContext())) {
             return false;
         }
-        Date day = CycleCalculator.parseDateId(dateId);
-        if (day == null) {
+        Date periodStart = ReminderCycleHelper.nextPeriodStart();
+        if (periodStart == null) {
             return false;
         }
         int daysBefore = PeriodReminderScheduler.getReminderDays(requireContext());
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(day);
-        calendar.add(Calendar.DAY_OF_MONTH, daysBefore);
-        Date periodDay = CycleCalculator.normalizeDate(calendar.getTime());
-        return !ReminderCycleHelper.nodeDatesBetween(
-                Reminder.NODE_PERIOD_START, periodDay, periodDay).isEmpty();
+        calendar.setTime(periodStart);
+        calendar.add(Calendar.DAY_OF_MONTH, -daysBefore);
+        Date reminderDay = CycleCalculator.normalizeDate(calendar.getTime());
+        return dateId.equals(CycleCalculator.formatDateId(reminderDay));
     }
 
     /**

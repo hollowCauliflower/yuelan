@@ -467,13 +467,14 @@ public class CalendarFragment extends Fragment {
             addEvent(eventMap, toCalendarKey(reminder.getDateId()), event);
         }
 
-        // 月经提醒（设置页开启时）：在“预计经期首日 - 提前提醒天数”那天挂一条提醒事项，
-        // 与实际通知日期保持一致。经期首日按当前阶段模型推算（叠加阶段锚点），
-        // 不能再用“周期起点 + 周期天数”，否则阶段被调整后提醒会早/晚好几天。
+        // 月经提醒（设置页开启时）：只挂“下一次”提醒日（预计经期首日 - 提前提醒天数），
+        // 与 PeriodReminderScheduler 实际排程的闹钟保持同一口径。
+        // 不再把前后一年里每个周期的提醒日都标出来：月经提醒是应用自动生成的，
+        // 逐周期展开会在大量未记录的空白日期上留下标记，看起来像是误报。
         if (PeriodReminderScheduler.isEnabled(requireContext())) {
             int daysBefore = PeriodReminderScheduler.getReminderDays(requireContext());
-            for (Date periodStart : ReminderCycleHelper.nodeDatesBetween(
-                    Reminder.NODE_PERIOD_START, rangeStart.getTime(), rangeEnd.getTime())) {
+            Date periodStart = ReminderCycleHelper.nextPeriodStart();
+            if (periodStart != null) {
                 Date reminderDay = shiftDays(periodStart, -daysBefore);
                 CalendarView.EventData event = new CalendarView.EventData();
                 event.setTitle(getString(R.string.period_reminder_notification_title));
