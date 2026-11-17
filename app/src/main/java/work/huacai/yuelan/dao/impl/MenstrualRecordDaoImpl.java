@@ -128,6 +128,24 @@ public class MenstrualRecordDaoImpl implements MenstrualRecordDao {
     }
 
     /**
+     * 只更新指定日期的心情等级，其余字段保持不变。
+     *
+     * @param id   记录 id（yyyyMMdd）
+     * @param mood 心情等级
+     * @return 受影响行数；id 为空或更新失败返回 0
+     */
+    @Override
+    public int updateMood(String id, int mood) {
+        if (id == null || id.isEmpty()) {
+            return 0;
+        }
+        ContentValues values = new ContentValues();
+        values.put("mood", mood);
+        values.put("updated_time", currentTimeString());
+        return databaseHelper.update("menstrual_record", values, "id = ?", new String[]{id});
+    }
+
+    /**
      * 按 id（日期）查询单条记录。
      *
      * @param id 记录 id（yyyyMMdd）
@@ -275,6 +293,7 @@ public class MenstrualRecordDaoImpl implements MenstrualRecordDao {
         values.put("notes", record.getNotes());
         values.put("flow_note", record.getFlowNote());
         values.put("pain_note", record.getPainNote());
+        values.put("mood", record.getMood());
         return values;
     }
 
@@ -311,6 +330,8 @@ public class MenstrualRecordDaoImpl implements MenstrualRecordDao {
             // v3 新增：流量 / 痛经专属备注，列在表结构末尾
             int flowNoteIndex = 16;
             int painNoteIndex = 17;
+            // v9 新增：心情等级，追加在表结构最后
+            int moodIndex = 18;
 
             if (hasColumn(cursor, flowLevelIndex)) {
                 record.setFlowLevel(cursor.getInt(flowLevelIndex));
@@ -347,6 +368,9 @@ public class MenstrualRecordDaoImpl implements MenstrualRecordDao {
             }
             if (hasColumn(cursor, painNoteIndex) && !cursor.isNull(painNoteIndex)) {
                 record.setPainNote(cursor.getString(painNoteIndex));
+            }
+            if (hasColumn(cursor, moodIndex)) {
+                record.setMood(cursor.getInt(moodIndex));
             }
 
             record.setCreated_time(parseDateTime(cursor, createdTimeIndex, "created_time"));

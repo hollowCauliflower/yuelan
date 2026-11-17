@@ -24,6 +24,11 @@ public final class WeatherCacheHelper {
     private static final String KEY_CACHE_KEY = "cache_key";
     private static final String KEY_TEXT = "weather_text";
     private static final String KEY_TEMPERATURE = "temperature";
+    /** v2 扩展维度：湿度 / 紫外线 / 空气质量 / 花粉；无数据时不写入 */
+    private static final String KEY_HUMIDITY = "humidity";
+    private static final String KEY_UV = "uv_index";
+    private static final String KEY_AIR_QUALITY = "air_quality";
+    private static final String KEY_POLLEN = "pollen";
 
     /** 进程内缓存：key = 日期@地点，翻看历史/未来日期时可直接命中 */
     private static final Map<String, Weather> memoryCache = new HashMap<>();
@@ -56,6 +61,18 @@ public final class WeatherCacheHelper {
             return null;
         }
         Weather weather = new Weather(dateKey, text, prefs.getString(KEY_TEMPERATURE, null));
+        if (prefs.contains(KEY_HUMIDITY)) {
+            weather.setHumidityPercent(prefs.getInt(KEY_HUMIDITY, 0));
+        }
+        if (prefs.contains(KEY_UV)) {
+            weather.setUvIndex((double) prefs.getFloat(KEY_UV, 0f));
+        }
+        if (prefs.contains(KEY_AIR_QUALITY)) {
+            weather.setAirQualityIndex(prefs.getInt(KEY_AIR_QUALITY, 0));
+        }
+        if (prefs.contains(KEY_POLLEN)) {
+            weather.setPollenIndex(prefs.getInt(KEY_POLLEN, 0));
+        }
         memoryCache.put(key, weather);
         return weather;
     }
@@ -72,11 +89,32 @@ public final class WeatherCacheHelper {
                            @NonNull Weather weather) {
         String key = buildKey(locationKey, dateKey);
         memoryCache.put(key, weather);
-        getPrefs(context).edit()
-                .putString(KEY_CACHE_KEY, key)
+        SharedPreferences.Editor editor = getPrefs(context).edit();
+        editor.putString(KEY_CACHE_KEY, key)
                 .putString(KEY_TEXT, weather.getWeatherText())
-                .putString(KEY_TEMPERATURE, weather.getTemperature())
-                .apply();
+                .putString(KEY_TEMPERATURE, weather.getTemperature());
+        // 扩展维度按“有值才写、无值则移除”处理，避免上一个日期的数据残留
+        if (weather.getHumidityPercent() != null) {
+            editor.putInt(KEY_HUMIDITY, weather.getHumidityPercent());
+        } else {
+            editor.remove(KEY_HUMIDITY);
+        }
+        if (weather.getUvIndex() != null) {
+            editor.putFloat(KEY_UV, weather.getUvIndex().floatValue());
+        } else {
+            editor.remove(KEY_UV);
+        }
+        if (weather.getAirQualityIndex() != null) {
+            editor.putInt(KEY_AIR_QUALITY, weather.getAirQualityIndex());
+        } else {
+            editor.remove(KEY_AIR_QUALITY);
+        }
+        if (weather.getPollenIndex() != null) {
+            editor.putInt(KEY_POLLEN, weather.getPollenIndex());
+        } else {
+            editor.remove(KEY_POLLEN);
+        }
+        editor.apply();
     }
 
     /**

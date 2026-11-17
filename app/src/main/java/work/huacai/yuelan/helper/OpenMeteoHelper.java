@@ -3,6 +3,8 @@ package work.huacai.yuelan.helper;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -35,6 +37,8 @@ public class OpenMeteoHelper {
     private static final String FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
     /** 历史归档接口（ERA5），数据有约 5 天延迟 */
     private static final String ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/era5";
+    /** 空气质量接口：湿度/紫外线之外的花粉与空气质量维度（仅预报范围可用） */
+    private static final String AIR_QUALITY_URL = "https://air-quality-api.open-meteo.com/v1/air-quality";
     /** 归档数据延迟天数：距今不足该天数的历史日期查不到 */
     private static final int ARCHIVE_DELAY_DAYS = 5;
     /** 接口要求的日期格式（yyyy-MM-dd，固定 Locale.US） */
@@ -42,6 +46,8 @@ public class OpenMeteoHelper {
 
     /** 进程内共享的 OkHttpClient，避免每次请求都新建连接池（双重检查锁保证单例） */
     private static volatile OkHttpClient sharedClient;
+    /** 空气质量请求专用客户端：超时更短，失败时不能拖慢主天气展示 */
+    private static volatile OkHttpClient airQualityClient;
     private static final Gson sharedGson = new Gson();
 
     /** 当前请求的弱引用，供 cancelRequest 取消；弱引用避免长时间持有请求对象 */
@@ -77,6 +83,24 @@ public class OpenMeteoHelper {
             }
         }
         return sharedClient;
+    }
+
+    /**
+     * 空气质量请求客户端：2 秒超时，失败直接放弃，不影响主天气。
+     */
+    private static OkHttpClient getAirQualityClient() {
+        if (airQualityClient == null) {
+            synchronized (OpenMeteoHelper.class) {
+                if (airQualityClient == null) {
+                    airQualityClient = new OkHttpClient.Builder()
+                            .connectTimeout(2, TimeUnit.SECONDS)
+                            .readTimeout(2, TimeUnit.SECONDS)
+                            .callTimeout(3, TimeUnit.SECONDS)
+                            .build();
+                }
+            }
+        }
+        return airQualityClient;
     }
 
     /**
@@ -260,8 +284,10 @@ public class OpenMeteoHelper {
         // 只要每日最高温与天气码，且时区跟随坐标自动推断。
         // 注意：预报接口的 start_date 本身可以向前覆盖最近几天，
         // 但不能再叠加 past_days（两者互斥，会直接返回参数错误）。
+        // 预报接口额外请求紫外线与逐时湿度；归档接口字段支持有限，保持原有查询。
         String url = baseUrl + "?latitude=" + lat + "&longitude=" + lon
                 + "&daily=temperature_2m_max,weathercode"
+                + ("forecast".equals(apiType) ? ",uv_index_max&hourly=relative_humidity_2m" : "")
                 + "&start_date=" + date + "&end_date=" + date
                 + "&timezone=auto";
 
@@ -322,7 +348,11 @@ public class OpenMeteoHelper {
                         // 统一带上“℃”，便于展示与解析
                         String temp = tempValue + "℃";
                         Weather data = new Weather(date, weatherText, temp);
+                        applyUvAndHumidity(data, weatherResponse, date, index);
+                        // 先回调基础天气，保证天气行立刻出现；空气质量稍后补充，
+                        // 不存在“等空气质量接口超时才显示天气”的体验问题
                         callback.onSuccess(data);
+                        enrichAirQuality(lat, lon, date, data, callback);
                     } else {
                         callback.onError("返回数据格式错误");
                     }
@@ -422,6 +452,141 @@ public class OpenMeteoHelper {
     }
 
     /**
+     * 从预报响应中补充紫外线与平均湿度；字段缺失时保持 null。
+     *
+     * @param data     目标天气对象
+     * @param response 预报响应
+     * @param date     目标日期（yyyy-MM-dd）
+     * @param index    目标日期在 daily 数组中的下标
+     */
+    private void applyUvAndHumidity(Weather data, WeatherResponse response,
+                                    String date, int index) {
+        if (response.daily.uv_index_max != null && index < response.daily.uv_index_max.length
+                && response.daily.uv_index_max[index] != null) {
+            data.setUvIndex(response.daily.uv_index_max[index]);
+        }
+
+        Hourly hourly = response.hourly;
+        if (hourly == null || hourly.time == null || hourly.relative_humidity_2m == null) {
+            return;
+        }
+        double sum = 0;
+        int count = 0;
+        for (int i = 0; i < hourly.time.length; i++) {
+            // Open-Meteo 的逐时时间格式为 yyyy-MM-ddTHH:mm，用日期前缀筛出目标日
+            if (hourly.time[i] == null || !hourly.time[i].startsWith(date)) {
+                continue;
+            }
+            if (i >= hourly.relative_humidity_2m.length || hourly.relative_humidity_2m[i] == null) {
+                continue;
+            }
+            sum += hourly.relative_humidity_2m[i];
+            count++;
+        }
+        if (count > 0) {
+            data.setHumidityPercent((int) Math.round(sum / count));
+        }
+    }
+
+    /**
+     * 补充空气质量与花粉数据。
+     * <p>该接口独立于天气接口，任何失败都直接返回已拿到的天气，不影响主流程；
+     * 请求使用更短的超时，避免拖慢天气展示。
+     *
+     * @param lat      纬度
+     * @param lon      经度
+     * @param date     目标日期（yyyy-MM-dd）
+     * @param weather  已解析的天气对象
+     * @param callback 最终回调
+     */
+    private void enrichAirQuality(double lat, double lon, String date,
+                                  Weather weather, WeatherCallback callback) {
+        String url = AIR_QUALITY_URL + "?latitude=" + lat + "&longitude=" + lon
+                + "&hourly=european_aqi,alder_pollen,birch_pollen,grass_pollen,"
+                + "mugwort_pollen,ragweed_pollen"
+                + "&start_date=" + date + "&end_date=" + date
+                + "&timezone=auto";
+        Request request = new Request.Builder().url(url).build();
+
+        getAirQualityClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // 空气质量是增强项：失败时静默降级，不再回调（基础天气已经展示过）
+                Log.d(TAG, "空气质量请求失败，忽略该维度: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) {
+                boolean enriched = false;
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        AirQualityResponse air = sharedGson.fromJson(
+                                response.body().string(), AirQualityResponse.class);
+                        applyAirQuality(weather, air, date);
+                        enriched = weather.getAirQualityIndex() != null
+                                || weather.getPollenIndex() != null;
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "解析空气质量失败，忽略该维度", e);
+                } finally {
+                    if (response != null) {
+                        response.close();
+                    }
+                }
+                // 只有真正补到了数据才再回调一次，让界面把扩展维度用于建议正文与缓存
+                if (enriched) {
+                    callback.onSuccess(weather);
+                }
+            }
+        });
+    }
+
+    /**
+     * 从空气质量响应中取目标日期的最大 AQI 与最大花粉指数。
+     */
+    private void applyAirQuality(Weather weather, AirQualityResponse response, String date) {
+        AirHourly hourly = response == null ? null : response.hourly;
+        if (hourly == null || hourly.time == null) {
+            return;
+        }
+        Integer maxAqi = null;
+        Integer maxPollen = null;
+        for (int i = 0; i < hourly.time.length; i++) {
+            if (hourly.time[i] == null || !hourly.time[i].startsWith(date)) {
+                continue;
+            }
+            Double aqi = valueAt(hourly.european_aqi, i);
+            if (aqi != null) {
+                maxAqi = maxAqi == null ? (int) Math.round(aqi) : Math.max(maxAqi, (int) Math.round(aqi));
+            }
+            // 花粉包含多种植物，取当天最高的一项作为“花粉指数”
+            maxPollen = maxOf(maxPollen, valueAt(hourly.alder_pollen, i));
+            maxPollen = maxOf(maxPollen, valueAt(hourly.birch_pollen, i));
+            maxPollen = maxOf(maxPollen, valueAt(hourly.grass_pollen, i));
+            maxPollen = maxOf(maxPollen, valueAt(hourly.mugwort_pollen, i));
+            maxPollen = maxOf(maxPollen, valueAt(hourly.ragweed_pollen, i));
+        }
+        weather.setAirQualityIndex(maxAqi);
+        weather.setPollenIndex(maxPollen);
+    }
+
+    @Nullable
+    private static Double valueAt(@Nullable Double[] values, int index) {
+        if (values == null || index < 0 || index >= values.length) {
+            return null;
+        }
+        return values[index];
+    }
+
+    private static Integer maxOf(@Nullable Integer current, @Nullable Double candidate) {
+        if (candidate == null) {
+            return current;
+        }
+        int value = (int) Math.round(candidate);
+        return current == null ? value : Math.max(current, value);
+    }
+
+    /**
      * 把 Open-Meteo 的 WMO 天气码翻译为中文描述。
      * <p>返回词表需与 {@link WeatherSuggestionHelper} 中的关键字匹配逻辑保持一致。
      *
@@ -458,6 +623,7 @@ public class OpenMeteoHelper {
      */
     private static class WeatherResponse {
         Daily daily;
+        Hourly hourly;
     }
 
     /**
@@ -468,5 +634,44 @@ public class OpenMeteoHelper {
         @SerializedName("temperature_2m_max")
         double[] temperature_2m_max;
         int[] weathercode;
+        /** 紫外线指数最大值；归档接口不返回时为 null */
+        @SerializedName("uv_index_max")
+        Double[] uv_index_max;
+    }
+
+    /**
+     * hourly 节点：只用逐时湿度求当天均值。
+     */
+    private static class Hourly {
+        String[] time;
+        @SerializedName("relative_humidity_2m")
+        Double[] relative_humidity_2m;
+    }
+
+    /**
+     * 空气质量响应根对象。
+     */
+    private static class AirQualityResponse {
+        AirHourly hourly;
+    }
+
+    /**
+     * 空气质量 hourly 节点：AQI 与五类花粉。
+     */
+    private static class AirHourly {
+        String[] time;
+        /** 欧洲 AQI，数值越大空气越差 */
+        @SerializedName("european_aqi")
+        Double[] european_aqi;
+        @SerializedName("alder_pollen")
+        Double[] alder_pollen;
+        @SerializedName("birch_pollen")
+        Double[] birch_pollen;
+        @SerializedName("grass_pollen")
+        Double[] grass_pollen;
+        @SerializedName("mugwort_pollen")
+        Double[] mugwort_pollen;
+        @SerializedName("ragweed_pollen")
+        Double[] ragweed_pollen;
     }
 }

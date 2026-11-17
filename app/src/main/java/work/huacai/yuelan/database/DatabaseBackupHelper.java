@@ -284,6 +284,10 @@ public class DatabaseBackupHelper {
                 item.put("clot_small_count", getInt(cursor, "clot_small_count"));
                 item.put("clot_large_count", getInt(cursor, "clot_large_count"));
                 item.put("notes", getString(cursor, "notes"));
+                // 记录级备注与心情：旧备份没有这些字段，导入时按 0 / null 回退
+                item.put("flow_note", getString(cursor, "flow_note"));
+                item.put("pain_note", getString(cursor, "pain_note"));
+                item.put("mood", getInt(cursor, "mood"));
                 item.put("created_time", getString(cursor, "created_time"));
                 item.put("updated_time", getString(cursor, "updated_time"));
                 array.put(item);
@@ -401,8 +405,9 @@ public class DatabaseBackupHelper {
         if (array == null) return;
         String sql = "INSERT INTO menstrual_record (id, menstrual_cycle, is_prediction, suggestion, "
                 + "flow_level, flow_score, pain_level, pad_count, pad_light_count, pad_medium_count, "
-                + "pad_heavy_count, clot_small_count, clot_large_count, notes, created_time, updated_time) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "pad_heavy_count, clot_small_count, clot_large_count, notes, "
+                + "flow_note, pain_note, mood, created_time, updated_time) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         for (int i = 0; i < array.length(); i++) {
             JSONObject item = array.getJSONObject(i);
             db.execSQL(sql, new Object[]{
@@ -420,6 +425,9 @@ public class DatabaseBackupHelper {
                     item.optInt("clot_small_count", 0),
                     item.optInt("clot_large_count", 0),
                     item.optString("notes", null),
+                    item.optString("flow_note", null),
+                    item.optString("pain_note", null),
+                    item.optInt("mood", 0),
                     item.optString("created_time", null),
                     item.optString("updated_time", null)
             });

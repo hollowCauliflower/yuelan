@@ -49,6 +49,8 @@ public class MenstrualRecord {
     private String flowNote;
     /** 痛经记录专属备注（仅“记录痛经”入口使用） */
     private String painNote;
+    /** 心情等级：0 未记录 / 1 好 / 2 一般 / 3 低落 */
+    private int mood;
 
     /** 流量等级：无 / 少量 / 适中 / 过量 */
     public static final int FLOW_LEVEL_NONE = 0;
@@ -62,6 +64,12 @@ public class MenstrualRecord {
     public static final int PAIN_LEVEL_MODERATE = 2;
     public static final int PAIN_LEVEL_SEVERE = 3;
     public static final int PAIN_LEVEL_EXTREME = 4;
+
+    /** 心情等级：未记录 / 好 / 一般 / 低落 */
+    public static final int MOOD_NONE = 0;
+    public static final int MOOD_GOOD = 1;
+    public static final int MOOD_OKAY = 2;
+    public static final int MOOD_LOW = 3;
 
     public String getId() {
         return id;
@@ -219,6 +227,14 @@ public class MenstrualRecord {
 
     public void setPainNote(String painNote) {
         this.painNote = painNote;
+    }
+
+    public int getMood() {
+        return mood;
+    }
+
+    public void setMood(int mood) {
+        this.mood = mood;
     }
 
     /**

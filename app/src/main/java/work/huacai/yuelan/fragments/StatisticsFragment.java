@@ -43,6 +43,7 @@ import work.huacai.yuelan.adapter.RecordAdapter;
 import work.huacai.yuelan.dao.MenstrualRecordDao;
 import work.huacai.yuelan.dao.impl.MenstrualRecordDaoImpl;
 import work.huacai.yuelan.helper.CycleCalculator;
+import work.huacai.yuelan.helper.CycleStatsHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualRecord;
 import work.huacai.yuelan.widget.AppDialogFactory;
@@ -211,24 +212,14 @@ public class StatisticsFragment extends Fragment {
         // 周期相关统计一律用经期切分的实测值。
         // 完整周期 = 轮次数 - 1：只有"下一次经期已经开始"的轮次才算一个完整周期，
         // 最后一段仍进行中的周期不计入，避免把"正在来的这一轮"也算成已完成。
-        List<List<MenstrualRecord>> cycles = splitCycles(records);
-        int completeCycles = Math.max(0, cycles.size() - 1);
+        List<List<MenstrualRecord>> cycles = CycleStatsHelper.splitCycles(records);
+        int completeCycles = CycleStatsHelper.completeCycleCount(cycles);
         tvCycleCount.setText(formatCount(completeCycles));
 
-        if (completeCycles >= 1) {
-            Date firstStart = CycleCalculator.parseDateId(cycles.get(0).get(0).getId());
-            Date lastStart = CycleCalculator.parseDateId(cycles.get(cycles.size() - 1).get(0).getId());
-            if (firstStart != null && lastStart != null) {
-                // 按自然日计算跨度，避免夏令时导致某一天只有 23 小时而少算一天
-                int spanDays = CycleCalculator.daysBetween(firstStart, lastStart);
-                int avgCycle = Math.round(spanDays / (float) completeCycles);
-                tvAvgCycle.setText(avgCycle + getString(R.string.statistics_days));
-            } else {
-                tvAvgCycle.setText("--");
-            }
-        } else {
-            tvAvgCycle.setText("--");
-        }
+        int avgCycle = CycleStatsHelper.averageCycleDays(cycles);
+        tvAvgCycle.setText(avgCycle >= 1
+                ? avgCycle + getString(R.string.statistics_days)
+                : "--");
 
         // 各阶段占比已移除：占比按记录条数计算会被“只在经期录入”的习惯严重带偏
 
@@ -443,77 +434,6 @@ public class StatisticsFragment extends Fragment {
     }
 
     /**
-     * 按“经期开始~下一个经期开始前一天”切分周期：
-     * 相邻经期日期间隔达到 10 天及以上视为进入新周期，非经期记录归入当前周期。
-     * 第一个经期之前的非经期记录没有归属周期，直接丢弃。
-     *
-     * @param records 实际记录（顺序不限，调用方已过滤预测记录）
-     * @return 按时间升序排列的周期列表，每个周期内记录同样按日期升序
-     */
-    private List<List<MenstrualRecord>> splitCycles(List<MenstrualRecord> records) {
-        List<MenstrualRecord> sorted = new ArrayList<>(records);
-        Collections.sort(sorted, (r1, r2) -> {
-            Date d1 = CycleCalculator.parseDateId(r1.getId());
-            Date d2 = CycleCalculator.parseDateId(r2.getId());
-            if (d1 == null || d2 == null) return 0;
-            return d1.compareTo(d2);
-        });
-
-        List<List<MenstrualRecord>> cycles = new ArrayList<>();
-        List<MenstrualRecord> current = null;
-        // 记录当前周期内“最后一条经期记录”的日期：
-        // 不能拿周期内最后一条记录做间隔判断，否则经期末尾补录的非经期记录会把下一次经期误判为同一周期
-        Date lastMenstrualDate = null;
-        for (MenstrualRecord r : sorted) {
-            if (r.getMenstrualCycle() == MenstrualCycle.MENSTRUAL_PERIOD) {
-                Date cur = CycleCalculator.parseDateId(r.getId());
-                boolean newCycle = current == null || lastMenstrualDate == null || cur == null
-                        || CycleCalculator.daysBetween(lastMenstrualDate, cur) >= 10;
-                if (newCycle) {
-                    current = new ArrayList<>();
-                    cycles.add(current);
-                    lastMenstrualDate = null;
-                }
-                current.add(r);
-                if (cur != null) {
-                    lastMenstrualDate = cur;
-                }
-            } else if (current != null && !current.isEmpty()) {
-                current.add(r);
-            }
-        }
-        return cycles;
-    }
-
-    /**
-     * 统计一个周期内的经期天数。
-     * <p>按“首末经期记录的日期跨度”计算，而不是数记录条数：
-     * 用户可能漏记中间某天，用条数会把 5 天经期算成 3 天。
-     */
-    private int countPeriodDays(List<MenstrualRecord> cycle) {
-        Date first = null;
-        Date last = null;
-        for (MenstrualRecord r : cycle) {
-            if (r.getMenstrualCycle() != MenstrualCycle.MENSTRUAL_PERIOD) {
-                continue;
-            }
-            Date date = CycleCalculator.parseDateId(r.getId());
-            if (date == null) {
-                continue;
-            }
-            if (first == null) {
-                first = date;
-            }
-            last = date;
-        }
-        if (first == null || last == null) {
-            return 0;
-        }
-        // 自然日跨度 +1（含首尾），跨夏令时也不会算错
-        return CycleCalculator.daysBetween(first, last) + 1;
-    }
-
-    /**
      * 构建"周期节律"条形图：展示最近 6 个完整周期的长度与经期占比。
      * <p>条形长度按"最长周期"等比缩放（所有行同一比例尺），
      * 因此能直观看出这一轮比上一轮长了几天；粉色段表示经期部分。
@@ -522,45 +442,25 @@ public class StatisticsFragment extends Fragment {
      * @param cycles 已按经期切分的轮次列表（升序）
      */
     private void setupCycleRhythm(List<List<MenstrualRecord>> cycles) {
-        int completeCycles = cycles.size() - 1;
-        if (completeCycles <= 0) {
+        // 最新周期排在最下面，最多展示 6 轮；周期长度统计统一由 CycleStatsHelper 计算
+        CycleStatsHelper.CycleLengthStats stats = CycleStatsHelper.cycleLengthStats(cycles, 6);
+        if (stats.isEmpty()) {
             cardCycleRhythm.setVisibility(View.GONE);
             rhythmView.setItems(null);
             return;
         }
 
-        // 最新周期排在最下面，最多展示 6 轮
-        int from = Math.max(0, completeCycles - 6);
         List<CycleRhythmView.Item> items = new ArrayList<>();
-        int sum = 0;
-        int min = Integer.MAX_VALUE;
-        int max = 0;
-        for (int i = from; i < completeCycles; i++) {
-            Date start = CycleCalculator.parseDateId(cycles.get(i).get(0).getId());
-            Date nextStart = CycleCalculator.parseDateId(cycles.get(i + 1).get(0).getId());
-            if (start == null || nextStart == null) {
-                continue;
-            }
-            int cycleDays = CycleCalculator.daysBetween(start, nextStart);
-            int periodDays = countPeriodDays(cycles.get(i));
+        for (CycleStatsHelper.CycleLength length : stats.getItems()) {
             items.add(new CycleRhythmView.Item(
-                    getString(R.string.statistics_rhythm_cycle_label, i + 1),
-                    cycleDays, periodDays));
-            sum += cycleDays;
-            min = Math.min(min, cycleDays);
-            max = Math.max(max, cycleDays);
-        }
-
-        if (items.isEmpty()) {
-            cardCycleRhythm.setVisibility(View.GONE);
-            rhythmView.setItems(null);
-            return;
+                    getString(R.string.statistics_rhythm_cycle_label, length.getIndex() + 1),
+                    length.getCycleDays(), length.getPeriodDays()));
         }
 
         cardCycleRhythm.setVisibility(View.VISIBLE);
         rhythmView.setItems(items);
         tvRhythmSummary.setText(getString(R.string.statistics_rhythm_summary,
-                Math.round(sum / (float) items.size()), min, max));
+                stats.getAverageDays(), stats.getMinDays(), stats.getMaxDays()));
     }
 
     /**
@@ -599,31 +499,15 @@ public class StatisticsFragment extends Fragment {
                 }
             }
 
-            int periodDays = countPeriodDays(oneCycle);
-            int flowSum = 0;
-            int flowCount = 0;
-            int painSum = 0;
-            int painCount = 0;
-            for (MenstrualRecord r : oneCycle) {
-                if (r.getMenstrualCycle() == MenstrualCycle.MENSTRUAL_PERIOD) {
-                    if (r.hasFlowData()) {
-                        flowSum += r.getFlowScore();
-                        flowCount++;
-                    }
-                    // 0 级也计入平均值：有录入即为“无痛经”，而不是“未记录”
-                    if (r.hasFlowData() || r.hasPainData()) {
-                        painSum += r.getPainLevel();
-                        painCount++;
-                    }
-                }
-            }
-
-            // 周期内平均流量/痛经；没有填写时显示“未记录”
-            String flowText = flowCount > 0
-                    ? getFlowLevelText(flowSum / flowCount)
+            int periodDays = CycleStatsHelper.countPeriodDays(oneCycle);
+            // 周期内平均流量/痛经；-1 表示该周期没有录入对应数据，展示“未记录”
+            int avgFlow = CycleStatsHelper.averageFlowScore(oneCycle);
+            int avgPain = CycleStatsHelper.averagePainLevel(oneCycle);
+            String flowText = avgFlow >= 0
+                    ? getFlowLevelText(avgFlow)
                     : getString(R.string.statistics_not_recorded);
-            String painText = painCount > 0
-                    ? getPainLevelText(painSum / painCount)
+            String painText = avgPain >= 0
+                    ? getPainLevelText(avgPain)
                     : getString(R.string.statistics_not_recorded);
 
             View row = LayoutInflater.from(requireContext())

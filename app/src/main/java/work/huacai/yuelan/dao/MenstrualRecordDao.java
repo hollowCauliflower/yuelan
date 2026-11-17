@@ -51,6 +51,16 @@ public interface MenstrualRecordDao {
     int updateSuggestion(String id, String suggestion);
 
     /**
+     * 只更新指定日期的心情等级，其余字段保持不变。
+     * <p>心情一键打卡不应覆盖用户已填写的流量、痛经与备注，因此单独提供该方法。
+     *
+     * @param id   记录 id（yyyyMMdd）
+     * @param mood 心情等级，见 {@code MenstrualRecord.MOOD_*}
+     * @return 受影响行数；id 为空或更新失败返回 0
+     */
+    int updateMood(String id, int mood);
+
+    /**
      * 根据ID查询记录
      * @param id 记录ID（日期格式，如20260326）
      * @return MenstrualRecord，不存在返回null

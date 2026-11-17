@@ -56,7 +56,8 @@
                     created_time TEXT DEFAULT (datetime('now', 'localtime')),
                     updated_time TEXT DEFAULT (datetime('now', 'localtime')),
                     flow_note TEXT,
-                    pain_note TEXT
+                    pain_note TEXT,
+                    mood INTEGER DEFAULT 0
                 )
                 ]]>
             </sql>

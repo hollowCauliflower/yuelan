@@ -15,6 +15,14 @@ public class Weather {
     private String weatherText;
     /** 温度（带“℃”单位） */
     private String temperature;
+    /** 相对湿度（%），无数据时为 null */
+    private Integer humidityPercent;
+    /** 紫外线指数最大值，无数据时为 null */
+    private Double uvIndex;
+    /** 空气质量指数，无数据时为 null */
+    private Integer airQualityIndex;
+    /** 花粉指数，无数据时为 null */
+    private Integer pollenIndex;
 
     /** 供 Gson 反序列化使用的无参构造 */
     public Weather() {
@@ -53,6 +61,38 @@ public class Weather {
 
     public void setTemperature(String temperature) {
         this.temperature = temperature;
+    }
+
+    public Integer getHumidityPercent() {
+        return humidityPercent;
+    }
+
+    public void setHumidityPercent(Integer humidityPercent) {
+        this.humidityPercent = humidityPercent;
+    }
+
+    public Double getUvIndex() {
+        return uvIndex;
+    }
+
+    public void setUvIndex(Double uvIndex) {
+        this.uvIndex = uvIndex;
+    }
+
+    public Integer getAirQualityIndex() {
+        return airQualityIndex;
+    }
+
+    public void setAirQualityIndex(Integer airQualityIndex) {
+        this.airQualityIndex = airQualityIndex;
+    }
+
+    public Integer getPollenIndex() {
+        return pollenIndex;
+    }
+
+    public void setPollenIndex(Integer pollenIndex) {
+        this.pollenIndex = pollenIndex;
     }
 
     @NonNull

@@ -28,11 +28,26 @@ import work.huacai.yuelan.model.Weather;
  */
 final class DailyWeatherSection {
 
+    /**
+     * 天气加载完成回调。
+     * <p>每日建议正文需要在天气到达后重新生成（天气类片段依赖气温/天气描述），
+     * 这里把结果透传给宿主，避免宿主再发一次网络请求。
+     */
+    interface OnWeatherLoadedListener {
+        /**
+         * @param today    当天天气，失败时为 null
+         * @param tomorrow 明天天气，仅“今天”会额外请求；未请求或失败时为 null
+         */
+        void onWeatherLoaded(@Nullable Weather today, @Nullable Weather tomorrow);
+    }
+
     private final Context context;
     private final TextView tvWeather;
     private final TextView tvTip;
     /** 当前展示的日期，用于丢弃切换日期后才回来的旧请求结果 */
     private Date currentDate;
+    /** 天气加载完成后的宿主回调，可为 null */
+    private OnWeatherLoadedListener weatherLoadedListener;
 
     /**
      * @param context   视图上下文，用于取文案
@@ -43,6 +58,15 @@ final class DailyWeatherSection {
         this.context = context;
         this.tvWeather = tvWeather;
         this.tvTip = tvTip;
+    }
+
+    /**
+     * 设置天气加载完成回调。
+     *
+     * @param listener 回调；传 null 表示不通知
+     */
+    void setOnWeatherLoadedListener(@Nullable OnWeatherLoadedListener listener) {
+        this.weatherLoadedListener = listener;
     }
 
     /**
@@ -71,7 +95,10 @@ final class DailyWeatherSection {
                     tvWeather.setVisibility(View.VISIBLE);
                     // 暖心提醒只针对今天：历史/未来日期只展示天气本身
                     if (isToday(date) && phase != null) {
+                        // 先取明天天气用于“明日降温”判断，取到后再统一通知宿主
                         loadTip(date, phase, weather);
+                    } else {
+                        notifyWeatherLoaded(weather, null);
                     }
                 });
             }
@@ -120,11 +147,25 @@ final class DailyWeatherSection {
                     todayWeather, tomorrowWeather);
             if (tip == null || tip.isEmpty()) {
                 hideTip();
-                return;
+            } else {
+                tvTip.setText(tip);
+                tvTip.setVisibility(View.VISIBLE);
             }
-            tvTip.setText(tip);
-            tvTip.setVisibility(View.VISIBLE);
+            // 无论有没有暖心提醒，都通知宿主天气已就绪：建议正文需要据此重新生成
+            notifyWeatherLoaded(todayWeather, tomorrowWeather);
         });
+    }
+
+    /**
+     * 通知宿主天气已加载完成。
+     * <p>调用方（{@link #show} 与 {@link #renderTip}）已校验过日期，
+     * 这里只负责把结果转发给宿主，不做二次判断。
+     */
+    private void notifyWeatherLoaded(@Nullable Weather today, @Nullable Weather tomorrow) {
+        if (weatherLoadedListener == null || currentDate == null) {
+            return;
+        }
+        weatherLoadedListener.onWeatherLoaded(today, tomorrow);
     }
 
     /**

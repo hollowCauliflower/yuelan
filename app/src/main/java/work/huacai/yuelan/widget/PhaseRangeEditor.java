@@ -311,7 +311,7 @@ public final class PhaseRangeEditor {
                         context.getString(R.string.phase_edit_luteal_to_period_message),
                         R.string.phase_edit_save_single_day, R.string.dialog_cancel,
                         () -> {
-                            saveSingleDay(context, fromEntry, recordDao);
+                            saveSingleDay(fromEntry, recordDao);
                             dialog.dismiss();
                             notifySaved(context, listener);
                         });
@@ -332,7 +332,7 @@ public final class PhaseRangeEditor {
             record.setMenstrualCycle(entry.phase);
             // 0 = 用户实际记录，重算预测时不会被覆盖
             record.setIsPrediction(0);
-            record.setSuggestion(entry.phase.getTips(context));
+            // 不再写入建议文案：界面按当天信号实时生成，数据库字段仅作兜底
             if (isNew) {
                 recordDao.insert(record);
             } else {
@@ -363,7 +363,7 @@ public final class PhaseRangeEditor {
      * 只保存补签当天：写入/更新一条实际阶段记录，不清理也不写锚点，
      * 因此预测分段和基准日保持不动。
      */
-    private static void saveSingleDay(Context context, DayEntry entry, MenstrualRecordDao recordDao) {
+    private static void saveSingleDay(DayEntry entry, MenstrualRecordDao recordDao) {
         MenstrualRecord record = recordDao.selectById(entry.dateId);
         boolean isNew = record == null;
         if (isNew) {
@@ -372,7 +372,7 @@ public final class PhaseRangeEditor {
         }
         record.setMenstrualCycle(entry.phase);
         record.setIsPrediction(0);
-        record.setSuggestion(entry.phase.getTips(context));
+        // 不再写入建议文案：界面按当天信号实时生成，数据库字段仅作兜底
         if (isNew) {
             recordDao.insert(record);
         } else {

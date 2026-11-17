@@ -45,7 +45,6 @@ import work.huacai.yuelan.dao.impl.ReminderDaoImpl;
 import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.DailyPromptHelper;
 import work.huacai.yuelan.helper.PeriodReminderScheduler;
-import work.huacai.yuelan.helper.GenerateSuggestionHelper;
 import work.huacai.yuelan.helper.OpenMeteoHelper;
 import work.huacai.yuelan.helper.ReminderAlarmScheduler;
 import work.huacai.yuelan.helper.ReminderCycleHelper;
@@ -906,11 +905,10 @@ public class HomeFragment extends Fragment {
                 record.setId(recordId);
                 record.setMenstrualCycle(cycle);
                 record.setPrediction(true);
+                // 不再写入随机建议：界面改为展示时由建议引擎实时生成，
+                // suggestion 字段只作为引擎不可用时的历史兜底
 
-                String localSuggestion = GenerateSuggestionHelper.generateSuggestion(requireContext(), cycle);
-                record.setSuggestion(localSuggestion);
-
-                Log.d(TAG, "补充记录: " + recordId + ", 阶段: " + cycle.name() + ", 建议: " + localSuggestion);
+                Log.d(TAG, "补充记录: " + recordId + ", 阶段: " + cycle.name());
 
                 long result = dao.insert(record);
                 if (result == -1) {

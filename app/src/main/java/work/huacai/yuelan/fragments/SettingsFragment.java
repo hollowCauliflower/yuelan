@@ -54,6 +54,7 @@ import work.huacai.yuelan.helper.AppIconHelper;
 import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.PeriodReminderScheduler;
 import work.huacai.yuelan.helper.ReminderNotificationHelper;
+import work.huacai.yuelan.helper.SuggestionToneStore;
 import work.huacai.yuelan.helper.ThemeHelper;
 import work.huacai.yuelan.helper.UpdateChecker;
 import work.huacai.yuelan.helper.WeatherCacheHelper;
@@ -99,6 +100,8 @@ public class SettingsFragment extends Fragment {
     private TextView tvVersion;
     /** 当前主题模式的展示文案 */
     private TextView tvThemeMode;
+    /** 每日建议语气的展示文案 */
+    private TextView tvSuggestionTone;
     /** 天气地点：跟随定位或用户指定的城市 */
     private TextView tvWeatherLocation;
     /** 设置页里当前图标风格的预览图标 */
@@ -206,6 +209,8 @@ public class SettingsFragment extends Fragment {
         tvVersion = view.findViewById(R.id.tv_version);
         tvThemeMode = view.findViewById(R.id.tv_theme_mode);
         tvThemeMode.setText(getThemeModeName(ThemeHelper.getSavedMode(requireContext())));
+        tvSuggestionTone = view.findViewById(R.id.tv_suggestion_tone);
+        tvSuggestionTone.setText(getToneName(SuggestionToneStore.getTone(requireContext())));
         tvWeatherLocation = view.findViewById(R.id.tv_weather_location);
         ivAppIconPreview = view.findViewById(R.id.iv_app_icon_preview);
         AppIconHelper.loadAppIcon(requireContext(), ivAppIconPreview);
@@ -231,6 +236,10 @@ public class SettingsFragment extends Fragment {
     private void loadData() {
         loadReminderSettings();
         loadCycleSettings();
+        // 语气可能在设置弹窗之外被修改，回到页面时统一刷新展示
+        if (tvSuggestionTone != null) {
+            tvSuggestionTone.setText(getToneName(SuggestionToneStore.getTone(requireContext())));
+        }
         tvWeatherLocation.setText(WeatherLocationHelper.getDisplayName(requireContext()));
         // 跟随系统定位时异步反查城市名，把展示补全成"跟随系统定位（南昌）"
         if (WeatherLocationHelper.isDeviceMode(requireContext())) {
@@ -323,6 +332,7 @@ public class SettingsFragment extends Fragment {
         View layoutAgreement = view.findViewById(R.id.layout_agreement);
         View layoutAppIcon = view.findViewById(R.id.layout_app_icon);
         View layoutThemeMode = view.findViewById(R.id.layout_theme_mode);
+        View layoutSuggestionTone = view.findViewById(R.id.layout_suggestion_tone);
         View layoutWeatherLocation = view.findViewById(R.id.layout_weather_location);
         View layoutCheckUpdate = view.findViewById(R.id.layout_check_update);
         SwitchCompat switchPeriodReminder = view.findViewById(R.id.switch_period_reminder);
@@ -344,6 +354,9 @@ public class SettingsFragment extends Fragment {
         }
         if (layoutThemeMode != null) {
             layoutThemeMode.setOnClickListener(v -> showThemeModeDialog());
+        }
+        if (layoutSuggestionTone != null) {
+            layoutSuggestionTone.setOnClickListener(v -> showSuggestionToneDialog());
         }
         if (layoutWeatherLocation != null) {
             layoutWeatherLocation.setOnClickListener(v -> showWeatherLocationDialog());
@@ -1117,6 +1130,53 @@ public class SettingsFragment extends Fragment {
                     // AppCompat 不会重建 Activity，界面不会自动刷新，这里手动同步展示文案
                     tvThemeMode.setText(getThemeModeName(which));
                 });
+    }
+
+    /**
+     * 弹出建议语气选择弹窗：温柔 / 简洁 / 元气。
+     * <p>语气只影响文案措辞，保存后下次打开每日建议立即生效，无需重启页面。
+     */
+    private void showSuggestionToneDialog() {
+        final String[] tones = {
+                SuggestionToneStore.TONE_GENTLE,
+                SuggestionToneStore.TONE_BRIEF,
+                SuggestionToneStore.TONE_CHEERFUL
+        };
+        String[] items = {
+                getString(R.string.suggestion_tone_gentle),
+                getString(R.string.suggestion_tone_brief),
+                getString(R.string.suggestion_tone_cheerful)
+        };
+        String currentTone = SuggestionToneStore.getTone(requireContext());
+        int checked = 0;
+        for (int i = 0; i < tones.length; i++) {
+            if (tones[i].equals(currentTone)) {
+                checked = i;
+                break;
+            }
+        }
+
+        AppDialogFactory.showSingleChoice(requireContext(),
+                getString(R.string.settings_suggestion_tone_title), items, checked, which -> {
+                    SuggestionToneStore.setTone(requireContext(), tones[which]);
+                    tvSuggestionTone.setText(getToneName(tones[which]));
+                });
+    }
+
+    /**
+     * 把语气值映射为展示文案。
+     *
+     * @param tone 语气值
+     * @return 对应的中文名称
+     */
+    private String getToneName(String tone) {
+        if (SuggestionToneStore.TONE_BRIEF.equals(tone)) {
+            return getString(R.string.suggestion_tone_brief);
+        }
+        if (SuggestionToneStore.TONE_CHEERFUL.equals(tone)) {
+            return getString(R.string.suggestion_tone_cheerful);
+        }
+        return getString(R.string.suggestion_tone_gentle);
     }
 
     /**

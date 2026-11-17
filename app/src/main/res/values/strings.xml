@@ -293,6 +293,12 @@
     <string name="settings_custom_reminder">Custom Reminder</string>
     <!-- Weather settings: location used by the weather hint in daily suggestions -->
     <string name="settings_weather_section">Weather</string>
+    <string name="settings_suggestion_section">Daily suggestions</string>
+    <string name="settings_suggestion_tone">Tone</string>
+    <string name="settings_suggestion_tone_title">Choose tone</string>
+    <string name="suggestion_tone_gentle">Gentle</string>
+    <string name="suggestion_tone_brief">Brief</string>
+    <string name="suggestion_tone_cheerful">Cheerful</string>
     <string name="settings_weather_location">Weather location</string>
     <string name="settings_weather_location_device">Follow device location</string>
     <!-- Appends the resolved city when device location is used -->
@@ -509,6 +515,22 @@
     <string name="daily_suggestion_no_remind_today">Don\'t remind me today</string>
     <string name="daily_suggestion_reminder_section">Day Reminders</string>
     <string name="daily_suggestion_close">Got it</string>
+    <string name="daily_suggestion_why">Why this suggestion?</string>
+    <string name="daily_suggestion_why_hide">Hide reason</string>
+    <string name="daily_suggestion_useful">Useful</string>
+    <string name="daily_suggestion_mood_title">Mood today</string>
+    <string name="daily_suggestion_mood_good">Good</string>
+    <string name="daily_suggestion_mood_okay">Okay</string>
+    <string name="daily_suggestion_mood_low">Low</string>
+    <string name="daily_suggestion_mood_saved">Mood saved</string>
+    <string name="daily_suggestion_mood_need_phase">Please record today\'s phase first</string>
+    <string name="daily_suggestion_habit_title">Today\'s small goals</string>
+    <string name="daily_suggestion_habit_sleep">Slept 7 hours</string>
+    <string name="daily_suggestion_habit_water">Drank 8 cups</string>
+    <string name="daily_suggestion_habit_saved">Check-in saved</string>
+    <string name="daily_suggestion_swap">Another one</string>
+    <string name="daily_suggestion_feedback_thanks">Thanks, we will adjust to your preference</string>
+    <string name="daily_suggestion_no_more">No more suggestions for now</string>
     <!-- Suggestion title when viewing a date other than today from the calendar -->
     <string name="daily_suggestion_title_day">Suggestion for the Day</string>
     <!-- Record summary matching the "Recorded" mark on the calendar cell; tap to view/edit -->

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:background="@drawable/dialog_background"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -95,6 +100,80 @@
                 android:textSize="15sp"
                 android:lineSpacingExtra="6dp"/>
 
+            <!-- 今日宜忌：引擎生成，没有匹配内容时隐藏 -->
+            <TextView
+                android:id="@+id/tv_yiji"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/text_body"
+                android:textSize="13sp"
+                android:visibility="gone"/>
+
+            <!-- “为什么会有这条建议”：点击展开依据，默认收起，避免首屏超过三行 -->
+            <TextView
+                android:id="@+id/tv_insight_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="?attr/selectableItemBackground"
+                android:paddingVertical="6dp"
+                android:text="@string/daily_suggestion_why"
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                android:visibility="gone"/>
+
+            <!-- 建议依据：展开后显示，内容来自引擎的 insight 插槽 -->
+            <TextView
+                android:id="@+id/tv_insight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/text_sub"
+                android:textSize="12sp"
+                android:visibility="gone"/>
+
+            <!-- 反馈入口：有用 / 换一条。没有建议内容时整行隐藏 -->
+            <LinearLayout
+                android:id="@+id/layout_feedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_useful"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="6dp"
+                    android:paddingEnd="18dp"
+                    android:text="@string/daily_suggestion_useful"
+                    android:textColor="@color/text_hint"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:id="@+id/tv_swap"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="6dp"
+                    android:paddingEnd="18dp"
+                    android:text="@string/daily_suggestion_swap"
+                    android:textColor="@color/text_hint"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+            <!-- 心情一键打卡 + 睡眠/饮水微习惯，只在查看今天时展示 -->
+            <work.huacai.yuelan.widget.SuggestionCheckInView
+                android:id="@+id/check_in"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"/>
+
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
@@ -154,4 +233,6 @@
         android:textSize="13sp"
         android:visibility="gone" />
 
-</LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

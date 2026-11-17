@@ -20,7 +20,6 @@ import work.huacai.yuelan.dao.MenstrualCycleRecordDao;
 import work.huacai.yuelan.dao.MenstrualRecordDao;
 import work.huacai.yuelan.database.DatabaseHelper;
 import work.huacai.yuelan.helper.CycleCalculator;
-import work.huacai.yuelan.helper.GenerateSuggestionHelper;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
@@ -400,7 +399,6 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
             if (cycle != null) {
                 // 记录 id 用日期串（yyyyMMdd），天然充当主键并保证同日只生成一条
                 String recordId = CycleCalculator.formatDateId(currentDate);
-                String localSuggestion = GenerateSuggestionHelper.generateSuggestion(context, cycle);
                 ExistingRecordState state = existing.get(recordId);
 
                 if (state == null) {
@@ -408,7 +406,8 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
                     record.setId(recordId);
                     record.setMenstrualCycle(cycle);
                     record.setPrediction(true);
-                    record.setSuggestion(localSuggestion);
+                    // 建议文案不再写入：界面已改为按当天信号实时生成，
+                    // suggestion 字段只作为引擎不可用时的历史兜底
 
                     long result = menstrualRecordDao.insert(record);
                     if (result == -1) {
@@ -417,14 +416,14 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
                         insertCount++;
                     }
                 } else if (state.prediction) {
-                    // 预测记录：阶段变化或建议缺失时刷新，避免基准日变化后仍展示旧阶段/旧建议
+                    // 预测记录：只在阶段变化时刷新，避免基准日变化后仍展示旧阶段。
+                    // 不再因“建议缺失”触发更新：新生成的记录本就不写建议，
+                    // 否则每次重算都会判定缺失并无谓地刷一遍库。
                     boolean phaseChanged = !cycle.name().equals(state.cycleName);
-                    boolean missingSuggestion = state.suggestion == null || state.suggestion.trim().isEmpty();
 
-                    if (phaseChanged || missingSuggestion) {
+                    if (phaseChanged) {
                         ContentValues values = new ContentValues();
                         values.put("menstrual_cycle", cycle.name());
-                        values.put("suggestion", localSuggestion);
                         values.put("updated_time", currentTimeString());
                         int updated = databaseHelper.update(
                                 "menstrual_record",
@@ -475,13 +474,13 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
         Cursor cursor = null;
         try {
             cursor = databaseHelper.querySQL(
-                    "SELECT id, is_prediction, menstrual_cycle, suggestion FROM menstrual_record WHERE id >= ? AND id <= ?",
+                    "SELECT id, is_prediction, menstrual_cycle FROM menstrual_record WHERE id >= ? AND id <= ?",
                     new String[]{startId, endId});
             while (cursor != null && cursor.moveToNext()) {
-                // 库内约定：0 = 预测，1 = 实际；suggestion 用于判断建议是否缺失
+                // 库内约定：0 = 预测，1 = 实际
                 states.put(cursor.getString(0),
                         new ExistingRecordState(cursor.getInt(1) == 0,
-                                cursor.getString(2), cursor.getString(3)));
+                                cursor.getString(2)));
             }
         } catch (Exception e) {
             Log.e(TAG, "loadExistingStates error", e);
@@ -494,20 +493,17 @@ public class MenstrualCycleRecordDaoImpl implements MenstrualCycleRecordDao {
     }
 
     /**
-     * 已存在记录的轻量状态：是否预测 + 当前阶段名 + 当前建议文案。
+     * 已存在记录的轻量状态：是否预测 + 当前阶段名。
      */
     private static class ExistingRecordState {
         /** true = 预测记录，false = 用户实际记录 */
         final boolean prediction;
         /** 当前阶段名，用于判断阶段是否发生变化 */
         final String cycleName;
-        /** 当前建议文案，为空表示需要补全 */
-        final String suggestion;
 
-        ExistingRecordState(boolean prediction, String cycleName, String suggestion) {
+        ExistingRecordState(boolean prediction, String cycleName) {
             this.prediction = prediction;
             this.cycleName = cycleName;
-            this.suggestion = suggestion;
         }
     }
 

@@ -23,6 +23,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.checkbox.MaterialCheckBox;
 
@@ -31,8 +32,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import work.huacai.yuelan.R;
 import work.huacai.yuelan.dao.MenstrualCycleRecordDao;
@@ -45,10 +49,17 @@ import work.huacai.yuelan.helper.CycleCalculator;
 import work.huacai.yuelan.helper.PeriodReminderScheduler;
 import work.huacai.yuelan.helper.PhaseContinuityHelper;
 import work.huacai.yuelan.helper.ReminderCycleHelper;
+import work.huacai.yuelan.helper.SuggestionContent;
+import work.huacai.yuelan.helper.SuggestionContext;
+import work.huacai.yuelan.helper.SuggestionContextHelper;
+import work.huacai.yuelan.helper.SuggestionEngine;
+import work.huacai.yuelan.helper.SuggestionFeedbackStore;
+import work.huacai.yuelan.helper.SuggestionTemplateRepository;
 import work.huacai.yuelan.model.MenstrualCycle;
 import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
 import work.huacai.yuelan.model.Reminder;
+import work.huacai.yuelan.model.Weather;
 
 /**
  * 每日建议弹窗。
@@ -84,6 +95,25 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
     /** 建议区块标题：今天显示"今日建议"，其他日期显示"当日建议" */
     private TextView tvSuggestionTitle;
     private TextView tvSuggestion;
+    /** 今日宜忌：引擎输出为空时隐藏 */
+    private TextView tvYiji;
+    /** “为什么会有这条建议”开关与依据正文 */
+    private TextView tvInsightToggle;
+    private TextView tvInsight;
+    /** 依据是否展开；切换日期时自动收起 */
+    private boolean insightExpanded;
+    /** 当前是否有依据内容，避免空点击 */
+    private boolean hasInsight;
+    /** 反馈入口容器与按钮：有用 / 换一条 */
+    private View layoutFeedback;
+    private TextView tvUseful;
+    private TextView tvSwap;
+    /** 心情与微习惯一键打卡 */
+    private SuggestionCheckInView checkInView;
+    /** 本次查看内“换一条”跳过的模板，切换日期后清空 */
+    private final Set<String> skippedTemplateIds = new HashSet<>();
+    /** 最近一次渲染结果，供反馈按钮取模板 id */
+    private SuggestionContent lastContent;
     /** 当日记录摘要：对应日历格子底部的"记"标记，点击打开记录详情 */
     private View layoutRecordSummary;
     private TextView tvRecordSummary;
@@ -104,6 +134,11 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
     private Date currentDate;
     /** true = 首页自动弹出的今日建议模式，才显示“今日不再提醒” */
     private boolean isTodayMode;
+    /** 当天天气，天气异步返回后用于重新生成建议正文 */
+    private Weather currentWeather;
+    /** 最近一次渲染使用的记录与阶段，供天气回调时复用，避免重复查库 */
+    private MenstrualRecord lastRecord;
+    private MenstrualCycle lastDisplayPhase;
     private MenstrualRecordDao recordDao;
     private ReminderDao reminderDao;
     private MenstrualCycleRecordDao cycleRecordDao;
@@ -204,6 +239,15 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         tvWeather = view.findViewById(R.id.tv_weather);
         tvWeatherTip = view.findViewById(R.id.tv_weather_tip);
         weatherSection = new DailyWeatherSection(requireContext(), tvWeather, tvWeatherTip);
+        // 天气异步返回后再重新生成一次建议正文：天气类片段依赖气温/天气描述，
+        // 但首屏不能等网络，因此先渲染不含天气的版本，天气到达后原地替换
+        weatherSection.setOnWeatherLoadedListener((today, tomorrow) -> {
+            if (!isAdded() || currentDate == null) {
+                return;
+            }
+            currentWeather = today;
+            renderSuggestion(lastRecord, lastDisplayPhase);
+        });
         tvSuggestionTitle = view.findViewById(R.id.tv_suggestion_title);
         layoutRecordSummary = view.findViewById(R.id.layout_record_summary);
         tvRecordSummary = view.findViewById(R.id.tv_record_summary);
@@ -211,6 +255,20 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         ivPhaseEdit = view.findViewById(R.id.iv_phase_edit);
         tvFutureHint = view.findViewById(R.id.tv_future_hint);
         tvSuggestion = view.findViewById(R.id.tv_suggestion);
+        tvYiji = view.findViewById(R.id.tv_yiji);
+        tvInsightToggle = view.findViewById(R.id.tv_insight_toggle);
+        tvInsight = view.findViewById(R.id.tv_insight);
+        // 依据默认收起：首屏只保留三行建议，用户想深究时再展开
+        tvInsightToggle.setOnClickListener(v -> {
+            insightExpanded = !insightExpanded;
+            updateInsightState();
+        });
+        layoutFeedback = view.findViewById(R.id.layout_feedback);
+        tvUseful = view.findViewById(R.id.tv_useful);
+        tvSwap = view.findViewById(R.id.tv_swap);
+        tvUseful.setOnClickListener(v -> onUsefulClicked());
+        tvSwap.setOnClickListener(v -> onSwapClicked());
+        checkInView = view.findViewById(R.id.check_in);
         tvPrevDay = view.findViewById(R.id.tv_prev_day);
         tvNextDay = view.findViewById(R.id.tv_next_day);
         cbNoRemindToday = view.findViewById(R.id.cb_no_remind_today);
@@ -408,6 +466,9 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         tvSuggestionTitle.setText(isToday
                 ? R.string.daily_suggestion_title : R.string.daily_suggestion_title_day);
 
+        // 切换日期时清空上一天的天气，避免旧天气参与新日期的建议生成
+        currentWeather = null;
+
         MenstrualRecord record = recordDao.selectById(dateId);
         updateRecordSummary(record);
         MenstrualCycle cycle = record != null ? record.getMenstrualCycle() : null;
@@ -418,9 +479,6 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
             tvPhase.setText(cycle.getDisplayName(requireContext()));
             tvPhase.setBackgroundTintList(
                     ContextCompat.getColorStateList(requireContext(), getPhaseColor(cycle)));
-            tvSuggestion.setText(record.getSuggestion() != null
-                    ? record.getSuggestion()
-                    : getString(R.string.record_adapter_no_suggestion));
         } else {
             // 当天没有实际记录：尝试按周期参数推算预测阶段，让用户看到预测结果后再决定是否覆盖
             MenstrualCycle predictedCycle = computePredictedPhase(currentDate);
@@ -430,15 +488,22 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
                         predictedCycle.getDisplayName(requireContext())));
                 tvPhase.setBackgroundTintList(
                         ContextCompat.getColorStateList(requireContext(), getPhaseColor(predictedCycle)));
-                tvSuggestion.setText(generateSuggestionForPhase(predictedCycle));
             } else {
                 // 无法推算预测阶段：显示占位文案与灰色标签
                 tvPhase.setText(getString(R.string.daily_suggestion_no_record));
                 tvPhase.setBackgroundTintList(
                         ContextCompat.getColorStateList(requireContext(), R.color.gray));
-                tvSuggestion.setText(getString(R.string.daily_suggestion_no_record_suggestion));
             }
         }
+
+        // 建议正文改为由引擎按当天信号实时生成；记录与阶段暂存，供天气回调时复用
+        lastRecord = record;
+        lastDisplayPhase = displayPhase;
+        // 切换日期后依据回到收起状态，避免把上一天的说明带到新日期
+        insightExpanded = false;
+        // 换过的文案只对当天生效，切换日期后重新开放候选
+        skippedTemplateIds.clear();
+        renderSuggestion(record, displayPhase);
 
         // 不允许查看今天之后的日期：只有当前日期早于今天时“下一天”才可用
         Date today = CycleCalculator.normalizeDate(new Date());
@@ -459,6 +524,201 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         if (weatherSection != null) {
             weatherSection.show(currentDate, displayPhase);
         }
+    }
+
+    /**
+     * 用建议引擎实时生成正文。
+     * <p>生成时机由“写库时随机一次”改为“展示时按当天信号计算”：
+     * 同一天反复打开结果一致，不同日期/不同症状给出不同内容。
+     * 数据库里的 {@code suggestion} 字段降级为兜底，仅在引擎无可用模板时回退。
+     *
+     * @param record 当天记录，可为 null
+     * @param phase  当天展示阶段，可为 null
+     */
+    private void renderSuggestion(@Nullable MenstrualRecord record, @Nullable MenstrualCycle phase) {
+        if (tvSuggestion == null || currentDate == null) {
+            return;
+        }
+        // 周期参数用于推算周期第几天与阶段内第几天，口径与日历、提醒保持一致
+        MenstrualCycleRecord cycleRecord = cycleRecordDao.selectLast();
+        // 实际记录用于规律性、连续打卡与痛经趋势；一次查询即可，数据量很小
+        SuggestionContext context = SuggestionContextHelper.build(requireContext(), currentDate,
+                record, phase, currentWeather, cycleRecord, recordDao.selectActual(),
+                reminderTimeOfToday(), reminderTitleOfToday());
+        // 反馈分与本次会话的跳过集合一起参与排序
+        Map<String, Integer> feedback = SuggestionFeedbackStore.loadScores(requireContext());
+        SuggestionContent content = SuggestionEngine.generate(context,
+                SuggestionTemplateRepository.getTemplates(requireContext()),
+                feedback, skippedTemplateIds);
+        String text = content.toDisplayText();
+        // 引擎无内容（模板损坏/未命中）时回退旧文案，保证正文永不空白
+        tvSuggestion.setText(text != null ? text : fallbackSuggestion(record, phase));
+        // 宜忌与依据独立于正文：有就展示，没有就隐藏
+        lastContent = content;
+        renderExtras(content);
+        updateFeedbackRow(content);
+        // 打卡区只在今天出现；数据变化后由 onCheckInChanged 重新生成建议
+        if (checkInView != null) {
+            checkInView.bind(currentDate, record, phase, this::onCheckInChanged);
+        }
+    }
+
+    /**
+     * 心情/微习惯变化后重新读取当天记录并刷新建议，让对应标签即时生效。
+     */
+    private void onCheckInChanged() {
+        if (currentDate == null) {
+            return;
+        }
+        MenstrualRecord record = recordDao.selectById(CycleCalculator.formatDateId(currentDate));
+        lastRecord = record;
+        renderSuggestion(record, lastDisplayPhase);
+    }
+
+    /**
+     * 当天最近一条提醒的时间；只有查看“今天”时才返回。
+     * <p>历史日期显示“今天 19:00 有提醒”会造成误解，因此非今天一律返回 null。
+     *
+     * @return HH:mm；没有提醒或非今天返回 null
+     */
+    @Nullable
+    private String reminderTimeOfToday() {
+        Reminder reminder = todayReminder();
+        return reminder == null ? null : reminder.getAlarmTime();
+    }
+
+    /**
+     * 当天最近一条提醒的标题；只有查看“今天”时才返回。
+     *
+     * @return 提醒标题；没有提醒或非今天返回 null
+     */
+    @Nullable
+    private String reminderTitleOfToday() {
+        Reminder reminder = todayReminder();
+        return reminder == null ? null : reminder.getTitle();
+    }
+
+    /**
+     * 取“今天”命中的最早一条启用提醒。
+     *
+     * @return 提醒；非今天或没有提醒时返回 null
+     */
+    @Nullable
+    private Reminder todayReminder() {
+        if (currentDate == null) {
+            return null;
+        }
+        String todayId = CycleCalculator.formatDateId(new Date());
+        if (!todayId.equals(CycleCalculator.formatDateId(currentDate))) {
+            return null;
+        }
+        return SuggestionContextHelper.firstReminderOn(reminderDao.selectAll(), currentDate);
+    }
+
+    /**
+     * 反馈入口是否展示：有实际建议内容时才出现，避免空点击。
+     *
+     * @param content 当前引擎输出
+     */
+    private void updateFeedbackRow(SuggestionContent content) {
+        if (layoutFeedback == null) {
+            return;
+        }
+        boolean visible = content != null && !content.getTemplateIds().isEmpty();
+        layoutFeedback.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (tvUseful != null) {
+            // 每次重新渲染后恢复可点，便于对新内容再次反馈
+            tvUseful.setEnabled(true);
+        }
+    }
+
+    /**
+     * “有用”：给本次命中的模板加分，后续排序会更偏向它们。
+     */
+    private void onUsefulClicked() {
+        if (lastContent == null || lastContent.getTemplateIds().isEmpty()) {
+            return;
+        }
+        SuggestionFeedbackStore.like(requireContext(), lastContent.getTemplateIds());
+        if (tvUseful != null) {
+            tvUseful.setEnabled(false);
+        }
+        Toast.makeText(requireContext(), R.string.daily_suggestion_feedback_thanks,
+                Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * “换一条”：给当前模板减分并临时跳过，立即重新生成一版。
+     * <p>若候选已用尽、内容没有变化，用 Toast 明确告知，而不是静默无响应。
+     */
+    private void onSwapClicked() {
+        if (lastContent == null || lastContent.getTemplateIds().isEmpty()) {
+            return;
+        }
+        List<String> ids = lastContent.getTemplateIds();
+        SuggestionFeedbackStore.dislike(requireContext(), ids);
+        skippedTemplateIds.addAll(ids);
+        String before = lastContent.toDisplayText();
+        renderSuggestion(lastRecord, lastDisplayPhase);
+        String after = lastContent == null ? null : lastContent.toDisplayText();
+        if (before != null && before.equals(after)) {
+            Toast.makeText(requireContext(), R.string.daily_suggestion_no_more,
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 渲染今日宜忌与“为什么”依据。
+     * <p>两者都可能为空：宜忌只在模板命中时出现，依据只在 insight 插槽有内容时出现。
+     *
+     * @param content 引擎输出
+     */
+    private void renderExtras(SuggestionContent content) {
+        if (tvYiji == null || tvInsight == null || tvInsightToggle == null) {
+            return;
+        }
+        String yiji = content.getYiji();
+        boolean hasYiji = yiji != null && !yiji.trim().isEmpty();
+        tvYiji.setText(hasYiji ? yiji : null);
+        tvYiji.setVisibility(hasYiji ? View.VISIBLE : View.GONE);
+
+        String insight = content.getInsight();
+        hasInsight = insight != null && !insight.trim().isEmpty();
+        tvInsight.setText(hasInsight ? insight : null);
+        tvInsightToggle.setVisibility(hasInsight ? View.VISIBLE : View.GONE);
+        updateInsightState();
+    }
+
+    /**
+     * 根据展开状态刷新依据正文与按钮文案；没有依据时保持隐藏。
+     */
+    private void updateInsightState() {
+        if (tvInsight == null || tvInsightToggle == null) {
+            return;
+        }
+        tvInsight.setVisibility(hasInsight && insightExpanded ? View.VISIBLE : View.GONE);
+        tvInsightToggle.setText(insightExpanded
+                ? R.string.daily_suggestion_why_hide : R.string.daily_suggestion_why);
+    }
+
+    /**
+     * 引擎不可用时的兜底文案：优先用记录里已写入的建议，其次用阶段静态建议，
+     * 最后才是“暂无记录”占位。
+     *
+     * @param record 当天记录，可为 null
+     * @param phase  当天阶段，可为 null
+     * @return 兜底文案
+     */
+    private String fallbackSuggestion(@Nullable MenstrualRecord record,
+                                      @Nullable MenstrualCycle phase) {
+        if (record != null && record.getSuggestion() != null
+                && !record.getSuggestion().trim().isEmpty()) {
+            return record.getSuggestion();
+        }
+        if (phase != null) {
+            return generateSuggestionForPhase(phase);
+        }
+        return getString(R.string.daily_suggestion_no_record_suggestion);
     }
 
     /**
@@ -761,6 +1021,22 @@ public class DailySuggestionBottomSheet extends BottomSheetDialogFragment {
         Dialog dialog = getDialog();
         if (dialog == null) return;
         applyWindowStyle(dialog);
+        // 内容包含建议、打卡与当日提醒，默认直接展开，保证内部 ScrollView 有足够高度滚动
+        expandSheet(dialog);
+    }
+
+    /**
+     * 将底部弹窗展开到全屏高度，避免内容较多时只展示一部分。
+     *
+     * @param dialog 当前弹窗
+     */
+    private void expandSheet(Dialog dialog) {
+        View bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+        if (bottomSheet == null) {
+            return;
+        }
+        BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
+        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
     }
 
     /**

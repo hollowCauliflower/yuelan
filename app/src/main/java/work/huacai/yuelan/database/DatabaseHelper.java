@@ -176,13 +176,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             // 7 → 8：reminder 追加两列（未发布前合并到同一个版本，避免版本号无意义自增）：
             // - cycle_node_end：阶段区间提醒的结束节点（0 表示单日节点提醒）；
             // - ring_duration：强提醒响铃时长（分钟，0 = 一直响）。
+            // 同时把 menstrual_record 的 mood 列合并进 v8 建表语句，这里为旧的 v7 库补齐。
             // 存量提醒两列均为 0，行为与升级前一致。
             try {
                 db.execSQL("ALTER TABLE reminder ADD COLUMN cycle_node_end INTEGER NOT NULL DEFAULT 0");
                 db.execSQL("ALTER TABLE reminder ADD COLUMN ring_duration INTEGER NOT NULL DEFAULT 0");
-                Log.i(TAG, "reminder 增加 cycle_node_end / ring_duration 列成功");
+                db.execSQL("ALTER TABLE menstrual_record ADD COLUMN mood INTEGER DEFAULT 0");
+                Log.i(TAG, "reminder 增加 cycle_node_end / ring_duration 列、menstrual_record 增加 mood 列成功");
             } catch (Exception e) {
-                Log.e(TAG, "reminder 增加阶段区间/响铃时长列失败", e);
+                Log.e(TAG, "reminder / menstrual_record 增加列失败", e);
             }
         }
     }

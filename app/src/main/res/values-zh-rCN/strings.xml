@@ -292,6 +292,12 @@
     <string name="settings_custom_reminder">自定义提醒</string>
     <!-- 天气设置：每日建议里天气提示使用的地点 -->
     <string name="settings_weather_section">天气设置</string>
+    <string name="settings_suggestion_section">每日建议</string>
+    <string name="settings_suggestion_tone">建议语气</string>
+    <string name="settings_suggestion_tone_title">选择建议语气</string>
+    <string name="suggestion_tone_gentle">温柔</string>
+    <string name="suggestion_tone_brief">简洁</string>
+    <string name="suggestion_tone_cheerful">元气</string>
     <string name="settings_weather_location">天气地点</string>
     <string name="settings_weather_location_device">跟随系统定位</string>
     <!-- 已解析出系统定位城市时，在设置项后补充城市名 -->
@@ -508,6 +514,22 @@
     <string name="daily_suggestion_no_remind_today">今日不再提醒</string>
     <string name="daily_suggestion_reminder_section">当日提醒</string>
     <string name="daily_suggestion_close">知道了</string>
+    <string name="daily_suggestion_why">为什么会有这条建议</string>
+    <string name="daily_suggestion_why_hide">收起依据</string>
+    <string name="daily_suggestion_useful">有用</string>
+    <string name="daily_suggestion_mood_title">今日心情</string>
+    <string name="daily_suggestion_mood_good">好</string>
+    <string name="daily_suggestion_mood_okay">一般</string>
+    <string name="daily_suggestion_mood_low">低落</string>
+    <string name="daily_suggestion_mood_saved">已记录今天的心情</string>
+    <string name="daily_suggestion_mood_need_phase">请先记录今天的阶段</string>
+    <string name="daily_suggestion_habit_title">今日小目标</string>
+    <string name="daily_suggestion_habit_sleep">睡够 7 小时</string>
+    <string name="daily_suggestion_habit_water">喝够 8 杯水</string>
+    <string name="daily_suggestion_habit_saved">打卡已保存</string>
+    <string name="daily_suggestion_swap">换一条</string>
+    <string name="daily_suggestion_feedback_thanks">感谢反馈，会继续按你的偏好调整</string>
+    <string name="daily_suggestion_no_more">暂时没有更多建议了</string>
     <!-- 从日历查看非今天的日期时，建议标题不再称“今日” -->
     <string name="daily_suggestion_title_day">当日建议</string>
     <!-- 当日记录摘要：对应日历格子里的“记”标记，点击可查看/编辑 -->

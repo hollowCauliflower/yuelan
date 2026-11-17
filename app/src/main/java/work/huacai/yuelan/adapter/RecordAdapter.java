@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
@@ -17,8 +18,18 @@ import java.util.List;
 import java.util.Locale;
 
 import work.huacai.yuelan.R;
+import work.huacai.yuelan.dao.MenstrualCycleRecordDao;
+import work.huacai.yuelan.dao.MenstrualRecordDao;
+import work.huacai.yuelan.dao.impl.MenstrualCycleRecordDaoImpl;
+import work.huacai.yuelan.dao.impl.MenstrualRecordDaoImpl;
 import work.huacai.yuelan.helper.CycleCalculator;
+import work.huacai.yuelan.helper.SuggestionContent;
+import work.huacai.yuelan.helper.SuggestionContext;
+import work.huacai.yuelan.helper.SuggestionContextHelper;
+import work.huacai.yuelan.helper.SuggestionEngine;
+import work.huacai.yuelan.helper.SuggestionTemplateRepository;
 import work.huacai.yuelan.model.MenstrualCycle;
+import work.huacai.yuelan.model.MenstrualCycleRecord;
 import work.huacai.yuelan.model.MenstrualRecord;
 
 /**
@@ -37,6 +48,10 @@ public class RecordAdapter extends RecyclerView.Adapter<RecordAdapter.RecordView
 
     private List<MenstrualRecord> records;
     private OnRecordClickListener listener;
+    /** 周期参数用于给建议引擎推算周期第几天，与弹窗保持同一口径 */
+    private final MenstrualCycleRecordDao cycleRecordDao = new MenstrualCycleRecordDaoImpl();
+    /** 实际记录缓存：列表刷新时更新一次，避免每个条目都查一遍库 */
+    private List<MenstrualRecord> actualRecords;
 
     /**
      * 条目点击回调
@@ -74,6 +89,8 @@ public class RecordAdapter extends RecyclerView.Adapter<RecordAdapter.RecordView
      */
     public void updateRecords(List<MenstrualRecord> newRecords) {
         this.records = newRecords;
+        // 历史信号（规律性/连续打卡/痛经趋势）按实际记录计算，整批刷新一次即可
+        this.actualRecords = new MenstrualRecordDaoImpl().selectActual();
         notifyDataSetChanged();
     }
 
@@ -101,12 +118,10 @@ public class RecordAdapter extends RecyclerView.Adapter<RecordAdapter.RecordView
         holder.tvPhase.setText(getPhaseDisplayName(context, record.getMenstrualCycle()));
         holder.viewPhaseColor.setBackgroundColor(getPhaseColor(record.getMenstrualCycle()));
 
-        // 建议预览最多展示 20 个字符，超出部分用省略号截断
-        String suggestion = record.getSuggestion();
+        // 建议预览改为引擎生成的短句：数据库里的 suggestion 是写库时随机冻结的旧文案，
+        // 直接展示会和每日建议弹窗的正文不一致
+        String suggestion = buildSuggestionPreview(context, date, record);
         if (suggestion != null && !suggestion.isEmpty()) {
-            if (suggestion.length() > 20) {
-                suggestion = suggestion.substring(0, 20) + "...";
-            }
             holder.tvSuggestionPreview.setText(suggestion);
         } else {
             holder.tvSuggestionPreview.setText(R.string.record_adapter_no_suggestion);
@@ -149,6 +164,38 @@ public class RecordAdapter extends RecyclerView.Adapter<RecordAdapter.RecordView
     @Override
     public int getItemCount() {
         return records != null ? records.size() : 0;
+    }
+
+    /**
+     * 生成列表用的建议预览。
+     * <p>与每日建议弹窗共用同一引擎与模板，只取第一句（开场优先），
+     * 超过 20 个字符时截断。引擎无内容时回退数据库里的旧文案。
+     *
+     * @param context 用于取阶段名与模板
+     * @param date    记录日期，解析失败时为 null
+     * @param record  记录本身
+     * @return 预览文案；无任何可用内容时返回 null
+     */
+    @Nullable
+    private String buildSuggestionPreview(Context context, @Nullable Date date,
+                                          MenstrualRecord record) {
+        if (date == null) {
+            return record.getSuggestion();
+        }
+        MenstrualCycleRecord cycleRecord = cycleRecordDao.selectLast();
+        if (actualRecords == null) {
+            actualRecords = new MenstrualRecordDaoImpl().selectActual();
+        }
+        SuggestionContext suggestionContext = SuggestionContextHelper.build(context, date, record,
+                record.getMenstrualCycle(), null, cycleRecord, actualRecords, null, null);
+        SuggestionContent content = SuggestionEngine.generate(suggestionContext,
+                SuggestionTemplateRepository.getTemplates(context));
+        String headline = content.getHeadline();
+        if (headline == null || headline.isEmpty()) {
+            return record.getSuggestion();
+        }
+        // 列表行宽有限，超出部分统一截断，避免不同条目高度参差
+        return headline.length() > 20 ? headline.substring(0, 20) + "..." : headline;
     }
 
     /**
