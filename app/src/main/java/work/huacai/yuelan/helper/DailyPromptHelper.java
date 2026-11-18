@@ -32,7 +32,7 @@ public final class DailyPromptHelper {
     private static final String KEY_LAST_SHOWN_TYPE = "last_shown_type";
 
     /** 距下次月经多少天内弹出"临近经期"提醒 */
-    private static final int APPROACHING_THRESHOLD_DAYS = 3;
+    public static final int APPROACHING_THRESHOLD_DAYS = 3;
 
     /** 引导类型 */
     public enum PromptType {
@@ -65,7 +65,9 @@ public final class DailyPromptHelper {
         String todayId = CycleCalculator.formatDateId(new Date());
         MenstrualRecord todayRecord = new MenstrualRecordDaoImpl().selectById(todayId);
 
-        // 1) 当天有预测记录时，按阶段判断是否属于"关键日期"
+        // 1) 当天有预测记录时，经期/排卵期给对应的阶段引导；
+        //    黄体期（以及已录过实际记录的日期）不直接给阶段引导，
+        //    继续往下判断是否已经临近下次经期——否则“临近经期”永远被这里挡住
         if (todayRecord != null && todayRecord.isPrediction()) {
             MenstrualCycle cycle = todayRecord.getMenstrualCycle();
             if (cycle == MenstrualCycle.MENSTRUAL_PERIOD) {
@@ -74,25 +76,35 @@ public final class DailyPromptHelper {
             if (cycle == MenstrualCycle.OVULATION_PERIOD) {
                 return PromptType.OVULATION;
             }
-            // 卵泡期、黄体期不主动引导
-            return PromptType.NONE;
         }
 
-        // 2) 没有预测记录或已是实际记录时，检查是否临近下次经期
+        // 2) 检查是否临近下次经期
         // 下次经期按当前阶段模型推算（含阶段锚点），保证引导弹窗与日历/首页显示一致
-        Date nextPeriod = ReminderCycleHelper.nextPeriodStart();
-        if (nextPeriod == null) {
-            return PromptType.NONE;
-        }
-
-        int daysUntil = CycleCalculator.daysBetween(CycleCalculator.normalizeDate(new Date()),
-                nextPeriod);
+        int daysUntil = getDaysUntilNextPeriod();
         // 下次经期还没到且在阈值内：弹出临近提醒（已经到了的话上面月经期分支会先命中）
         if (daysUntil > 0 && daysUntil <= APPROACHING_THRESHOLD_DAYS) {
             return PromptType.APPROACHING_PERIOD;
         }
 
         return PromptType.NONE;
+    }
+
+    /**
+     * 距下次预测经期开始还有几天的自然日。
+     * <p>
+     * 与 {@link #getPromptType} 使用同一推算口径（{@link ReminderCycleHelper#nextPeriodStart()}），
+     * 供“临近经期”弹窗按实际剩余天数显示倒计时文案，避免三天的弹窗都写“3 天后”。
+     *
+     * @return 剩余天数（0 表示今天就是预测经期首日，负数表示已过）；
+     *         无法推算下次经期时返回 -1
+     */
+    public static int getDaysUntilNextPeriod() {
+        Date nextPeriod = ReminderCycleHelper.nextPeriodStart();
+        if (nextPeriod == null) {
+            return -1;
+        }
+        return CycleCalculator.daysBetween(CycleCalculator.normalizeDate(new Date()),
+                nextPeriod);
     }
 
     /**

@@ -305,6 +305,9 @@ public class SettingsFragment extends Fragment {
         editor.apply();
 
         // 设置变化后重排闹钟（内部会先取消旧闹钟，再异步计算下一次提醒）
+        // 同时清掉“本轮经期已提醒”标记：按新的提前天数/提醒时间重新判断是否要补发，
+        // 否则刚把提前天数改长也会被上一轮的“已提醒”状态挡住
+        PeriodReminderScheduler.clearNotified(requireContext());
         PeriodReminderScheduler.apply(requireContext());
     }
 

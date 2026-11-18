@@ -340,6 +340,10 @@
     <string name="reminder_notification_default_text">You have a reminder</string>
     <string name="period_reminder_notification_title">Period reminder</string>
     <string name="period_reminder_notification_text">Your period is expected in about %1$d days. Be prepared.</string>
+    <!-- Notification text counts down by actual days left: a catch-up notice may land on T-2 / T-1 / the day itself -->
+    <string name="period_reminder_notification_text_days">Your period is expected in %1$d days. Be prepared.</string>
+    <string name="period_reminder_notification_text_tomorrow">Your period is expected tomorrow. Be prepared.</string>
+    <string name="period_reminder_notification_text_today">Your period is expected today. Be prepared.</string>
     <string name="reminder_time_passed">The reminder time has passed; no notification will be sent</string>
     <string name="reminder_notification_disabled">Notifications are not allowed, so reminders cannot fire. Please enable notifications.</string>
     <string name="reminder_exact_alarm_open_failed">Unable to open settings. Please enable "Alarms &amp; reminders" manually.</string>
@@ -633,7 +637,9 @@
     <string name="daily_prompt_ovulation_title">Today is predicted ovulation day</string>
     <string name="daily_prompt_ovulation_message">You can note how you\'re feeling (useful when trying to conceive).</string>
     <string name="daily_prompt_approaching_title">Your period is coming soon</string>
-    <string name="daily_prompt_approaching_message">Your period is expected within 3 days. Have sanitary products ready.</string>
+    <!-- Countdown by actual days left; 1 day uses its own wording -->
+    <string name="daily_prompt_approaching_message_tomorrow">Your period is expected tomorrow. Have sanitary products ready.</string>
+    <string name="daily_prompt_approaching_message_days">Your period is expected in %1$d days. Have sanitary products ready.</string>
     <string name="daily_prompt_got_it">Got it</string>
 
     <!-- Cycle correction dialog -->

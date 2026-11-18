@@ -506,8 +506,7 @@ public class HomeFragment extends Fragment {
                         R.string.daily_prompt_ovulation_message);
                 break;
             case APPROACHING_PERIOD:
-                showInfoPrompt(R.string.daily_prompt_approaching_title,
-                        R.string.daily_prompt_approaching_message);
+                showApproachingPrompt();
                 break;
             default:
                 dailyPromptShowing = false;
@@ -560,13 +559,39 @@ public class HomeFragment extends Fragment {
     }
 
     /**
+     * 临近经期提示：正文按“距下次经期还有几天”实时倒计时，剩余 1 天时用“明天”表述。
+     * <p>
+     * 之前的文案是固定的“预计 3 天内来月经”，进入 T-3 / T-2 / T-1 三天都会显示同一句话，
+     * 看起来像时间没有推进；这里改为每次弹出时按当天实际剩余天数生成。
+     */
+    private void showApproachingPrompt() {
+        int daysUntil = DailyPromptHelper.getDaysUntilNextPeriod();
+        // 只有 1~3 天才显示倒计时；跨零点后提示条件可能已不成立，宁可不弹也不显示错误天数
+        if (daysUntil < 1 || daysUntil > DailyPromptHelper.APPROACHING_THRESHOLD_DAYS) {
+            dailyPromptShowing = false;
+            return;
+        }
+        String message = daysUntil == 1
+                ? getString(R.string.daily_prompt_approaching_message_tomorrow)
+                : getString(R.string.daily_prompt_approaching_message_days, daysUntil);
+        showInfoPrompt(R.string.daily_prompt_approaching_title, message);
+    }
+
+    /**
      * 排卵期 / 临近经期的纯提示弹窗，只有一个"知道了"按钮。
      * <p>无论点按钮还是点外部关闭，都要重置 {@code dailyPromptShowing}，否则会阻塞后续引导。
      */
     private void showInfoPrompt(int titleRes, int messageRes) {
+        showInfoPrompt(titleRes, getString(messageRes));
+    }
+
+    /**
+     * 同上，正文由调用方按实际情况拼好（如临近经期文案需要带上剩余天数）。
+     */
+    private void showInfoPrompt(int titleRes, CharSequence message) {
         android.app.Dialog dialog = AppDialogFactory.showConfirm(requireContext(),
                 getString(titleRes),
-                getString(messageRes),
+                message,
                 R.string.daily_prompt_got_it, 0, null);
         dialog.setOnDismissListener(d -> dailyPromptShowing = false);
     }

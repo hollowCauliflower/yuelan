@@ -49,6 +49,13 @@ public final class PeriodReminderScheduler {
     public static final String KEY_HOUR = "reminder_hour";
     /** 提醒分钟 */
     public static final String KEY_MINUTE = "reminder_minute";
+    /**
+     * 已经发出过提醒的“下一轮经期开始日”（yyyyMMdd）。
+     * <p>
+     * 提醒日已过而经期还没来时，调度器会在启动时补发一次提醒；
+     * 记下已提醒的是哪一轮，后续启动就不会连续几天重复弹出同一条提醒。
+     */
+    private static final String KEY_NOTIFIED_PERIOD_START = "period_reminder_notified_start";
 
     /** 经期提醒闹钟触发的广播 action */
     public static final String ACTION_PERIOD_REMINDER =
@@ -103,18 +110,68 @@ public final class PeriodReminderScheduler {
     }
 
     /**
+     * 记录本次经期提醒已经发出。
+     * <p>
+     * 只在通知真正弹出后调用；{@link #computeNextTrigger} 据此判断是否需要“补发”，
+     * 避免同一轮经期在每次启动应用时都重新提醒一次。
+     *
+     * @param context     任意 Context
+     * @param periodStart 本轮提醒对应的经期开始日（与调度口径一致，取
+     *                    {@link ReminderCycleHelper#nextPeriodStart()}）
+     */
+    public static void markNotified(Context context, Date periodStart) {
+        if (periodStart == null) {
+            return;
+        }
+        getPrefs(context).edit()
+                .putString(KEY_NOTIFIED_PERIOD_START, CycleCalculator.formatDateId(periodStart))
+                .apply();
+    }
+
+    /**
+     * 清除“本轮已提醒”标记。
+     * <p>用户修改提前天数/提醒时间或重新开启提醒后调用，让新设置立即生效，
+     * 而不是被上一轮设置的“已提醒”状态挡住。
+     *
+     * @param context 任意 Context
+     */
+    public static void clearNotified(Context context) {
+        getPrefs(context).edit().remove(KEY_NOTIFIED_PERIOD_START).apply();
+    }
+
+    /**
+     * 本轮经期是否已经补发过提醒。
+     *
+     * @param context     任意 Context
+     * @param periodStart 本轮经期开始日
+     * @return 已提醒返回 true
+     */
+    private static boolean wasNotified(Context context, Date periodStart) {
+        if (periodStart == null) {
+            return false;
+        }
+        String notified = getPrefs(context).getString(KEY_NOTIFIED_PERIOD_START, null);
+        return CycleCalculator.formatDateId(periodStart).equals(notified);
+    }
+
+    /**
      * 按当前设置重排经期提醒：先取消旧闹钟，开关打开时再异步安排下一次。
      * <p>
      * 适合在设置项变化、导入/清空数据、开机或进程启动时调用；取消操作很轻，直接在主线程完成。
+     * <p>
+     * 重排时只撤销闹钟、保留已经弹出的提醒通知：同一轮经期只提醒一次，
+     * 若每次启动应用都把通知栏里的提醒清掉，用户反而容易错过。
      *
      * @param context 任意 Context
      */
     public static void apply(Context context) {
         Context appContext = context.getApplicationContext();
-        cancel(appContext);
         if (!isEnabled(appContext)) {
+            // 关闭提醒：闹钟和通知都撤销
+            cancel(appContext);
             return;
         }
+        cancelAlarm(appContext);
         scheduleAsync(appContext);
     }
 
@@ -129,17 +186,55 @@ public final class PeriodReminderScheduler {
     }
 
     /**
-     * 闹钟触发后安排“下一次”提醒（下一个月经周期）。
+     * 闹钟触发后的处理：按实际剩余天数发出本轮提醒，并安排“下一次”提醒（下一个月经周期）。
+     * <p>
+     * 推算日期、“已提醒”标记与下一次排程都要读数据库/SharedPreferences，
+     * 统一放在调度器的单线程池执行，避免占用广播接收器的主线程做磁盘 IO。
      * <p>
      * 本次提醒时间已经过去，若仍按普通逻辑计算会命中“立即提醒”分支造成重复通知，
      * 因此把最早触发时间推迟 1 天，要求调度器跳过本周期。
      *
      * @param context 任意 Context
      */
-    public static void scheduleNextAfterFired(Context context) {
+    public static void onTriggered(Context context) {
         Context appContext = context.getApplicationContext();
-        long minTriggerAt = System.currentTimeMillis() + RESCHEDULE_MIN_GAP_MILLIS;
-        executor.execute(() -> schedule(appContext, minTriggerAt));
+        executor.execute(() -> {
+            notifyUpcomingPeriod(appContext);
+            schedule(appContext, System.currentTimeMillis() + RESCHEDULE_MIN_GAP_MILLIS);
+        });
+    }
+
+    /**
+     * 按“实际还剩几天”发出本轮提醒。
+     * <p>
+     * 文案不再读设置里的提前天数：闹钟补发（提醒日已过、进程启动时才补上）时可能已经是
+     * T-2 / T-1，固定天数会让连续几天的提醒都写“3 天后”。
+     * 迟到太久的闹钟已经跨过整轮经期，此时“经期即将来潮”不再成立，直接跳过提示。
+     */
+    private static void notifyUpcomingPeriod(Context context) {
+        // 开关可能刚被关闭（闹钟已取消，但不排除广播已在途中），此时不再发通知
+        if (!isEnabled(context)) {
+            return;
+        }
+
+        Date upcomingStart = ReminderCycleHelper.nextNodeDate(Reminder.NODE_PERIOD_START);
+        int daysAhead = upcomingStart == null
+                ? getReminderDays(context)
+                : Math.max(0, CycleCalculator.daysBetween(
+                        CycleCalculator.normalizeDate(new Date()), upcomingStart));
+
+        if (upcomingStart != null && daysAhead > getReminderDays(context)) {
+            Log.i(TAG, "闹钟迟到超过提醒窗口，跳过本轮通知: daysAhead=" + daysAhead);
+            return;
+        }
+
+        boolean posted = ReminderNotificationHelper.showPeriodReminder(context, daysAhead);
+        if (posted) {
+            markNotified(context, ReminderCycleHelper.nextPeriodStart());
+        } else {
+            // 没有通知权限：不写“已提醒”，用户授权后下次启动还能补发
+            Log.i(TAG, "本轮提醒未发出（缺少通知权限），保留补发机会");
+        }
     }
 
     /**
@@ -248,8 +343,10 @@ public final class PeriodReminderScheduler {
                 return reminderMillis;
             }
             if (periodStartMillis > threshold) {
-                // 提醒日已过、但月经还没来：本次不限制最早时间时立即提醒一次
-                if (minTriggerAt <= now) {
+                // 提醒日已过、但月经还没来：本次不限制最早时间时立即补发一次。
+                // 同一轮经期只补发一次——已经提醒过就跳过本周期，直接排到下个周期，
+                // 否则提醒日之后的每一天启动应用都会再弹一次同样的“还有 N 天”
+                if (minTriggerAt <= now && !wasNotified(context, periodStart)) {
                     return now + IMMEDIATE_DELAY_MILLIS;
                 }
             }
@@ -267,6 +364,17 @@ public final class PeriodReminderScheduler {
      * @param context 任意 Context
      */
     public static void cancel(Context context) {
+        cancelAlarm(context);
+        ReminderNotificationHelper.cancelPeriodReminder(context);
+    }
+
+    /**
+     * 只撤销闹钟，保留通知栏里已经弹出的提醒通知。
+     * <p>重排闹钟（如进程启动、设置变化）时使用，避免把用户还没看到的提醒一起清掉。
+     *
+     * @param context 任意 Context
+     */
+    private static void cancelAlarm(Context context) {
         AlarmManager alarmManager =
                 (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager != null) {
@@ -274,7 +382,6 @@ public final class PeriodReminderScheduler {
             alarmManager.cancel(pendingIntent);
             pendingIntent.cancel();
         }
-        ReminderNotificationHelper.cancelPeriodReminder(context);
     }
 
     /**

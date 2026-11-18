@@ -326,15 +326,16 @@ public final class ReminderNotificationHelper {
      * 发出“经期即将来潮”提示通知。
      * <p>
      * 复用自定义提醒的通知渠道（高优先级、锁屏可见），点击通知直接回到首页。
-     * 没有通知权限时静默返回，避免出现“到了时间却什么都没发生”的误解。
+     * 没有通知权限时静默返回 false，避免出现“到了时间却什么都没发生”的误解。
      *
      * @param context   任意 Context
      * @param daysAhead 距离预计来潮还有多少天（用于文案）
+     * @return 通知已发出返回 true；没有通知权限返回 false
      */
-    public static void showPeriodReminder(Context context, int daysAhead) {
+    public static boolean showPeriodReminder(Context context, int daysAhead) {
         ensureChannel(context);
         if (!canPostNotifications(context)) {
-            return;
+            return false;
         }
 
         // 必须打开“当前启用中的入口”：用户切换桌面图标风格后，MainActivity 会被禁用，
@@ -345,7 +346,16 @@ public final class ReminderNotificationHelper {
                 PERIOD_NOTIFICATION_ID, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        String text = context.getString(R.string.period_reminder_notification_text, daysAhead);
+        // 按实际剩余天数选文案：0 天（补发时经期已经开始）/ 1 天用更自然的说法，
+        // 其余天才写“N 天后”，避免几天里的通知都显示同一个数字
+        String text;
+        if (daysAhead <= 0) {
+            text = context.getString(R.string.period_reminder_notification_text_today);
+        } else if (daysAhead == 1) {
+            text = context.getString(R.string.period_reminder_notification_text_tomorrow);
+        } else {
+            text = context.getString(R.string.period_reminder_notification_text_days, daysAhead);
+        }
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(AppIconHelper.getNotificationIconRes(context))
                 .setContentTitle(context.getString(R.string.period_reminder_notification_title))
@@ -361,6 +371,7 @@ public final class ReminderNotificationHelper {
                 .setContentIntent(contentIntent);
 
         NotificationManagerCompat.from(context).notify(PERIOD_NOTIFICATION_ID, builder.build());
+        return true;
     }
 
     /**

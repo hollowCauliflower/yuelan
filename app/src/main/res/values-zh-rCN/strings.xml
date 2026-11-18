@@ -339,6 +339,10 @@
     <string name="reminder_notification_default_text">你有一条提醒</string>
     <string name="period_reminder_notification_title">月经提醒</string>
     <string name="period_reminder_notification_text">预计约 %1$d 天后月经来潮，记得提前做好准备哦</string>
+    <!-- 通知文案按实际剩余天数显示：补发提醒时可能已经是 T-2 / T-1 / 当天 -->
+    <string name="period_reminder_notification_text_days">预计 %1$d 天后月经来潮，记得提前做好准备哦</string>
+    <string name="period_reminder_notification_text_tomorrow">预计明天月经来潮，记得提前做好准备哦</string>
+    <string name="period_reminder_notification_text_today">预计今天月经来潮，记得提前做好准备哦</string>
     <string name="reminder_time_passed">提醒时间已过，不会触发通知</string>
     <string name="reminder_notification_disabled">通知权限未开启，到点将无法提醒，请允许通知</string>
     <string name="reminder_exact_alarm_open_failed">无法打开系统设置，请在系统设置中手动开启「闹钟与提醒」</string>
@@ -635,7 +639,9 @@
     <string name="daily_prompt_ovulation_title">今天是预测排卵期</string>
     <string name="daily_prompt_ovulation_message">可以记录一下身体状况（备孕时更有帮助）。</string>
     <string name="daily_prompt_approaching_title">月经快到了</string>
-    <string name="daily_prompt_approaching_message">预计 3 天内来月经，准备好卫生用品。</string>
+    <!-- 临近经期弹窗：按距下次月经的实际天数倒计时（1 天单独用“明天”，更自然） -->
+    <string name="daily_prompt_approaching_message_tomorrow">预计明天来月经，准备好卫生用品。</string>
+    <string name="daily_prompt_approaching_message_days">预计 %1$d 天后月经来潮，准备好卫生用品。</string>
     <string name="daily_prompt_got_it">知道了</string>
 
     <!-- 纠错周期弹窗 -->
