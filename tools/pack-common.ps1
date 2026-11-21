@@ -92,6 +92,14 @@ function Invoke-GradleBuild {
     # gradlew 必须在项目根目录执行，脚本当前位于 tools，需要临时切换。
     # 把 stderr 合并后逐行转成字符串，避免 PowerShell 把 Gradle 的编译提示
     # 当成 NativeCommandError 整段标红。
+    #
+    # 编码：脚本头部把 [Console]::OutputEncoding 设成了 UTF-8（用于 Node 等 UTF-8 输出），
+    # 但 Gradle / javac 在中文 Windows 上按控制台代码页（GBK）输出中文提示，
+    # 用 UTF-8 去解码就会变成乱码（如「注:」显示为「ע:」）。
+    # 因此调用 Gradle 期间临时切回控制台实际代码页，结束后再恢复。
+    $originalEncoding = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(
+        [System.Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage)
     Push-Location -LiteralPath $script:ProjectRoot
     try {
         Write-Host ""
@@ -108,6 +116,7 @@ function Invoke-GradleBuild {
         return ($buildExit -eq 0)
     } finally {
         Pop-Location
+        [Console]::OutputEncoding = $originalEncoding
     }
 }
 

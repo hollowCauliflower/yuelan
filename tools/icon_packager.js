@@ -478,15 +478,66 @@ function restoreIcons(backup) {
 // 打包
 // ---------------------------------------------------------------------------
 
-function runAssemble(release) {
-  const gradlew = path.join(PROJECT_ROOT, 'gradlew.bat');
-  const task = release ? 'assembleRelease' : 'assembleDebug';
+/**
+ * Gradle / javac 在中文 Windows 上按控制台代码页（GBK）输出中文提示，
+ * Node 默认按 UTF-8 解码会变成乱码（如「注:」显示为「ע:」），
+ * 这里捕获原始字节后按 GBK 解码，再以 UTF-8 输出给 PowerShell。
+ */
+function writeGradleOutput(buf) {
+  if (!buf || buf.length === 0) {
+    return;
+  }
+  let text;
   try {
-    execSync(`"${gradlew}" ${task} --offline -q`, { cwd: PROJECT_ROOT, stdio: 'inherit' });
+    text = new TextDecoder('gbk').decode(buf);
+  } catch (e) {
+    text = buf.toString('utf8');
+  }
+  process.stdout.write(text.endsWith('\n') ? text : text + '\n');
+}
+
+/** 执行 gradlew，输出按 GBK 正确解码；返回是否成功 */
+function execGradle(args) {
+  const gradlew = path.join(PROJECT_ROOT, 'gradlew.bat');
+  try {
+    const out = execSync(`"${gradlew}" ${args}`, {
+      cwd: PROJECT_ROOT,
+      encoding: 'buffer',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    writeGradleOutput(out);
     return true;
   } catch (e) {
+    writeGradleOutput(e.stdout);
+    writeGradleOutput(e.stderr);
     return false;
   }
+}
+
+/**
+ * clean 失败时的兜底：删掉旧 APK，避免把上一次的产物当成这次的结果。
+ * clean 失败通常是因为资源管理器窗口停在 app\build 目录，锁住了文件夹。
+ */
+function removeOldApks() {
+  for (const dir of [APK_DIR_RELEASE, APK_DIR_DEBUG]) {
+    try {
+      if (!fs.existsSync(dir)) {
+        continue;
+      }
+      for (const name of fs.readdirSync(dir)) {
+        if (name.toLowerCase().endsWith('.apk')) {
+          fs.rmSync(path.join(dir, name), { force: true });
+        }
+      }
+    } catch (e) {
+      // 文件被占用时忽略，后续按时间戳判断产物
+    }
+  }
+}
+
+function runAssemble(release) {
+  const task = release ? 'assembleRelease' : 'assembleDebug';
+  return execGradle(`${task} --offline -q`);
 }
 
 /**
@@ -494,16 +545,15 @@ function runAssemble(release) {
  * 每次定制都强制重新生成，代价是多花一点构建时间。
  */
 function runClean() {
-  const gradlew = path.join(PROJECT_ROOT, 'gradlew.bat');
-  try {
-    log('清理上次构建产物（clean）…');
-    execSync(`"${gradlew}" clean --offline -q`, { cwd: PROJECT_ROOT, stdio: 'inherit' });
+  log('清理上次构建产物（clean）…');
+  if (execGradle('clean --offline -q')) {
     return true;
-  } catch (e) {
-    // clean 失败不阻断打包，交给后续 assemble 与产物检查兜底
-    log('clean 失败，将继续尝试直接打包：' + e.message);
-    return false;
   }
+  // clean 失败不阻断打包；先删掉旧 APK，并提示占用原因
+  log('clean 失败：可能有窗口停在 app\\build 目录（关掉资源管理器窗口可避免）');
+  log('已删除旧 APK，继续打包…');
+  removeOldApks();
+  return false;
 }
 
 /** 读取 version.properties 中的 VERSION_NAME，用于输出文件名 */

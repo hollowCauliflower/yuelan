@@ -993,6 +993,8 @@ public class SettingsFragment extends Fragment {
             }
         }
 
+        // 长按改名时需要关闭当前弹窗，避免保存后新旧两个弹窗叠加导致取消时露出旧名称
+        final Dialog[] dialogHolder = new Dialog[1];
         Dialog dialog = AppDialogFactory.showSingleChoice(requireContext(),
                 getString(R.string.settings_app_icon_title),
                 labels.toArray(new String[0]), checkedIndex,
@@ -1024,7 +1026,9 @@ public class SettingsFragment extends Fragment {
                     }
                 },
                 // 长按重命名
-                this::showBundledIconRenameInput);
+                index -> showBundledIconRenameInput(dialogHolder[0], index));
+
+        dialogHolder[0] = dialog;
 
         // 提示用户可以长按改名
         AppDialogFactory.setSubtitle(dialog, getString(R.string.icon_rename_longpress_hint));
@@ -1033,9 +1037,10 @@ public class SettingsFragment extends Fragment {
     /**
      * 输入新的图标名称并保存，保存后重新打开图标弹窗回显。
      *
-     * @param index 图片下标
+     * @param ownerDialog 长按所在的图标弹窗，保存后需要关闭，避免与新弹窗叠加；可为 null
+     * @param index       图片下标
      */
-    private void showBundledIconRenameInput(int index) {
+    private void showBundledIconRenameInput(Dialog ownerDialog, int index) {
         View content = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_text_input, null);
         EditText input = content.findViewById(R.id.et_input);
@@ -1060,6 +1065,10 @@ public class SettingsFragment extends Fragment {
                     Toast.makeText(requireContext(),
                             R.string.icon_rename_saved, Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
+                    // 关闭长按前的旧弹窗，否则重新打开后点取消会露出旧名称
+                    if (ownerDialog != null) {
+                        ownerDialog.dismiss();
+                    }
                     showBundledIconDialog(AppIconHelper.getBundledIconAssets(requireContext()));
                 });
     }
