@@ -64,7 +64,7 @@ public class DailySuggestionDialog extends DialogFragment {
     private static final String ARG_SHOW_SNOOZE = "show_snooze";
 
     /** 弹窗宽度占屏幕宽度的比例 */
-    private static final float WIDTH_RATIO = 0.88f;
+    private static final float WIDTH_RATIO = 0.92f;
 
     /** 弹窗标题日期格式（如“2024年5月20日”） */
     private static final SimpleDateFormat DATE_DISPLAY_FORMAT =
@@ -77,6 +77,8 @@ public class DailySuggestionDialog extends DialogFragment {
     private TextView tvWeatherTip;
     private DailyWeatherSection weatherSection;
     private TextView tvSuggestion;
+    /** 建议正文折叠控制：默认只展示前几行，超长时提供“展开全文 / 收起” */
+    private CollapsibleText suggestionCollapsible;
     /** 今日宜忌：引擎输出为空时隐藏 */
     private TextView tvYiji;
     /** “为什么会有这条建议”开关与依据正文 */
@@ -173,6 +175,9 @@ public class DailySuggestionDialog extends DialogFragment {
             renderSuggestion(lastRecord, lastDisplayPhase);
         });
         tvSuggestion = view.findViewById(R.id.tv_suggestion);
+        // 长建议默认折叠：正文超过 3 行时显示“展开全文”，避免弹窗被撑长、内容看不全
+        suggestionCollapsible = new CollapsibleText(tvSuggestion,
+                view.findViewById(R.id.tv_suggestion_toggle));
         tvYiji = view.findViewById(R.id.tv_yiji);
         tvInsightToggle = view.findViewById(R.id.tv_insight_toggle);
         tvInsight = view.findViewById(R.id.tv_insight);
@@ -342,8 +347,9 @@ public class DailySuggestionDialog extends DialogFragment {
                 SuggestionTemplateRepository.getTemplates(requireContext()),
                 feedback, skippedTemplateIds);
         String text = content.toDisplayText();
-        // 引擎无内容（模板损坏/未命中）时回退旧文案，保证正文永不空白
-        tvSuggestion.setText(text != null ? text : fallbackSuggestion(record, phase));
+        // 引擎无内容（模板损坏/未命中）时回退旧文案，保证正文永不空白；
+        // 文本变化后折叠回首屏，用户点“展开全文”再看完整内容
+        suggestionCollapsible.setText(text != null ? text : fallbackSuggestion(record, phase));
         // 宜忌与依据独立于正文：有就展示，没有就隐藏
         lastContent = content;
         renderExtras(content);

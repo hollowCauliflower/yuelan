@@ -520,6 +520,9 @@
     <string name="daily_suggestion_close">知道了</string>
     <string name="daily_suggestion_why">为什么会有这条建议</string>
     <string name="daily_suggestion_why_hide">收起依据</string>
+    <!-- 长建议正文折叠：默认展示前几行，点“展开全文”查看全部 -->
+    <string name="daily_suggestion_expand">展开全文</string>
+    <string name="daily_suggestion_collapse">收起</string>
     <string name="daily_suggestion_useful">有用</string>
     <string name="daily_suggestion_mood_title">今日心情</string>
     <string name="daily_suggestion_mood_good">好</string>

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/dialog_background"
-    android:padding="24dp"
+    android:padding="20dp"
     android:scrollbars="none">
 
     <LinearLayout
@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="12dp">
 
         <TextView
             android:id="@+id/tv_date"
@@ -48,7 +48,7 @@
         android:id="@+id/tv_weather"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="6dp"
         android:textColor="@color/text_sub"
         android:textSize="12sp"
         android:visibility="gone" />
@@ -58,7 +58,7 @@
         android:id="@+id/tv_weather_tip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="6dp"
         android:lineSpacingExtra="2dp"
         android:textColor="@color/text_body"
         android:textSize="12sp"
@@ -68,7 +68,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/divider"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="12dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -76,7 +76,7 @@
         android:text="@string/daily_suggestion_title"
         android:textColor="@color/text_sub"
         android:textSize="14sp"
-        android:layout_marginBottom="12dp"/>
+        android:layout_marginBottom="8dp"/>
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -89,7 +89,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/tv_suggestion"
@@ -98,14 +98,27 @@
                 android:text="@string/daily_suggestion_default"
                 android:textColor="@color/text_title"
                 android:textSize="15sp"
-                android:lineSpacingExtra="6dp"/>
+                android:lineSpacingExtra="4dp"/>
+
+            <!-- 建议正文超过 3 行时折叠，点“展开全文”查看完整内容 -->
+            <TextView
+                android:id="@+id/tv_suggestion_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:background="?attr/selectableItemBackground"
+                android:paddingVertical="4dp"
+                android:text="@string/daily_suggestion_expand"
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                android:visibility="gone"/>
 
             <!-- 今日宜忌：引擎生成，没有匹配内容时隐藏 -->
             <TextView
                 android:id="@+id/tv_yiji"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="10dp"
                 android:lineSpacingExtra="4dp"
                 android:textColor="@color/text_body"
                 android:textSize="13sp"
@@ -116,9 +129,9 @@
                 android:id="@+id/tv_insight_toggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:background="?attr/selectableItemBackground"
-                android:paddingVertical="6dp"
+                android:paddingVertical="4dp"
                 android:text="@string/daily_suggestion_why"
                 android:textColor="@color/text_hint"
                 android:textSize="12sp"
@@ -139,7 +152,7 @@
                 android:id="@+id/layout_feedback"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:orientation="horizontal"
                 android:visibility="gone">
 
@@ -148,7 +161,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
-                    android:paddingVertical="6dp"
+                    android:paddingVertical="4dp"
                     android:paddingEnd="18dp"
                     android:text="@string/daily_suggestion_useful"
                     android:textColor="@color/text_hint"
@@ -159,7 +172,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
-                    android:paddingVertical="6dp"
+                    android:paddingVertical="4dp"
                     android:paddingEnd="18dp"
                     android:text="@string/daily_suggestion_swap"
                     android:textColor="@color/text_hint"
@@ -182,7 +195,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="20dp">
+        android:layout_marginTop="14dp">
 
         <TextView
             android:id="@+id/tv_prev_day"
@@ -214,7 +227,7 @@
         android:id="@+id/tv_close"
         android:layout_width="match_parent"
         android:layout_height="44dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:background="@drawable/btn_primary_background"
         android:gravity="center"
         android:text="@string/daily_suggestion_close"
@@ -227,7 +240,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="@string/daily_suggestion_no_remind_today"
         android:textColor="@color/text_sub"
         android:textSize="13sp"

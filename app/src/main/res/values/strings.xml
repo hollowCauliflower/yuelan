@@ -521,6 +521,9 @@
     <string name="daily_suggestion_close">Got it</string>
     <string name="daily_suggestion_why">Why this suggestion?</string>
     <string name="daily_suggestion_why_hide">Hide reason</string>
+    <!-- Long suggestion body collapses to a few lines; tap to read all -->
+    <string name="daily_suggestion_expand">Show more</string>
+    <string name="daily_suggestion_collapse">Show less</string>
     <string name="daily_suggestion_useful">Useful</string>
     <string name="daily_suggestion_mood_title">Mood today</string>
     <string name="daily_suggestion_mood_good">Good</string>

@@ -41,6 +41,7 @@ local.properties
 /build_*.txt
 /.tmp/
 /.screenshots/
+/.verify/
 /verification/
 /verification_*/
 /screenshots/

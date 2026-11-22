@@ -176,6 +176,19 @@
                 android:textSize="15sp"
                 android:lineSpacingExtra="6dp"/>
 
+            <!-- 建议正文超过 3 行时折叠，点“展开全文”查看完整内容 -->
+            <TextView
+                android:id="@+id/tv_suggestion_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:paddingVertical="6dp"
+                android:text="@string/daily_suggestion_expand"
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                android:visibility="gone"/>
+
             <!-- 今日宜忌：引擎生成，没有匹配内容时隐藏 -->
             <TextView
                 android:id="@+id/tv_yiji"
