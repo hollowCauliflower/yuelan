@@ -7,6 +7,11 @@
 - 目标版本：Android 14（API 34）
 - 数据默认只保存在本机，不需要账号，不上传云端
 
+## 下载
+
+- 最新版本：[Releases](https://github.com/hollowCauliflower/yuelan/releases/latest)
+- 直接下载：`Yuelan-v1.0-release.apk`（Android 7.0+）
+
 ## 主要功能
 
 | 功能 | 说明 |
